@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: tramites-app
+    env: node
+    plan: free
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NEXTAUTH_URL
+        value: https://tramites-app.onrender.com
+      - key: NODE_VERSION
+        value: "18"
+databases:
+  - name: tramites-db
+    databaseName: tramites_db
+    user: postgres

@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  googleId      String    @unique
+  role          String    @default("usuario") // "usuario" o "admin"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tramites      Tramite[]
+  pagos         Pago[]
+
+  @@map("users")
+}
+
+model Tramite {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  oficina       String    // "Registro Propiedad Inmueble", "Registro de las Personas", etc.
+  tipoTramite   String    // "Inscripción", "Transferencia", etc.
+  estado        String    @default("pendiente") // "pendiente", "en_proceso", "completado", "rechazado"
+
+  descripcion   String?
+  monto         Float
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  documentos    Documento[]
+  pago          Pago?
+
+  @@map("tramites")
+}
+
+model Documento {
+  id            String    @id @default(cuid())
+  tramiteId     String
+  tramite       Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
+
+  nombre        String
+  tipo          String    // "solicitud", "comprobante", "resultado"
+  url           String    // URL de S3 o servidor
+
+  createdAt     DateTime  @default(now())
+
+  @@map("documentos")
+}
+
+model Pago {
+  id            String    @id @default(cuid())
+  tramiteId     String    @unique
+  tramite       Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
+
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+
+  monto         Float
+  estado        String    @default("pendiente") // "pendiente", "confirmado", "rechazado"
+
+  mercadopagoId String?   // ID de la preferencia en Mercado Pago
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("pagos")
+}
