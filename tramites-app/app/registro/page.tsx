@@ -1,45 +1,76 @@
 "use client"
 
 import { signIn } from "next-auth/react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Suspense, useState } from "react"
+import { useState } from "react"
 
-function LoginContent() {
-  const searchParams = useSearchParams()
+export default function RegistroPage() {
   const router = useRouter()
-  const error = searchParams.get("error")
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
 
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [formError, setFormError] = useState("")
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
 
   const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl })
+    signIn("google", { callbackUrl: "/" })
   }
 
-  const handleCredentialsLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setFormError("")
+    setError("")
+
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      setIsLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres")
+      setIsLoading(false)
+      return
+    }
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
       })
 
-      if (result?.error) {
-        setFormError("Email o contraseña incorrectos")
-      } else {
-        router.push(callbackUrl)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || "Error al crear la cuenta")
+        setIsLoading(false)
+        return
       }
+
+      setSuccess(true)
+
+      // Auto login después del registro
+      setTimeout(async () => {
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        })
+
+        if (result?.ok) {
+          router.push("/")
+        } else {
+          router.push("/login")
+        }
+      }, 1500)
     } catch {
-      setFormError("Error al iniciar sesión")
+      setError("Error al crear la cuenta")
     } finally {
       setIsLoading(false)
     }
@@ -59,22 +90,42 @@ function LoginContent() {
         {/* Card */}
         <div className="bg-white rounded border border-gray-200">
           <div className="p-4 sm:p-6 border-b border-gray-200">
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">Iniciar sesion</h1>
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">Crear cuenta</h1>
           </div>
 
           <div className="p-4 sm:p-6">
-            {(error || formError) && (
+            {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-xs sm:text-sm mb-4">
-                {formError || "Error al iniciar sesion. Por favor intenta de nuevo."}
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded text-xs sm:text-sm mb-4">
+                Cuenta creada exitosamente. Redirigiendo...
               </div>
             )}
 
             <p className="text-gray-600 text-xs sm:text-sm text-center mb-6">
-              Accede a tu cuenta para gestionar tus tramites
+              Crea tu cuenta para gestionar tus tramites
             </p>
 
-            {/* Formulario de email/contraseña */}
-            <form onSubmit={handleCredentialsLogin} className="space-y-4">
+            {/* Formulario de registro */}
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Tu nombre"
+                />
+              </div>
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -100,17 +151,34 @@ function LoginContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={6}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
+                  placeholder="Minimo 6 caracteres"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar contraseña
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Repite tu contraseña"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || success}
                 className="w-full px-4 py-2.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Iniciando sesion..." : "Iniciar sesion"}
+                {isLoading ? "Creando cuenta..." : "Crear cuenta"}
               </button>
             </form>
 
@@ -120,7 +188,7 @@ function LoginContent() {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">o continua con</span>
+                <span className="px-2 bg-white text-gray-500">o registrate con</span>
               </div>
             </div>
 
@@ -150,12 +218,12 @@ function LoginContent() {
               Google
             </button>
 
-            {/* Link a registro */}
+            {/* Link a login */}
             <div className="mt-6 pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-600 text-center">
-                ¿No tenes cuenta?{" "}
-                <Link href="/registro" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Registrate
+                ¿Ya tenes cuenta?{" "}
+                <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Inicia sesion
                 </Link>
               </p>
             </div>
@@ -168,17 +236,5 @@ function LoginContent() {
         </p>
       </div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-600">Cargando...</div>
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
   )
 }

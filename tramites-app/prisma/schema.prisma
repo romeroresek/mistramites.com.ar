@@ -45,6 +45,7 @@ model User {
   emailVerified DateTime?
   name          String?
   image         String?
+  password      String?
   role          String    @default("usuario")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
