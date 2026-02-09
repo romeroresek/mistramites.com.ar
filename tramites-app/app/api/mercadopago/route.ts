@@ -33,6 +33,8 @@ export async function POST(req: NextRequest) {
     const webhookUrl = process.env.WEBHOOK_URL
 
     // Llamar a la API REST de Mercado Pago directamente
+    const isProduction = baseUrl.startsWith("https://")
+
     const preferenceBody: any = {
       items: [
         {
@@ -53,7 +55,11 @@ export async function POST(req: NextRequest) {
         failure: `${baseUrl}/mis-tramites`,
         pending: `${baseUrl}/mis-tramites`,
       },
-      auto_return: "approved",
+    }
+
+    // auto_return solo funciona con URLs HTTPS (producción)
+    if (isProduction) {
+      preferenceBody.auto_return = "approved"
     }
 
     if (webhookUrl) {

@@ -12,6 +12,7 @@ interface Tramite {
   estado: string
   descripcion: string | null
   monto: number
+  archivoUrl: string | null
   createdAt: string
   updatedAt: string
   pago?: {
@@ -224,6 +225,35 @@ export default function TramiteDetalle() {
                 >
                   {processingPayment ? "Procesando..." : "Pagar con Mercado Pago"}
                 </button>
+              </div>
+            )}
+
+            {tramite.archivoUrl && (
+              <div className="pt-4 border-t border-gray-200 mt-4">
+                <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
+                  <div className="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z"/>
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Documento disponible</p>
+                      <p className="text-xs text-gray-500">Tu trámite está listo para descargar</p>
+                    </div>
+                  </div>
+                  <a
+                    href={tramite.archivoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Descargar
+                  </a>
+                </div>
               </div>
             )}
           </div>

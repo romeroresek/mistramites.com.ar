@@ -12,6 +12,7 @@ interface Tramite {
   tipoTramite: string
   estado: string
   monto: number
+  archivoUrl: string | null
   createdAt: string
   pago?: {
     estado: string
@@ -181,33 +182,51 @@ function MisTramitesContent() {
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
               {tramites.map((tramite) => (
-                <Link
+                <div
                   key={tramite.id}
-                  href={`/mis-tramites/${tramite.id}`}
-                  className="block bg-white border border-gray-200 rounded p-3"
+                  className="bg-white border border-gray-200 rounded p-3"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <p className="font-medium text-gray-900 text-sm truncate">{tramite.tipoTramite}</p>
-                      <p className="text-xs text-gray-500 truncate">{tramite.oficina}</p>
+                  <Link href={`/mis-tramites/${tramite.id}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="font-medium text-gray-900 text-sm truncate">{tramite.tipoTramite}</p>
+                        <p className="text-xs text-gray-500 truncate">{tramite.oficina}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        tramite.pago?.estado === "confirmado"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
+                      </span>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      tramite.pago?.estado === "confirmado"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}>
-                      {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">
-                      {new Date(tramite.createdAt).toLocaleDateString("es-AR")}
-                    </span>
-                    <span className="font-semibold text-gray-900">
-                      ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </Link>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500">
+                        {new Date(tramite.createdAt).toLocaleDateString("es-AR")}
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </Link>
+                  {tramite.archivoUrl && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <a
+                        href={tramite.archivoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="7 10 12 15 17 10"/>
+                          <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Descargar PDF
+                      </a>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -245,12 +264,29 @@ function MisTramitesContent() {
                         ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3 text-sm">
-                        <Link
-                          href={`/mis-tramites/${tramite.id}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Ver detalles
-                        </Link>
+                        <div className="flex items-center gap-3">
+                          <Link
+                            href={`/mis-tramites/${tramite.id}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            Ver detalles
+                          </Link>
+                          {tramite.archivoUrl && (
+                            <a
+                              href={tramite.archivoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                              </svg>
+                              PDF
+                            </a>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

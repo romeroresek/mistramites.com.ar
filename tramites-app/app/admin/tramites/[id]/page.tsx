@@ -12,6 +12,7 @@ interface Tramite {
   estado: string
   descripcion: string | null
   monto: number
+  archivoUrl: string | null
   createdAt: string
   updatedAt: string
   user: { name: string; email: string }
@@ -58,6 +59,8 @@ export default function AdminTramiteDetalle() {
   const [editMonto, setEditMonto] = useState("")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState("")
 
   const fetchTramite = async () => {
     try {
@@ -173,6 +176,62 @@ export default function AdminTramiteDetalle() {
     if (tramite) {
       setEditMonto(tramite.monto.toString())
       setEditMode(true)
+    }
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !tramite) return
+
+    if (file.type !== "application/pdf") {
+      setUploadError("Solo se permiten archivos PDF")
+      return
+    }
+
+    setUploading(true)
+    setUploadError("")
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const res = await fetch(`/api/admin/tramites/${tramite.id}/upload`, {
+        method: "POST",
+        body: formData,
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setTramite({ ...tramite, archivoUrl: data.archivoUrl })
+      } else {
+        const error = await res.json()
+        setUploadError(error.error || "Error al subir archivo")
+      }
+    } catch (error) {
+      console.error(error)
+      setUploadError("Error al subir archivo")
+    } finally {
+      setUploading(false)
+      e.target.value = ""
+    }
+  }
+
+  const handleFileDelete = async () => {
+    if (!tramite) return
+    setUploading(true)
+
+    try {
+      const res = await fetch(`/api/admin/tramites/${tramite.id}/upload`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        setTramite({ ...tramite, archivoUrl: null })
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -338,6 +397,66 @@ export default function AdminTramiteDetalle() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Archivo PDF */}
+        <div className="bg-white border border-gray-200 rounded p-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Documento PDF</h3>
+
+          {tramite.archivoUrl ? (
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
+              <div className="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z"/>
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Archivo adjunto</p>
+                  <p className="text-xs text-gray-500">PDF disponible para descarga</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={tramite.archivoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                >
+                  Ver PDF
+                </a>
+                <button
+                  onClick={handleFileDelete}
+                  disabled={uploading}
+                  className="px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50"
+                >
+                  {uploading ? "..." : "Eliminar"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-gray-300 rounded p-6 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mx-auto text-gray-400 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p className="text-sm text-gray-600 mb-3">
+                {uploading ? "Subiendo archivo..." : "Subir archivo PDF para el usuario"}
+              </p>
+              {uploadError && (
+                <p className="text-sm text-red-600 mb-3">{uploadError}</p>
+              )}
+              <label className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded cursor-pointer hover:bg-blue-700">
+                {uploading ? "Subiendo..." : "Seleccionar PDF"}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
         </div>
 
         {/* Datos de la partida */}
