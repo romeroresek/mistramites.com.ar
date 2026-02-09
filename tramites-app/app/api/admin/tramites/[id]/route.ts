@@ -31,6 +31,7 @@ export async function GET(
         user: true,
         documentos: true,
         pago: true,
+        partida: true,
       },
     })
 

@@ -7,20 +7,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
 model User {
   id            String    @id @default(cuid())
-  email         String    @unique
+  email         String?   @unique
+  emailVerified DateTime?
   name          String?
   image         String?
-  googleId      String    @unique
-  role          String    @default("usuario") // "usuario" o "admin"
+  role          String    @default("usuario")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  accounts      Account[]
+  sessions      Session[]
   tramites      Tramite[]
   pagos         Pago[]
 
   @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 model Tramite {
@@ -28,9 +70,9 @@ model Tramite {
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  oficina       String    // "Registro Propiedad Inmueble", "Registro de las Personas", etc.
-  tipoTramite   String    // "Inscripción", "Transferencia", etc.
-  estado        String    @default("pendiente") // "pendiente", "en_proceso", "completado", "rechazado"
+  oficina       String
+  tipoTramite   String
+  estado        String    @default("pendiente")
 
   descripcion   String?
   monto         Float
@@ -40,8 +82,40 @@ model Tramite {
 
   documentos    Documento[]
   pago          Pago?
+  partida       Partida?
 
   @@map("tramites")
+}
+
+model Partida {
+  id               String    @id @default(cuid())
+  tramiteId        String    @unique
+  tramite          Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
+
+  tipoPartida      String
+
+  dni              String
+  sexo             String
+  nombres          String
+  apellido         String
+  fechaNacimiento  DateTime
+  ciudadNacimiento String?
+
+  fechaDefuncion   DateTime?
+
+  dni2             String?
+  sexo2            String?
+  nombres2         String?
+  apellido2        String?
+  fechaNacimiento2 DateTime?
+
+  fechaMatrimonio  DateTime?
+  ciudadMatrimonio String?
+  divorciados      Boolean   @default(false)
+
+  createdAt        DateTime  @default(now())
+
+  @@map("partidas")
 }
 
 model Documento {
@@ -50,8 +124,8 @@ model Documento {
   tramite       Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
 
   nombre        String
-  tipo          String    // "solicitud", "comprobante", "resultado"
-  url           String    // URL de S3 o servidor
+  tipo          String
+  url           String
 
   createdAt     DateTime  @default(now())
 
@@ -67,9 +141,9 @@ model Pago {
   user          User      @relation(fields: [userId], references: [id])
 
   monto         Float
-  estado        String    @default("pendiente") // "pendiente", "confirmado", "rechazado"
+  estado        String    @default("pendiente")
 
-  mercadopagoId String?   // ID de la preferencia en Mercado Pago
+  mercadopagoId String?
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

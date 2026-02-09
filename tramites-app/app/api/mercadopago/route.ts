@@ -5,10 +5,6 @@ import { authOptions } from "../auth/[...nextauth]/route"
 
 const prisma = new PrismaClient()
 
-// Inicializar Mercado Pago SDK
-const mercadopago = require("mercadopago")
-mercadopago.configurations.setAccessToken(process.env.MERCADOPAGO_ACCESS_TOKEN)
-
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -24,7 +20,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "tramiteId requerido" }, { status: 400 })
     }
 
-    // Obtener el trámite
     const tramite = await prisma.tramite.findUnique({
       where: { id: tramiteId },
       include: { user: true },
@@ -34,10 +29,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Trámite no encontrado" }, { status: 404 })
     }
 
-    // Crear preferencia en Mercado Pago
-    const preference = {
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+    const webhookUrl = process.env.WEBHOOK_URL
+
+    // Llamar a la API REST de Mercado Pago directamente
+    const preferenceBody: any = {
       items: [
         {
+          id: tramiteId,
           title: tramite.tipoTramite,
           quantity: 1,
           unit_price: tramite.monto,
@@ -45,30 +44,54 @@ export async function POST(req: NextRequest) {
         },
       ],
       payer: {
-        email: tramite.user.email,
-        name: tramite.user.name,
+        email: tramite.user.email || undefined,
+        name: tramite.user.name || undefined,
       },
-      notification_url: `${process.env.NEXTAUTH_URL}/api/mercadopago/webhook`,
       external_reference: tramiteId,
-      auto_return: "approved",
       back_urls: {
-        success: `${process.env.NEXTAUTH_URL}/pago/success`,
-        failure: `${process.env.NEXTAUTH_URL}/pago/failure`,
-        pending: `${process.env.NEXTAUTH_URL}/pago/pending`,
+        success: `${baseUrl}/mis-tramites`,
+        failure: `${baseUrl}/mis-tramites`,
+        pending: `${baseUrl}/mis-tramites`,
       },
     }
 
-    const response = await mercadopago.preferences.create(preference)
+    if (webhookUrl) {
+      preferenceBody.notification_url = `${webhookUrl}/api/mercadopago/webhook`
+    }
 
-    // Guardar el ID de Mercado Pago
-    await prisma.pago.update({
-      where: { tramiteId: tramiteId },
-      data: { mercadopagoId: response.body.id },
+    const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify(preferenceBody),
     })
 
-    return NextResponse.json({ preferenceId: response.body.id, initPoint: response.body.init_point })
-  } catch (error) {
-    console.error(error)
+    const result = await mpResponse.json()
+
+    if (!mpResponse.ok) {
+      console.error("Mercado Pago API Error:", JSON.stringify(result))
+      return NextResponse.json({ error: "Error al crear preferencia" }, { status: 500 })
+    }
+
+    await prisma.pago.upsert({
+      where: { tramiteId: tramiteId },
+      update: { mercadopagoId: result.id },
+      create: {
+        tramiteId: tramiteId,
+        userId: tramite.userId,
+        monto: tramite.monto,
+        mercadopagoId: result.id,
+      },
+    })
+
+    return NextResponse.json({
+      preferenceId: result.id,
+      initPoint: result.init_point,
+    })
+  } catch (error: any) {
+    console.error("Mercado Pago Error:", error?.message)
     return NextResponse.json({ error: "Error al crear preferencia de pago" }, { status: 500 })
   }
 }
