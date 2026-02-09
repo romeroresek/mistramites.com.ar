@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { authOptions } from "@/lib/auth"
 
 const servicios = [
