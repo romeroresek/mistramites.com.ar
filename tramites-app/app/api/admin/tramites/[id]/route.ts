@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { PrismaClient } from "@prisma/client"
 import { authOptions } from "@/lib/auth"
+import { notifyTramiteStatusChange } from "@/lib/tramiteNotifications"
 
 const prisma = new PrismaClient()
 
@@ -105,6 +106,13 @@ export async function PUT(
         partida: true,
       },
     })
+
+    // Enviar notificacion push si cambio el estado
+    if (estado && tramiteActualizado) {
+      notifyTramiteStatusChange(id, estado, tramiteActualizado.userId).catch(
+        (err) => console.error("Error al enviar notificacion:", err)
+      )
+    }
 
     return NextResponse.json(tramiteActualizado)
   } catch (error) {

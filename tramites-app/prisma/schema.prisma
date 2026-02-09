@@ -49,10 +49,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  tramites      Tramite[]
-  pagos         Pago[]
+  accounts          Account[]
+  sessions          Session[]
+  tramites          Tramite[]
+  pagos             Pago[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -151,4 +152,19 @@ model Pago {
   updatedAt     DateTime  @updatedAt
 
   @@map("pagos")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("push_subscriptions")
 }
