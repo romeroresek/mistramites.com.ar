@@ -10,7 +10,7 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const error = searchParams.get("error")
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
