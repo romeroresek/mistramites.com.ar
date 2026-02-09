@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
@@ -18,7 +19,7 @@ interface Tramite {
   }
 }
 
-export default function MisTramites() {
+function MisTramitesContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -30,10 +31,15 @@ export default function MisTramites() {
     try {
       const res = await fetch("/api/tramites")
       const data = await res.json()
-      setTramites(data)
-      return data
+      if (Array.isArray(data)) {
+        setTramites(data)
+        return data
+      }
+      setTramites([])
+      return []
     } catch (error) {
       console.error(error)
+      setTramites([])
       return []
     } finally {
       setLoading(false)
@@ -41,6 +47,7 @@ export default function MisTramites() {
   }
 
   const verifyPendingPayments = async (tramitesList: Tramite[]) => {
+    if (!Array.isArray(tramitesList)) return
     const pendientes = tramitesList.filter(
       (t) => t.pago?.estado === "pendiente" && t.pago?.mercadopagoId
     )
@@ -263,5 +270,17 @@ export default function MisTramites() {
         </div>
       </footer>
     </div>
+  )
+}
+
+export default function MisTramites() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-600">Cargando...</p>
+      </div>
+    }>
+      <MisTramitesContent />
+    </Suspense>
   )
 }
