@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-export default function PagoFailurePage() {
+function FailureContent() {
   const searchParams = useSearchParams()
   const externalReference = searchParams.get("external_reference")
 
@@ -56,5 +57,17 @@ export default function PagoFailurePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PagoFailurePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-600">Cargando...</div>
+      </div>
+    }>
+      <FailureContent />
+    </Suspense>
   )
 }

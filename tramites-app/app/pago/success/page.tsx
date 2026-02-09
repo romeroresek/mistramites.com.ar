@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-export default function PagoSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const paymentId = searchParams.get("payment_id")
 
@@ -51,5 +52,17 @@ export default function PagoSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PagoSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-600">Cargando...</div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }
