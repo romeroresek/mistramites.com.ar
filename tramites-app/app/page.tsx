@@ -2,8 +2,8 @@ import Link from "next/link"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "MisTramites | Tramites Digitales en Misiones",
-  description: "Solicita partidas, informes de inmuebles y apostillas de forma 100% online en la Provincia de Misiones.",
+  title: "MisTramites | Gestoria Digital - Servicios Profesionales",
+  description: "Estudio de gestores profesionales. Gestionamos partidas, informes y apostillas ante organismos oficiales. Servicio privado de intermediacion.",
 }
 
 export default function LandingPage() {
@@ -31,40 +31,48 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        {/* Aviso legal */}
+        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-6">
+          <p className="text-xs text-blue-800">
+            <strong>Aviso:</strong> Este es un servicio privado de gestoria profesional. No somos un organismo oficial del Estado.
+            Nuestros gestores matriculados realizan los tramites en su nombre ante los organismos correspondientes, cobrando honorarios por el servicio de intermediacion.
+          </p>
+        </div>
+
         {/* Hero */}
         <div className="mb-6 sm:mb-10">
-          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Tramites Digitales</h1>
-          <p className="text-gray-600 text-sm">Provincia de Misiones - Solicita tus tramites 100% online</p>
+          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Gestoria Digital - Servicios Profesionales</h1>
+          <p className="text-gray-600 text-sm">Estudio de gestores en Misiones - Gestionamos sus tramites ante organismos oficiales</p>
         </div>
 
         {/* SECCION PARTIDAS */}
         <section id="partidas" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded">
             <div className="p-3 sm:p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Actas con Legalizacion Digital</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Solicitud de Actas Legalizadas en la Provincia de Misiones</p>
+              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Gestion de Actas y Partidas</h2>
+              <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion ante el Registro Civil de Misiones</p>
             </div>
             <div className="p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Obtencion de actas de nacimiento, matrimonio y defuncion, mediante solicitud a traves del formulario.
+                Nuestros gestores profesionales tramitan la obtencion de actas de nacimiento, matrimonio y defuncion ante el Registro Civil. El servicio incluye honorarios de gestion.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <Link href="/oficinas/registro-personas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Actas Legalizadas</h3>
-                    <p className="text-xs text-gray-600">Busqueda y legalizacion digital de actas de Nacimiento, Matrimonio y Defuncion con validez nacional.</p>
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Actas del Registro Civil</h3>
+                    <p className="text-xs text-gray-600">Gestionamos la busqueda y obtencion de actas de Nacimiento, Matrimonio y Defuncion.</p>
                   </div>
                 </Link>
                 <Link href="/oficinas/apostillas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostillado de la Haya</h3>
-                    <p className="text-xs text-gray-600">Apostilla de actas con validez internacional. Envio en PDF con firma digital.</p>
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostillado de Documentos</h3>
+                    <p className="text-xs text-gray-600">Gestion de apostilla para documentos con validez internacional.</p>
                   </div>
                 </Link>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link href="/oficinas/registro-personas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                  Solicitar Partida
+                  Solicitar Gestion
                 </Link>
                 <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded hover:bg-gray-50">
                   Solicitar Apostilla
@@ -78,30 +86,30 @@ export default function LandingPage() {
         <section id="inmuebles" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded">
             <div className="p-3 sm:p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Informes Digitales - Inmuebles</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Solicitud de Informes Catastrales e Informes Registro de Inmuebles</p>
+              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Gestion de Informes de Inmuebles</h2>
+              <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion ante Catastro y Registro de la Propiedad</p>
             </div>
             <div className="p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Obtencion de Informes Catastrales e Informes Registro de Inmuebles de la Provincia de Misiones.
+                Tramitamos la obtencion de informes catastrales e informes del Registro de la Propiedad Inmueble de Misiones. Servicio profesional con honorarios incluidos.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <Link href="/oficinas/registro-propiedad">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes Registro de Inmuebles</h3>
-                    <p className="text-xs text-gray-600">Informe de dominio e inhibicion con firma digital.</p>
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes de Dominio</h3>
+                    <p className="text-xs text-gray-600">Gestion de informes de dominio e inhibicion ante el Registro de la Propiedad.</p>
                   </div>
                 </Link>
                 <Link href="/oficinas/catastro">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes Catastrales</h3>
-                    <p className="text-xs text-gray-600">Apto para situaciones. Formato PDF con validez nacional.</p>
+                    <p className="text-xs text-gray-600">Gestion de informes ante la Direccion de Catastro provincial.</p>
                   </div>
                 </Link>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link href="/oficinas/registro-propiedad" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                  Registro Inmuebles
+                  Solicitar Informe
                 </Link>
                 <Link href="/oficinas/catastro" className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded hover:bg-gray-50">
                   Solicitar Catastral
@@ -115,39 +123,57 @@ export default function LandingPage() {
         <section id="apostillas" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded">
             <div className="p-3 sm:p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Apostillado Digital</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Solicitud de Apostilla/Legalizacion para documentos publicos</p>
+              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Gestion de Apostillas</h2>
+              <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion de legalizacion para uso en el exterior</p>
             </div>
             <div className="p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Este tramite permite solicitar a distancia la Apostilla o Legalizacion de documentos publicos para ser presentados en el exterior, sin la necesidad de gestionar turnos.
+                Nuestros gestores tramitan la Apostilla de la Haya para documentos que requieran validez internacional. Servicio profesional de intermediacion.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div className="border border-gray-200 rounded p-3">
-                  <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostillado de la Haya</h3>
+                  <h3 className="font-semibold text-gray-900 text-sm mb-1">Documentos que gestionamos</h3>
                   <ul className="text-xs text-gray-600 space-y-1">
                     <li>• Actas de Nacimiento, Matrimonio, Defuncion</li>
                     <li>• Antecedentes Penales</li>
-                    <li>• Validez Internacional</li>
-                    <li>• Envio en PDF con firma digital</li>
+                    <li>• Titulos y certificados</li>
+                    <li>• Otros documentos publicos</li>
                   </ul>
                 </div>
               </div>
               <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                Solicitar Apostilla
+                Solicitar Gestion
               </Link>
             </div>
           </div>
         </section>
 
+        {/* Sobre nosotros */}
+        <div className="bg-white border border-gray-200 rounded mb-6">
+          <div className="p-3 sm:p-4 border-b border-gray-200">
+            <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Sobre nuestro servicio</h2>
+          </div>
+          <div className="p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 mb-3">
+              Somos un estudio de gestores profesionales con sede en Posadas, Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos.
+            </p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-3">
+              <strong>Importante:</strong> No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion, que incluye la tramitacion, seguimiento y entrega de documentacion.
+            </p>
+            <p className="text-xs sm:text-sm text-gray-600">
+              Todos los tramites se realizan ante los organismos oficiales correspondientes (Registro Civil, Registro de la Propiedad, Catastro, Cancilleria, etc.).
+            </p>
+          </div>
+        </div>
+
         {/* CTA */}
         <div className="bg-white border border-gray-200 rounded">
           <div className="p-3 sm:p-4 border-b border-gray-200">
-            <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Comenzar ahora</h2>
+            <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Contactenos</h2>
           </div>
           <div className="p-3 sm:p-4">
             <p className="text-xs sm:text-sm text-gray-600 mb-4">
-              Accede a tu cuenta para gestionar tus tramites o contactanos por WhatsApp.
+              Acceda a su cuenta o contactenos por WhatsApp para consultar sobre nuestros servicios de gestoria.
             </p>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Link href="/login" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
@@ -164,8 +190,11 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <p className="text-center text-gray-500 text-xs sm:text-sm">
-            © 2024 MisTramites - Todos los derechos reservados - Posadas, Misiones
+          <p className="text-center text-gray-500 text-xs mb-2">
+            MisTramites - Estudio de Gestores Profesionales - Posadas, Misiones
+          </p>
+          <p className="text-center text-gray-400 text-xs">
+            Servicio privado de gestoria. No somos un organismo oficial del Estado.
           </p>
         </div>
       </footer>
