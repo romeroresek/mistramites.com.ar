@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 
 interface Tramite {
   id: string
@@ -144,12 +145,7 @@ export default function TramiteDetalle() {
               <span className="text-xs sm:text-sm">Volver</span>
             </Link>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-white">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              </div>
+              <Image src="/icon.png" alt="MisTrámites" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800 hidden sm:inline">MisTrámites</span>
             </Link>
             <Link href="/api/auth/signout" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
