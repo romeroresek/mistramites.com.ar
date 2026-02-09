@@ -7,9 +7,10 @@ const prisma = new PrismaClient()
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || !session.user?.email) {
@@ -26,7 +27,7 @@ export async function GET(
 
     const tramite = await prisma.tramite.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
       include: {

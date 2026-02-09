@@ -4,9 +4,6 @@ import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 
 interface Tramite {
   id: string
@@ -24,22 +21,8 @@ interface Tramite {
   }
 }
 
-const estadoColors: Record<string, string> = {
-  pendiente: "bg-yellow-100 text-yellow-800",
-  en_proceso: "bg-blue-100 text-blue-800",
-  completado: "bg-green-100 text-green-800",
-  rechazado: "bg-red-100 text-red-800",
-}
-
-const estadoLabels: Record<string, string> = {
-  pendiente: "Pendiente",
-  en_proceso: "En Proceso",
-  completado: "Completado",
-  rechazado: "Rechazado",
-}
-
 export default function TramiteDetalle() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const params = useParams()
   const [tramite, setTramite] = useState<Tramite | null>(null)
@@ -69,7 +52,6 @@ export default function TramiteDetalle() {
 
     if (status === "authenticated" && params.id) {
       fetchTramite().then((data) => {
-        // Si el pago está pendiente y ya se inició un pago en MP, verificar el estado
         if (data && data.pago?.estado === "pendiente" && data.pago?.mercadopagoId) {
           fetch("/api/mercadopago/verify", {
             method: "POST",
@@ -79,7 +61,6 @@ export default function TramiteDetalle() {
             .then((res) => res.json())
             .then((verifyData) => {
               if (verifyData.pagoEstado === "confirmado") {
-                // Recargar el trámite para mostrar el estado actualizado
                 fetchTramite()
               }
             })
@@ -115,128 +96,148 @@ export default function TramiteDetalle() {
     }
   }
 
+  const getEstadoLabel = (estado: string) => {
+    switch (estado) {
+      case "completado": return "Completado"
+      case "en_proceso": return "En proceso"
+      case "rechazado": return "Rechazado"
+      default: return "Pendiente"
+    }
+  }
+
   if (status === "loading" || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-600">Cargando...</p>
       </div>
     )
   }
 
   if (!tramite) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-destructive">Trámite no encontrado</CardTitle>
-            <CardDescription>El trámite que buscas no existe o no tienes acceso.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/mis-tramites">
-              <Button variant="outline" className="w-full">Volver a mis trámites</Button>
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white border border-gray-200 rounded p-6 max-w-md w-full text-center">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Trámite no encontrado</h2>
+          <p className="text-gray-600 text-sm mb-4">El trámite que buscas no existe o no tienes acceso.</p>
+          <Link
+            href="/mis-tramites"
+            className="inline-block px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+          >
+            Volver a mis trámites
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-        <div className="container flex h-16 items-center">
-          <Link href="/mis-tramites">
-            <Button variant="ghost" className="gap-2">
+    <div className="min-h-screen bg-gray-100">
+      {/* Navbar */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+          <div className="flex h-14 items-center justify-between">
+            <Link href="/mis-tramites" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
-              Volver
-            </Button>
-          </Link>
-        </div>
-      </header>
-
-      <main className="container py-8 max-w-3xl">
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-2xl">{tramite.tipoTramite}</CardTitle>
-                <CardDescription className="text-base mt-1">{tramite.oficina}</CardDescription>
+              <span className="text-xs sm:text-sm">Volver</span>
+            </Link>
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-white">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
               </div>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${estadoColors[tramite.estado]}`}>
-                {estadoLabels[tramite.estado]}
+              <span className="font-semibold text-gray-800 hidden sm:inline">MisTrámites</span>
+            </Link>
+            <Link href="/api/auth/signout" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
+              Salir
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <h1 className="text-lg sm:text-2xl font-semibold text-gray-900 mb-4">Detalle del trámite</h1>
+
+        <div className="bg-white border border-gray-200 rounded">
+          {/* Header */}
+          <div className="p-3 sm:p-4 border-b border-gray-200">
+            <div className="flex justify-between items-start gap-2">
+              <div className="min-w-0">
+                <h2 className="text-base font-semibold text-gray-900">{tramite.tipoTramite}</h2>
+                <p className="text-sm text-gray-600">{tramite.oficina}</p>
+              </div>
+              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded whitespace-nowrap">
+                {getEstadoLabel(tramite.estado)}
               </span>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
+          </div>
+
+          {/* Body */}
+          <div className="p-3 sm:p-4">
             {tramite.descripcion && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Descripción</h3>
-                <p className="text-foreground">{tramite.descripcion}</p>
+              <div className="mb-4">
+                <label className="text-xs text-gray-500">Descripción</label>
+                <p className="text-sm text-gray-900">{tramite.descripcion}</p>
               </div>
             )}
 
-            <Separator />
-
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Monto</h3>
-                <p className="text-2xl font-bold">${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+                <label className="text-xs text-gray-500">Monto</label>
+                <p className="text-base sm:text-lg font-semibold text-gray-900">
+                  ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Estado del Pago</h3>
-                <p className={`text-lg font-semibold ${tramite.pago?.estado === "confirmado" ? "text-green-600" : "text-yellow-600"}`}>
+                <label className="text-xs text-gray-500">Estado del Pago</label>
+                <p className={`text-sm font-semibold ${tramite.pago?.estado === "confirmado" ? "text-green-600" : "text-yellow-600"}`}>
                   {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
                 </p>
               </div>
             </div>
 
-            <Separator />
-
-            <div className="grid grid-cols-2 gap-6 text-sm">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 text-sm">
               <div>
-                <span className="text-muted-foreground">Fecha de creación:</span>
-                <p className="font-medium">{new Date(tramite.createdAt).toLocaleDateString("es-AR", {
-                  day: "2-digit", month: "long", year: "numeric"
-                })}</p>
+                <label className="text-xs text-gray-500">Fecha de creación</label>
+                <p className="text-sm text-gray-900">
+                  {new Date(tramite.createdAt).toLocaleDateString("es-AR")}
+                </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Última actualización:</span>
-                <p className="font-medium">{new Date(tramite.updatedAt).toLocaleDateString("es-AR", {
-                  day: "2-digit", month: "long", year: "numeric"
-                })}</p>
+                <label className="text-xs text-gray-500">Última actualización</label>
+                <p className="text-sm text-gray-900">
+                  {new Date(tramite.updatedAt).toLocaleDateString("es-AR")}
+                </p>
               </div>
             </div>
 
             {tramite.pago?.estado !== "confirmado" && (
-              <>
-                <Separator />
-                <Button
+              <div className="pt-4 border-t border-gray-200">
+                <button
                   onClick={handlePagar}
                   disabled={processingPayment}
-                  className="w-full h-12 text-base"
+                  className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {processingPayment ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                        <line x1="1" y1="10" x2="23" y2="10"/>
-                      </svg>
-                      Pagar con Mercado Pago
-                    </>
-                  )}
-                </Button>
-              </>
+                  {processingPayment ? "Procesando..." : "Pagar con Mercado Pago"}
+                </button>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <p className="text-center text-gray-500 text-xs sm:text-sm">
+            © 2024 MisTrámites - Todos los derechos reservados
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

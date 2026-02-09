@@ -6,83 +6,21 @@ import { useState } from "react"
 import Link from "next/link"
 
 const LOCALIDADES_MISIONES = [
-  "Alba Posse",
-  "Almafuerte",
-  "Apóstoles",
-  "Aristóbulo del Valle",
-  "Arroyo del Medio",
-  "Azara",
-  "Bernardo de Irigoyen",
-  "Bonpland",
-  "Campo Grande",
-  "Campo Ramón",
-  "Campo Viera",
-  "Candelaria",
-  "Capioví",
-  "Caraguatay",
-  "Cerro Azul",
-  "Cerro Corá",
-  "Colonia Alberdi",
-  "Colonia Aurora",
-  "Colonia Delicia",
-  "Colonia Polana",
-  "Colonia Victoria",
-  "Colonia Wanda",
-  "Comandante Andresito",
-  "Concepción de la Sierra",
-  "Corpus",
-  "Dos Arroyos",
-  "Dos de Mayo",
-  "El Alcázar",
-  "El Soberbio",
-  "Eldorado",
-  "Fachinal",
-  "Garuhapé",
-  "Garupá",
-  "Gobernador López",
-  "Gobernador Roca",
-  "Guaraní",
-  "Iguazú",
-  "Itacaruaré",
-  "Jardín América",
-  "Leandro N. Alem",
-  "Loreto",
-  "Los Helechos",
-  "Mártires",
-  "Mojón Grande",
-  "Montecarlo",
-  "9 de Julio",
-  "Oberá",
-  "Panambí",
-  "Posadas",
-  "Profundidad",
-  "Puerto Esperanza",
-  "Puerto Iguazú",
-  "Puerto Leoni",
-  "Puerto Libertad",
-  "Puerto Piray",
-  "Puerto Rico",
-  "Ruiz de Montoya",
-  "San Antonio",
-  "San Ignacio",
-  "San Javier",
-  "San José",
-  "San Martín",
-  "San Pedro",
-  "San Vicente",
-  "Santa Ana",
-  "Santa María",
-  "Santo Pipó",
-  "Tres Capones",
-  "25 de Mayo",
-  "Wanda",
+  "Alba Posse", "Almafuerte", "Apóstoles", "Aristóbulo del Valle", "Azara",
+  "Bernardo de Irigoyen", "Campo Grande", "Campo Ramón", "Campo Viera",
+  "Candelaria", "Capioví", "Cerro Azul", "Colonia Aurora", "Colonia Delicia",
+  "Colonia Victoria", "Colonia Wanda", "Comandante Andresito", "Concepción de la Sierra",
+  "Corpus", "Dos de Mayo", "El Soberbio", "Eldorado", "Garuhapé", "Garupá",
+  "Gobernador Roca", "Guaraní", "Iguazú", "Jardín América", "Leandro N. Alem",
+  "Loreto", "Montecarlo", "Oberá", "Posadas", "Puerto Esperanza", "Puerto Iguazú",
+  "Puerto Rico", "Ruiz de Montoya", "San Antonio", "San Ignacio", "San Javier",
+  "San Pedro", "San Vicente", "Santa Ana", "Santo Pipó", "Wanda"
 ].sort()
 
-const inputClass = "w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white text-slate-800"
-const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5"
-const selectClass = "w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white text-slate-800 appearance-none"
+const inputClass = "w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
-function PersonaFields({ dniVal, setDniVal, sexoVal, setSexoVal, nombresVal, setNombresVal, apellidoVal, setApellidoVal, fechaNacVal, setFechaNacVal, label }: {
+function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombresVal, setNombresVal, apellidoVal, setApellidoVal, fechaNacVal, setFechaNacVal }: {
   label: string
   dniVal: string; setDniVal: (v: string) => void
   sexoVal: string; setSexoVal: (v: string) => void
@@ -91,17 +29,17 @@ function PersonaFields({ dniVal, setDniVal, sexoVal, setSexoVal, nombresVal, set
   fechaNacVal: string; setFechaNacVal: (v: string) => void
 }) {
   return (
-    <div className="space-y-4">
-      {label && <h3 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">{label}</h3>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="space-y-3">
+      {label && <h3 className="font-semibold text-gray-900 border-b pb-2">{label}</h3>}
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelClass}>DNI</label>
-          <input type="text" value={dniVal} onChange={(e) => setDniVal(e.target.value)} placeholder="Ej: 30790468" className={inputClass} required maxLength={10} />
+          <input type="text" value={dniVal} onChange={(e) => setDniVal(e.target.value)} className={inputClass} required maxLength={10} />
         </div>
         <div>
           <label className={labelClass}>Sexo</label>
-          <select value={sexoVal} onChange={(e) => setSexoVal(e.target.value)} className={selectClass} required>
-            <option value="">Seleccione sexo</option>
+          <select value={sexoVal} onChange={(e) => setSexoVal(e.target.value)} className={inputClass} required>
+            <option value="">Seleccione</option>
             <option value="M">Masculino</option>
             <option value="F">Femenino</option>
           </select>
@@ -109,11 +47,11 @@ function PersonaFields({ dniVal, setDniVal, sexoVal, setSexoVal, nombresVal, set
       </div>
       <div>
         <label className={labelClass}>Apellido</label>
-        <input type="text" value={apellidoVal} onChange={(e) => setApellidoVal(e.target.value)} placeholder="Apellido" className={inputClass} required />
+        <input type="text" value={apellidoVal} onChange={(e) => setApellidoVal(e.target.value)} className={inputClass} required />
       </div>
       <div>
         <label className={labelClass}>Nombres</label>
-        <input type="text" value={nombresVal} onChange={(e) => setNombresVal(e.target.value)} placeholder="Nombres" className={inputClass} required />
+        <input type="text" value={nombresVal} onChange={(e) => setNombresVal(e.target.value)} className={inputClass} required />
       </div>
       <div>
         <label className={labelClass}>Fecha de nacimiento</label>
@@ -124,40 +62,9 @@ function PersonaFields({ dniVal, setDniVal, sexoVal, setSexoVal, nombresVal, set
 }
 
 const PARTIDAS = [
-  {
-    id: "nacimiento",
-    nombre: "Partida de Nacimiento",
-    descripcion: "Solicitud de copia de partida de nacimiento",
-    icono: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
-  {
-    id: "matrimonio",
-    nombre: "Partida de Matrimonio",
-    descripcion: "Solicitud de copia de partida de matrimonio",
-    icono: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-      </svg>
-    ),
-  },
-  {
-    id: "defuncion",
-    nombre: "Partida de Defunción",
-    descripcion: "Solicitud de copia de partida de defunción",
-    icono: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-    ),
-  },
+  { id: "nacimiento", nombre: "Partida de Nacimiento" },
+  { id: "matrimonio", nombre: "Partida de Matrimonio" },
+  { id: "defuncion", nombre: "Partida de Defunción" },
 ]
 
 export default function RegistroPersonas() {
@@ -166,7 +73,6 @@ export default function RegistroPersonas() {
   const [selectedPartida, setSelectedPartida] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Nacimiento / Defunción fields
   const [dni, setDni] = useState("")
   const [sexo, setSexo] = useState("")
   const [nombres, setNombres] = useState("")
@@ -175,14 +81,12 @@ export default function RegistroPersonas() {
   const [ciudadNacimiento, setCiudadNacimiento] = useState("")
   const [fechaDefuncion, setFechaDefuncion] = useState("")
 
-  // Matrimonio - Persona 2
   const [dni2, setDni2] = useState("")
   const [sexo2, setSexo2] = useState("")
   const [nombres2, setNombres2] = useState("")
   const [apellido2, setApellido2] = useState("")
   const [fechaNacimiento2, setFechaNacimiento2] = useState("")
 
-  // Matrimonio datos
   const [fechaMatrimonio, setFechaMatrimonio] = useState("")
   const [ciudadMatrimonio, setCiudadMatrimonio] = useState("")
   const [divorciados, setDivorciados] = useState(false)
@@ -194,11 +98,8 @@ export default function RegistroPersonas() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-600">Cargando...</p>
-        </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-600">Cargando...</p>
       </div>
     )
   }
@@ -220,12 +121,7 @@ export default function RegistroPersonas() {
     try {
       const body: any = {
         tipoPartida: selectedPartida,
-        dni,
-        sexo,
-        nombres,
-        apellido,
-        fechaNacimiento,
-        ciudadNacimiento,
+        dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
       }
 
       if (selectedPartida === "defuncion") {
@@ -270,240 +166,185 @@ export default function RegistroPersonas() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center gap-4">
-            <Link href="/" className="text-slate-500 hover:text-slate-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="min-h-screen bg-gray-100">
+      {/* Navbar */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex h-14 items-center gap-4">
+            <Link href="/" className="text-gray-600 hover:text-gray-900">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-slate-800">Registro de las Personas</h1>
+            <h1 className="font-semibold text-gray-900">Registro de las Personas</h1>
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Hero */}
-      <div className="bg-gradient-to-r from-pink-500 to-pink-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold">Partidas</h2>
-              <p className="text-pink-100">Seleccioná el tipo de partida que deseás tramitar</p>
-            </div>
+      {/* Main */}
+      <main className="max-w-2xl mx-auto px-4 py-8">
+        <div className="bg-white border border-gray-200 rounded">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="font-semibold text-gray-900">Solicitar Partida</h2>
+            <p className="text-sm text-gray-600">Seleccioná el tipo de partida y completá los datos</p>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
-        {/* Paso 1: Selección de tipo de partida */}
-        <div className="grid gap-4 mb-8">
-          {PARTIDAS.map((partida) => (
-            <button
-              key={partida.id}
-              onClick={() => { setSelectedPartida(partida.id); resetForm() }}
-              className={`w-full text-left bg-white rounded-2xl shadow-sm border-2 p-6 hover:shadow-md transition-all ${
-                selectedPartida === partida.id
-                  ? "border-pink-500 ring-2 ring-pink-200"
-                  : "border-slate-100 hover:border-slate-200"
-              }`}
-            >
-              <div className="flex items-center gap-4">
-                <div className={`rounded-xl p-3 flex-shrink-0 ${
-                  selectedPartida === partida.id
-                    ? "bg-pink-500 text-white"
-                    : "bg-pink-100 text-pink-600"
-                }`}>
-                  {partida.icono}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-800">{partida.nombre}</h3>
-                  <p className="text-slate-500 text-sm">{partida.descripcion}</p>
-                </div>
-                {selectedPartida === partida.id && (
-                  <div className="flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-pink-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                  </div>
-                )}
+          <div className="p-4">
+            {/* Tipo de partida */}
+            <div className="mb-6">
+              <label className={labelClass}>Tipo de partida</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                {PARTIDAS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => { setSelectedPartida(p.id); resetForm() }}
+                    className={`p-3 border rounded text-sm text-left transition-colors ${
+                      selectedPartida === p.id
+                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        : "border-gray-300 hover:border-gray-400 text-gray-700"
+                    }`}
+                  >
+                    {p.nombre}
+                  </button>
+                ))}
               </div>
-            </button>
-          ))}
-        </div>
+            </div>
 
-        {/* Paso 2: Formulario según tipo de partida */}
-        {selectedPartida && (
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-6">
-            <h2 className="text-xl font-bold text-slate-800">
-              {PARTIDAS.find(p => p.id === selectedPartida)?.nombre}
-            </h2>
-
-            {/* Partida de Nacimiento */}
-            {selectedPartida === "nacimiento" && (
-              <>
-                <PersonaFields
-                  label=""
-                  dniVal={dni} setDniVal={setDni}
-                  sexoVal={sexo} setSexoVal={setSexo}
-                  nombresVal={nombres} setNombresVal={setNombres}
-                  apellidoVal={apellido} setApellidoVal={setApellido}
-                  fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
-                />
-                <div>
-                  <label className={labelClass}>Ciudad de nacimiento</label>
-                  <select value={ciudadNacimiento} onChange={(e) => setCiudadNacimiento(e.target.value)} className={selectClass} required>
-                    <option value="">Seleccione localidad</option>
-                    {LOCALIDADES_MISIONES.map((loc) => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
-
-            {/* Partida de Defunción */}
-            {selectedPartida === "defuncion" && (
-              <>
-                <PersonaFields
-                  label=""
-                  dniVal={dni} setDniVal={setDni}
-                  sexoVal={sexo} setSexoVal={setSexo}
-                  nombresVal={nombres} setNombresVal={setNombres}
-                  apellidoVal={apellido} setApellidoVal={setApellido}
-                  fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
-                />
-                <div>
-                  <label className={labelClass}>Ciudad de nacimiento o defunción</label>
-                  <select value={ciudadNacimiento} onChange={(e) => setCiudadNacimiento(e.target.value)} className={selectClass} required>
-                    <option value="">Seleccione localidad</option>
-                    {LOCALIDADES_MISIONES.map((loc) => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Fecha de defunción</label>
-                  <input type="date" value={fechaDefuncion} onChange={(e) => setFechaDefuncion(e.target.value)} className={inputClass} required />
-                </div>
-              </>
-            )}
-
-            {/* Partida de Matrimonio */}
-            {selectedPartida === "matrimonio" && (
-              <>
-                <PersonaFields
-                  label="Datos de la primera persona"
-                  dniVal={dni} setDniVal={setDni}
-                  sexoVal={sexo} setSexoVal={setSexo}
-                  nombresVal={nombres} setNombresVal={setNombres}
-                  apellidoVal={apellido} setApellidoVal={setApellido}
-                  fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
-                />
-
-                <div className="border-t border-slate-200 pt-6">
-                  <PersonaFields
-                    label="Datos de la segunda persona"
-                    dniVal={dni2} setDniVal={setDni2}
-                    sexoVal={sexo2} setSexoVal={setSexo2}
-                    nombresVal={nombres2} setNombresVal={setNombres2}
-                    apellidoVal={apellido2} setApellidoVal={setApellido2}
-                    fechaNacVal={fechaNacimiento2} setFechaNacVal={setFechaNacimiento2}
-                  />
-                </div>
-
-                <div className="border-t border-slate-200 pt-6 space-y-4">
-                  <h3 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">Datos del matrimonio</h3>
-                  <div>
-                    <label className={labelClass}>Fecha de matrimonio</label>
-                    <input type="date" value={fechaMatrimonio} onChange={(e) => setFechaMatrimonio(e.target.value)} className={inputClass} required />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Ciudad en donde se realizó el matrimonio</label>
-                    <select value={ciudadMatrimonio} onChange={(e) => setCiudadMatrimonio(e.target.value)} className={selectClass} required>
-                      <option value="">Seleccione localidad</option>
-                      {LOCALIDADES_MISIONES.map((loc) => (
-                        <option key={loc} value={loc}>{loc}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="divorciados"
-                      checked={divorciados}
-                      onChange={(e) => setDivorciados(e.target.checked)}
-                      className="w-4 h-4 text-pink-600 border-slate-300 rounded focus:ring-pink-500"
+            {/* Formulario */}
+            {selectedPartida && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Nacimiento */}
+                {selectedPartida === "nacimiento" && (
+                  <>
+                    <PersonaFields
+                      label=""
+                      dniVal={dni} setDniVal={setDni}
+                      sexoVal={sexo} setSexoVal={setSexo}
+                      nombresVal={nombres} setNombresVal={setNombres}
+                      apellidoVal={apellido} setApellidoVal={setApellido}
+                      fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
                     />
-                    <label htmlFor="divorciados" className="text-sm text-slate-700">
-                      Marcar si una o ambas personas están divorciadas
-                    </label>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Monto y botón */}
-            <div className="border-t border-slate-200 pt-6 space-y-4">
-              <div className="bg-pink-50 rounded-xl p-4 flex items-center justify-between">
-                <span className="text-slate-700 font-medium">Monto a pagar:</span>
-                <span className="text-2xl font-bold text-pink-600">$20.000,00</span>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                      <line x1="1" y1="10" x2="23" y2="10"/>
-                    </svg>
-                    Continuar al pago
+                    <div>
+                      <label className={labelClass}>Ciudad de nacimiento</label>
+                      <select value={ciudadNacimiento} onChange={(e) => setCiudadNacimiento(e.target.value)} className={inputClass} required>
+                        <option value="">Seleccione localidad</option>
+                        {LOCALIDADES_MISIONES.map((loc) => (
+                          <option key={loc} value={loc}>{loc}</option>
+                        ))}
+                      </select>
+                    </div>
                   </>
                 )}
-              </button>
-            </div>
-          </form>
-        )}
+
+                {/* Defunción */}
+                {selectedPartida === "defuncion" && (
+                  <>
+                    <PersonaFields
+                      label=""
+                      dniVal={dni} setDniVal={setDni}
+                      sexoVal={sexo} setSexoVal={setSexo}
+                      nombresVal={nombres} setNombresVal={setNombres}
+                      apellidoVal={apellido} setApellidoVal={setApellido}
+                      fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
+                    />
+                    <div>
+                      <label className={labelClass}>Ciudad</label>
+                      <select value={ciudadNacimiento} onChange={(e) => setCiudadNacimiento(e.target.value)} className={inputClass} required>
+                        <option value="">Seleccione localidad</option>
+                        {LOCALIDADES_MISIONES.map((loc) => (
+                          <option key={loc} value={loc}>{loc}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Fecha de defunción</label>
+                      <input type="date" value={fechaDefuncion} onChange={(e) => setFechaDefuncion(e.target.value)} className={inputClass} required />
+                    </div>
+                  </>
+                )}
+
+                {/* Matrimonio */}
+                {selectedPartida === "matrimonio" && (
+                  <>
+                    <PersonaFields
+                      label="Primera persona"
+                      dniVal={dni} setDniVal={setDni}
+                      sexoVal={sexo} setSexoVal={setSexo}
+                      nombresVal={nombres} setNombresVal={setNombres}
+                      apellidoVal={apellido} setApellidoVal={setApellido}
+                      fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
+                    />
+
+                    <div className="border-t pt-4">
+                      <PersonaFields
+                        label="Segunda persona"
+                        dniVal={dni2} setDniVal={setDni2}
+                        sexoVal={sexo2} setSexoVal={setSexo2}
+                        nombresVal={nombres2} setNombresVal={setNombres2}
+                        apellidoVal={apellido2} setApellidoVal={setApellido2}
+                        fechaNacVal={fechaNacimiento2} setFechaNacVal={setFechaNacimiento2}
+                      />
+                    </div>
+
+                    <div className="border-t pt-4 space-y-3">
+                      <h3 className="font-semibold text-gray-900">Datos del matrimonio</h3>
+                      <div>
+                        <label className={labelClass}>Fecha de matrimonio</label>
+                        <input type="date" value={fechaMatrimonio} onChange={(e) => setFechaMatrimonio(e.target.value)} className={inputClass} required />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Ciudad</label>
+                        <select value={ciudadMatrimonio} onChange={(e) => setCiudadMatrimonio(e.target.value)} className={inputClass} required>
+                          <option value="">Seleccione localidad</option>
+                          {LOCALIDADES_MISIONES.map((loc) => (
+                            <option key={loc} value={loc}>{loc}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="divorciados"
+                          checked={divorciados}
+                          onChange={(e) => setDivorciados(e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        <label htmlFor="divorciados" className="text-sm text-gray-700">
+                          Divorciados
+                        </label>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Monto y submit */}
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-gray-700">Monto a pagar:</span>
+                    <span className="text-xl font-semibold text-gray-900">$20.000,00</span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Procesando..." : "Continuar al pago"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-800 text-white mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-white">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              </div>
-              <span className="font-semibold">MisTrámites</span>
-            </div>
-            <p className="text-slate-400 text-sm">
-              © 2024 Todos los derechos reservados
-            </p>
-          </div>
+      <footer className="bg-white border-t border-gray-200 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <p className="text-center text-gray-500 text-sm">
+            © 2024 MisTrámites - Todos los derechos reservados
+          </p>
         </div>
       </footer>
     </div>

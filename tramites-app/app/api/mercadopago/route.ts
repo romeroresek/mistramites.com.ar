@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
         failure: `${baseUrl}/mis-tramites`,
         pending: `${baseUrl}/mis-tramites`,
       },
+      auto_return: "approved",
     }
 
     if (webhookUrl) {
@@ -71,8 +72,10 @@ export async function POST(req: NextRequest) {
     const result = await mpResponse.json()
 
     if (!mpResponse.ok) {
-      console.error("Mercado Pago API Error:", JSON.stringify(result))
-      return NextResponse.json({ error: "Error al crear preferencia" }, { status: 500 })
+      console.error("Mercado Pago API Error:", JSON.stringify(result, null, 2))
+      console.error("Status:", mpResponse.status)
+      console.error("Preference body sent:", JSON.stringify(preferenceBody, null, 2))
+      return NextResponse.json({ error: "Error al crear preferencia", details: result }, { status: 500 })
     }
 
     await prisma.pago.upsert({
@@ -92,6 +95,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     console.error("Mercado Pago Error:", error?.message)
-    return NextResponse.json({ error: "Error al crear preferencia de pago" }, { status: 500 })
+    console.error("Full error:", error)
+    return NextResponse.json({ error: "Error al crear preferencia de pago", details: error?.message }, { status: 500 })
   }
 }

@@ -8,9 +8,10 @@ const prisma = new PrismaClient()
 // GET: obtener detalles de un trámite
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || !session.user?.email) {
@@ -26,7 +27,7 @@ export async function GET(
     }
 
     const tramite = await prisma.tramite.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: true,
         documentos: true,
@@ -46,12 +47,13 @@ export async function GET(
   }
 }
 
-// PUT: actualizar estado del trámite
+// PUT: actualizar trámite (estado, monto, estado de pago)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || !session.user?.email) {
@@ -67,25 +69,79 @@ export async function PUT(
     }
 
     const body = await req.json()
-    const { estado } = body
+    const { estado, monto, pagoEstado } = body
 
-    if (!estado) {
-      return NextResponse.json({ error: "estado requerido" }, { status: 400 })
-    }
+    // Actualizar trámite
+    const tramiteData: Record<string, unknown> = {}
+    if (estado) tramiteData.estado = estado
+    if (monto !== undefined) tramiteData.monto = parseFloat(monto)
 
     const tramite = await prisma.tramite.update({
-      where: { id: params.id },
-      data: { estado },
+      where: { id },
+      data: tramiteData,
       include: {
         user: true,
         documentos: true,
         pago: true,
+        partida: true,
       },
     })
 
-    return NextResponse.json(tramite)
+    // Actualizar estado de pago si se proporciona
+    if (pagoEstado && tramite.pago) {
+      await prisma.pago.update({
+        where: { id: tramite.pago.id },
+        data: { estado: pagoEstado },
+      })
+    }
+
+    // Obtener trámite actualizado
+    const tramiteActualizado = await prisma.tramite.findUnique({
+      where: { id },
+      include: {
+        user: true,
+        documentos: true,
+        pago: true,
+        partida: true,
+      },
+    })
+
+    return NextResponse.json(tramiteActualizado)
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: "Error al actualizar trámite" }, { status: 500 })
+  }
+}
+
+// DELETE: eliminar trámite
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const session = await getServerSession(authOptions)
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    })
+
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+    }
+
+    // Eliminar trámite (cascade eliminará documentos, pago y partida)
+    await prisma.tramite.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ success: true, message: "Trámite eliminado" })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: "Error al eliminar trámite" }, { status: 500 })
   }
 }
