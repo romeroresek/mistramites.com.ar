@@ -120,8 +120,8 @@ export async function PUT(
       },
     })
 
-    // Enviar notificacion push si cambio el estado
-    if (estado && tramiteActualizado) {
+    // Enviar notificacion push si cambio el estado (solo si hay usuario registrado)
+    if (estado && tramiteActualizado && tramiteActualizado.userId) {
       notifyTramiteStatusChange(id, estado, tramiteActualizado.userId).catch(
         (err) => console.error("Error al enviar notificacion:", err)
       )
