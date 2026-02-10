@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       payer: {
-        email: tramite.user.email || undefined,
-        name: tramite.user.name || undefined,
+        email: tramite.user?.email || tramite.guestEmail || undefined,
+        name: tramite.user?.name || "Invitado",
       },
       external_reference: tramiteId,
       back_urls: {
