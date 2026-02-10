@@ -62,8 +62,8 @@ function LoginContent() {
         {/* Logo */}
         <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Image src="/icon-192x192.png" alt="MisTramites" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" />
-            <span className="text-xl sm:text-2xl font-semibold text-gray-800">MisTramites</span>
+            <Image src="/icon-192x192.png" alt="TramitesMisiones" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" />
+            <span className="text-xl sm:text-2xl font-semibold text-gray-800">TramitesMisiones</span>
           </Link>
         </div>
 
@@ -175,7 +175,7 @@ function LoginContent() {
 
         {/* Footer */}
         <p className="text-center text-gray-500 text-xs sm:text-sm mt-6">
-          © 2024 MisTramites - Todos los derechos reservados
+          © 2024 TramitesMisiones - Todos los derechos reservados
         </p>
       </div>
     </div>

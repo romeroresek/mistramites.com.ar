@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "MisTramites | Gestoria Digital - Servicios Profesionales",
+  title: "TramitesMisiones | Gestoria Digital - Servicios Profesionales",
   description: "Estudio de gestores profesionales. Gestionamos partidas, informes y apostillas ante organismos oficiales. Servicio privado de intermediacion.",
 }
 
@@ -14,8 +14,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/icon-192x192.png" alt="MisTramites" className="w-8 h-8" />
-              <span className="font-semibold text-gray-800 hidden sm:inline">MisTramites</span>
+              <img src="/icon-192x192.png" alt="TramitesMisiones" className="w-8 h-8" />
+              <span className="font-semibold text-gray-800 hidden sm:inline">TramitesMisiones</span>
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">
               <a href="#partidas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Partidas</a>
@@ -191,7 +191,7 @@ export default function LandingPage() {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <p className="text-center text-gray-500 text-xs">
-            © 2024 MisTramites - Todos los derechos reservados
+            © 2024 TramitesMisiones - Todos los derechos reservados
           </p>
         </div>
       </footer>

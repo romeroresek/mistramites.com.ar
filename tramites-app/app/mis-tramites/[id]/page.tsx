@@ -163,8 +163,8 @@ export default function TramiteDetalle() {
               <span className="text-xs sm:text-sm">Volver</span>
             </Link>
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="MisTrámites" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800 hidden sm:inline">MisTrámites</span>
+              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <span className="font-semibold text-gray-800 hidden sm:inline">TramitesMisiones</span>
             </Link>
             <Link href="/api/auth/signout" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
               Salir
@@ -376,7 +376,7 @@ export default function TramiteDetalle() {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
-            © 2024 MisTrámites - Todos los derechos reservados
+            © 2024 TramitesMisiones - Todos los derechos reservados
           </p>
         </div>
       </footer>

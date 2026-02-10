@@ -5,13 +5,13 @@ import WhatsAppButton from "./components/WhatsAppButton"
 import { NotificationPrompt } from "@/components/NotificationPrompt"
 
 export const metadata: Metadata = {
-  title: "MisTramites - Sistema de Tramites",
+  title: "TramitesMisiones - Sistema de Tramites",
   description: "Plataforma para realizar tramites en linea",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "MisTramites",
+    title: "TramitesMisiones",
   },
   formatDetection: {
     telephone: false,

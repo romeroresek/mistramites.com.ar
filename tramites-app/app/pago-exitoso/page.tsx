@@ -23,8 +23,8 @@ function PagoExitosoContent() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex h-14 items-center justify-center">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="MisTrámites" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">MisTrámites</span>
+              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
           </div>
         </div>
@@ -121,7 +121,7 @@ function PagoExitosoContent() {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <p className="text-center text-gray-500 text-sm">
-            © 2024 MisTrámites - Todos los derechos reservados
+            © 2024 TramitesMisiones - Todos los derechos reservados
           </p>
         </div>
       </footer>
