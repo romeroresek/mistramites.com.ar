@@ -154,8 +154,15 @@ export async function POST(req: NextRequest) {
       tramiteId: tramite.id,
       initPoint: result.init_point,
     })
-  } catch (error: any) {
-    console.error("Error creando partida:", error?.message)
-    return NextResponse.json({ error: "Error al crear la solicitud" }, { status: 500 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error("Error creando partida:", errorMessage)
+    console.error("Stack trace:", errorStack)
+    console.error("Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error as object), 2))
+    return NextResponse.json({
+      error: "Error al crear la solicitud",
+      details: errorMessage
+    }, { status: 500 })
   }
 }
