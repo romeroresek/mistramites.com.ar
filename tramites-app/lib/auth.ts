@@ -1,12 +1,11 @@
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import type { NextAuthOptions } from "next-auth"
 import bcrypt from "bcryptjs"
 import { prisma } from "./prisma"
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // NO usar PrismaAdapter con CredentialsProvider - causa conflictos
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -65,10 +64,43 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      // Para Google OAuth, crear/actualizar usuario en la DB
+      if (account?.provider === "google" && user.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        })
+
+        if (!existingUser) {
+          // Crear usuario nuevo
+          const newUser = await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+            },
+          })
+          user.id = newUser.id
+          ;(user as any).role = newUser.role
+        } else {
+          // Actualizar datos y usar ID existente
+          await prisma.user.update({
+            where: { email: user.email },
+            data: {
+              name: user.name,
+              image: user.image,
+            },
+          })
+          user.id = existingUser.id
+          ;(user as any).role = existingUser.role
+        }
+      }
+      return true
+    },
     async jwt({ token, user }: any) {
       if (user) {
         token.id = user.id
-        token.role = user.role
+        token.role = user.role || "usuario"
       }
       return token
     },
