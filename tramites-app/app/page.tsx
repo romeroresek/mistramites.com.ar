@@ -34,48 +34,48 @@ export default function LandingPage() {
         {/* Aviso legal */}
         <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-6">
           <p className="text-xs text-blue-800">
-            <strong>Aviso:</strong> Este es un servicio privado de gestoria profesional. No somos un organismo oficial del Estado.
-            Nuestros gestores matriculados realizan los tramites en su nombre ante los organismos correspondientes, cobrando honorarios por el servicio de intermediacion.
+            <strong>Aviso:</strong> Este es un servicio privado de gestoría. No somos un organismo oficial del Estado.
+            Nuestros profesionales matriculados realizan los trámites en su nombre ante los organismos correspondientes, cobrando honorarios por el servicio de intermediación.
           </p>
         </div>
 
         {/* Hero */}
         <div className="mb-6 sm:mb-10">
-          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Gestoria Digital - Servicios Profesionales</h1>
-          <p className="text-gray-600 text-sm">Estudio de gestores en Misiones - Gestionamos sus tramites ante organismos oficiales</p>
+          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Servicios Profesionales</h1>
+          <p className="text-gray-600 text-sm">Realizamos sus trámites ante organismos oficiales</p>
         </div>
 
         {/* SECCION PARTIDAS */}
         <section id="partidas" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded">
             <div className="p-3 sm:p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Gestion de Actas y Partidas</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion ante el Registro Civil de Misiones</p>
+              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitar Actas y Partidas</h2>
+              <p className="text-xs sm:text-sm text-gray-600">Trámites ante el Registro Civil de Misiones</p>
             </div>
             <div className="p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Nuestros gestores profesionales tramitan la obtencion de actas de nacimiento, matrimonio y defuncion ante el Registro Civil. El servicio incluye honorarios de gestion.
+                Nuestros profesionales tramitan la obtencion de actas de nacimiento, matrimonio y defuncion ante el Registro Civil. El servicio incluye honorarios de gestion.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <Link href="/oficinas/registro-personas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 text-sm mb-1">Actas del Registro Civil</h3>
-                    <p className="text-xs text-gray-600">Gestionamos la busqueda y obtencion de actas de Nacimiento, Matrimonio y Defuncion.</p>
+                    <p className="text-xs text-gray-600">Realizamos la busqueda, obtencion y legalizacion de actas de Nacimiento, Matrimonio y Defuncion.</p>
                   </div>
                 </Link>
                 <Link href="/oficinas/apostillas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostillado de Documentos</h3>
-                    <p className="text-xs text-gray-600">Gestion de apostilla para documentos con validez internacional.</p>
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostillado de la Haya</h3>
+                    <p className="text-xs text-gray-600">Trámites de apostilla para documentos con validez internacional.</p>
                   </div>
                 </Link>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link href="/oficinas/registro-personas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                  Solicitar Gestion
+                  Solicitar Partida
                 </Link>
                 <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded hover:bg-gray-50">
-                  Solicitar Apostilla
+                  Apostilla Partida
                 </Link>
               </div>
             </div>
@@ -87,7 +87,7 @@ export default function LandingPage() {
           <div className="bg-white border border-gray-200 rounded">
             <div className="p-3 sm:p-4 border-b border-gray-200">
               <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Gestion de Informes de Inmuebles</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion ante Catastro y Registro de la Propiedad</p>
+              <p className="text-xs sm:text-sm text-gray-600">Servicio de trámites ante Catastro y Registro de la Propiedad</p>
             </div>
             <div className="p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
@@ -109,7 +109,7 @@ export default function LandingPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link href="/oficinas/registro-propiedad" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                  Solicitar Informe
+                  Informes RPI
                 </Link>
                 <Link href="/oficinas/catastro" className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded hover:bg-gray-50">
                   Solicitar Catastral
@@ -142,7 +142,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                Solicitar Gestion
+                Tramitar Apostilla
               </Link>
             </div>
           </div>
@@ -155,13 +155,13 @@ export default function LandingPage() {
           </div>
           <div className="p-3 sm:p-4">
             <p className="text-xs sm:text-sm text-gray-600 mb-3">
-              Somos un estudio de gestores profesionales con sede en Posadas, Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos.
+              Somos un estudio jurídico contable todos matriculados con sede en Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos de la Provincia y Nación.
             </p>
             <p className="text-xs sm:text-sm text-gray-600 mb-3">
-              <strong>Importante:</strong> No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion, que incluye la tramitacion, seguimiento y entrega de documentacion.
+              <strong>Importante:</strong> No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion administrativa, que incluye la tramitacion, pago de tasas correspondiente, seguimiento, eventuales reclamos por demoras y entrega de documentacion.
             </p>
             <p className="text-xs sm:text-sm text-gray-600">
-              Todos los tramites se realizan ante los organismos oficiales correspondientes (Registro Civil, Registro de la Propiedad, Catastro, Cancilleria, etc.).
+              Todos los tramites se realizan ante los organismos oficiales correspondientes (Registro Civil, Registro de la Propiedad, Catastro, Cancilleria, expedientes judiciales, etc.).
             </p>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function LandingPage() {
           </div>
           <div className="p-3 sm:p-4">
             <p className="text-xs sm:text-sm text-gray-600 mb-4">
-              Acceda a su cuenta o contactenos por WhatsApp para consultar sobre nuestros servicios de gestoria.
+              Acceda a su cuenta o contactenos por WhatsApp para consultar sobre nuestros servicios de trámites administrativos y judiciales.
             </p>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Link href="/login" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">

@@ -6,22 +6,22 @@ import { authOptions } from "@/lib/auth"
 
 const servicios = [
   {
-    title: "Registro de las Personas",
+    title: "Trámites de Partidas",
     description: "Partidas de nacimiento, defunción y matrimonio",
     href: "/oficinas/registro-personas",
   },
   {
-    title: "Registro de la Propiedad",
-    description: "Certificados de dominio e inhibición",
+    title: "Informes de Inmuebles",
+    description: "Informes de titularidad, dominio e inhibición",
     href: "/oficinas/registro-propiedad",
   },
   {
-    title: "Apostillas",
-    description: "Legalización de documentos",
+    title: "Apostilla de la Haya",
+    description: "Apostillado de documentos públicos",
     href: "/oficinas/apostillas",
   },
   {
-    title: "Catastro",
+    title: "Informes de Catastro",
     description: "Informes catastrales y valuaciones",
     href: "/oficinas/catastro",
   },
@@ -128,7 +128,7 @@ export default async function Home() {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
-            © 2024 MisTrámites - Todos los derechos reservados
+            © 2022 MisTrámites - Todos los derechos reservados
           </p>
         </div>
       </footer>
