@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { PrismaClient } from "@prisma/client"
 import { authOptions } from "@/lib/auth"
 import { MercadoPagoConfig, Payment } from "mercadopago"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,

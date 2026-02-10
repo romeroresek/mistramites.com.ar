@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { PrismaClient } from "@prisma/client"
 import { authOptions } from "@/lib/auth"
 import { notifyTramiteStatusChange } from "@/lib/tramiteNotifications"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // GET: obtener detalles de un trámite
 export async function GET(

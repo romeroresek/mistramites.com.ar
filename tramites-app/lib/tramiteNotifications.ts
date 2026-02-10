@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client"
 import { sendPushNotification, NotificationPayload } from "@/lib/push"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 const estadoMessages: Record<string, { title: string; body: string }> = {
   en_proceso: {
