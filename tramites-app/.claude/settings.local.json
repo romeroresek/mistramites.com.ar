@@ -6,7 +6,9 @@
       "Bash(npx web-push:*)",
       "Bash(npx prisma db push:*)",
       "Bash(npx prisma generate:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(git config:*)"
     ]
   }
 }
