@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "TramitesMisiones | Gestoria Digital - Servicios Profesionales",
+  title: "TramitesMisiones | Servicios Profesionales",
   description: "Estudio de gestores profesionales. Gestionamos partidas, informes y apostillas ante organismos oficiales. Servicio privado de intermediacion.",
 }
 
