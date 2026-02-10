@@ -19,16 +19,23 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
+        console.log("[AUTH] Intento de login con email:", credentials?.email)
+
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email y contraseña son requeridos")
+          console.log("[AUTH] Error: Credenciales vacías")
+          return null
         }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         })
 
+        console.log("[AUTH] Usuario encontrado:", user ? "Sí" : "No")
+        console.log("[AUTH] Usuario tiene password:", user?.password ? "Sí" : "No")
+
         if (!user || !user.password) {
-          throw new Error("Usuario no encontrado")
+          console.log("[AUTH] Error: Usuario no encontrado o sin password")
+          return null
         }
 
         const isValidPassword = await bcrypt.compare(
@@ -36,10 +43,14 @@ export const authOptions: NextAuthOptions = {
           user.password
         )
 
+        console.log("[AUTH] Password válido:", isValidPassword)
+
         if (!isValidPassword) {
-          throw new Error("Contraseña incorrecta")
+          console.log("[AUTH] Error: Contraseña incorrecta")
+          return null
         }
 
+        console.log("[AUTH] Login exitoso para:", user.email)
         return {
           id: user.id,
           email: user.email,
