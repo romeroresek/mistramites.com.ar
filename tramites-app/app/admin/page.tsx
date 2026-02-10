@@ -193,8 +193,8 @@ export default function AdminPage() {
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 min-w-0 pr-2">
                   <p className="font-medium text-gray-900 text-sm truncate">{tramite.tipoTramite}</p>
-                  <p className="text-xs text-gray-500 truncate">{tramite.user?.name || "Invitado"}</p>
-                  <p className="text-xs text-gray-400 truncate">{tramite.user?.email || tramite.guestEmail}</p>
+                  <p className="text-xs text-gray-500 truncate">{tramite.user ? tramite.user.name : "Invitado"}</p>
+                  <p className="text-xs text-gray-400 truncate">{tramite.user ? tramite.user.email : tramite.guestEmail}</p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded ${
                   tramite.pago?.estado === "confirmado"
@@ -255,8 +255,8 @@ export default function AdminPage() {
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900">{index + 1}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     <div>
-                      <span className="font-medium">{tramite.user?.name || "Invitado"}</span>
-                      <span className="text-gray-500 ml-2 text-xs">{tramite.user?.email || tramite.guestEmail}</span>
+                      <span className="font-medium">{tramite.user ? tramite.user.name : "Invitado"}</span>
+                      <span className="text-gray-500 ml-2 text-xs">{tramite.user ? tramite.user.email : tramite.guestEmail}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">{tramite.oficina}</td>
