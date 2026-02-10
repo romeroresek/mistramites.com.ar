@@ -1,6 +1,11 @@
 import Link from "next/link"
 import { Metadata } from "next"
-import NavbarAuth from "./components/NavbarAuth"
+import dynamic from "next/dynamic"
+
+const NavbarAuth = dynamic(() => import("./components/NavbarAuth"), {
+  ssr: false,
+  loading: () => <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
+})
 
 export const metadata: Metadata = {
   title: "TramitesMisiones | Servicios Profesionales",
