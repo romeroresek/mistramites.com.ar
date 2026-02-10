@@ -1,12 +1,11 @@
+"use client"
+
 import Link from "next/link"
-import { Metadata } from "next"
+import { useSession } from "next-auth/react"
 
-export const metadata: Metadata = {
-  title: "TramitesMisiones | Servicios Profesionales",
-  description: "Estudio de gestores profesionales. Gestionamos partidas, informes y apostillas ante organismos oficiales. Servicio privado de intermediacion.",
-}
+export default function LandingContent() {
+  const { data: session, status } = useSession()
 
-export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navbar */}
@@ -21,12 +20,32 @@ export default function LandingPage() {
               <a href="#partidas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Partidas</a>
               <a href="#inmuebles" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Inmuebles</a>
               <a href="#apostillas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Apostillas</a>
-              <Link
-                href="/mis-tramites"
-                className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700"
-              >
-                Mis Tramites
-              </Link>
+
+              {status === "loading" ? (
+                <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
+              ) : status === "authenticated" && session?.user ? (
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Link
+                    href="/mis-tramites"
+                    className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700"
+                  >
+                    Mis Tramites
+                  </Link>
+                  <Link
+                    href="/api/auth/signout?callbackUrl=/"
+                    className="text-red-600 hover:text-red-800 text-xs sm:text-sm"
+                  >
+                    Salir
+                  </Link>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700"
+                >
+                  Acceso Clientes
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -179,8 +198,8 @@ export default function LandingPage() {
               Acceda a su cuenta o contactenos por WhatsApp para consultar sobre nuestros servicios de trámites administrativos y judiciales.
             </p>
             <div className="flex flex-wrap gap-2 sm:gap-3">
-              <Link href="/mis-tramites" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                Mis Tramites
+              <Link href="/login" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
+                Acceso Clientes
               </Link>
               <a href="https://wa.me/543764889861" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded hover:bg-gray-50">
                 WhatsApp

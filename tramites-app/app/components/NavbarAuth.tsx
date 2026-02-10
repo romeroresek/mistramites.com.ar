@@ -22,7 +22,7 @@ export default function NavbarAuth() {
           Mis Trámites
         </Link>
         <Link
-          href="/api/auth/signout"
+          href="/api/auth/signout?callbackUrl=/"
           className="text-red-600 hover:text-red-800 text-xs sm:text-sm"
         >
           Salir

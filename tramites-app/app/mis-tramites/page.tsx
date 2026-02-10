@@ -143,7 +143,7 @@ function MisTramitesContent() {
                   Admin
                 </Link>
               )}
-              <Link href="/api/auth/signout" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
+              <Link href="/api/auth/signout?callbackUrl=/" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
                 Salir
               </Link>
             </div>

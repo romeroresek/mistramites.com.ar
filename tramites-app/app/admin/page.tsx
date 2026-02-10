@@ -151,7 +151,7 @@ export default function AdminPage() {
               <Link href="/mis-tramites" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">
                 Mis Trámites
               </Link>
-              <Link href="/api/auth/signout" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
+              <Link href="/api/auth/signout?callbackUrl=/" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
                 Salir
               </Link>
             </div>

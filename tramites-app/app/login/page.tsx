@@ -173,8 +173,15 @@ function LoginContent() {
           </div>
         </div>
 
+        {/* Volver al inicio */}
+        <div className="text-center mt-6">
+          <Link href="/" className="text-blue-600 hover:text-blue-700 text-sm">
+            ← Volver al inicio
+          </Link>
+        </div>
+
         {/* Footer */}
-        <p className="text-center text-gray-500 text-xs sm:text-sm mt-6">
+        <p className="text-center text-gray-500 text-xs sm:text-sm mt-4">
           © 2024 TramitesMisiones - Todos los derechos reservados
         </p>
       </div>

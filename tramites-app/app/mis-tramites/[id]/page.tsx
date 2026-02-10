@@ -166,7 +166,7 @@ export default function TramiteDetalle() {
               <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800 hidden sm:inline">TramitesMisiones</span>
             </Link>
-            <Link href="/api/auth/signout" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
+            <Link href="/api/auth/signout?callbackUrl=/" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
               Salir
             </Link>
           </div>
