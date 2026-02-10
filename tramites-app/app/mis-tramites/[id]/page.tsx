@@ -21,6 +21,24 @@ interface Tramite {
     estado: string
     mercadopagoId: string | null
   }
+  partida?: {
+    tipoPartida: string
+    dni: string
+    sexo: string
+    nombres: string
+    apellido: string
+    fechaNacimiento: string
+    ciudadNacimiento: string | null
+    fechaDefuncion: string | null
+    dni2: string | null
+    sexo2: string | null
+    nombres2: string | null
+    apellido2: string | null
+    fechaNacimiento2: string | null
+    fechaMatrimonio: string | null
+    ciudadMatrimonio: string | null
+    divorciados: boolean
+  }
 }
 
 export default function TramiteDetalle() {
@@ -254,6 +272,104 @@ export default function TramiteDetalle() {
             )}
           </div>
         </div>
+
+        {/* Datos de la partida */}
+        {tramite.partida && (
+          <div className="bg-white border border-gray-200 rounded mt-4">
+            <div className="p-3 sm:p-4 border-b border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900">Datos de la solicitud</h3>
+            </div>
+            <div className="p-3 sm:p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                <div>
+                  <label className="text-xs text-gray-500">DNI</label>
+                  <p className="text-sm font-medium text-gray-900">{tramite.partida.dni}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Sexo</label>
+                  <p className="text-sm font-medium text-gray-900">{tramite.partida.sexo === "M" ? "Masculino" : "Femenino"}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs text-gray-500">Nombre completo</label>
+                  <p className="text-sm font-medium text-gray-900">{tramite.partida.apellido} {tramite.partida.nombres}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Fecha de nacimiento</label>
+                  <p className="text-sm font-medium text-gray-900">
+                    {new Date(tramite.partida.fechaNacimiento).toLocaleDateString("es-AR")}
+                  </p>
+                </div>
+                {tramite.partida.ciudadNacimiento && (
+                  <div>
+                    <label className="text-xs text-gray-500">Ciudad de nacimiento</label>
+                    <p className="text-sm font-medium text-gray-900">{tramite.partida.ciudadNacimiento}</p>
+                  </div>
+                )}
+                {tramite.partida.fechaDefuncion && (
+                  <div>
+                    <label className="text-xs text-gray-500">Fecha de defunción</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {new Date(tramite.partida.fechaDefuncion).toLocaleDateString("es-AR")}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Segunda persona (matrimonio) */}
+              {tramite.partida.tipoPartida === "matrimonio" && tramite.partida.dni2 && (
+                <>
+                  <hr className="my-4 border-gray-200" />
+                  <h4 className="font-medium text-gray-900 mb-3 text-sm">Segunda persona</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                    <div>
+                      <label className="text-xs text-gray-500">DNI</label>
+                      <p className="text-sm font-medium text-gray-900">{tramite.partida.dni2}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Sexo</label>
+                      <p className="text-sm font-medium text-gray-900">{tramite.partida.sexo2 === "M" ? "Masculino" : "Femenino"}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-xs text-gray-500">Nombre completo</label>
+                      <p className="text-sm font-medium text-gray-900">{tramite.partida.apellido2} {tramite.partida.nombres2}</p>
+                    </div>
+                    {tramite.partida.fechaNacimiento2 && (
+                      <div>
+                        <label className="text-xs text-gray-500">Fecha de nacimiento</label>
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(tramite.partida.fechaNacimiento2).toLocaleDateString("es-AR")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <hr className="my-4 border-gray-200" />
+                  <h4 className="font-medium text-gray-900 mb-3 text-sm">Datos del matrimonio</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                    {tramite.partida.fechaMatrimonio && (
+                      <div>
+                        <label className="text-xs text-gray-500">Fecha de matrimonio</label>
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(tramite.partida.fechaMatrimonio).toLocaleDateString("es-AR")}
+                        </p>
+                      </div>
+                    )}
+                    {tramite.partida.ciudadMatrimonio && (
+                      <div>
+                        <label className="text-xs text-gray-500">Ciudad</label>
+                        <p className="text-sm font-medium text-gray-900">{tramite.partida.ciudadMatrimonio}</p>
+                      </div>
+                    )}
+                    <div>
+                      <label className="text-xs text-gray-500">Divorciados</label>
+                      <p className="text-sm font-medium text-gray-900">{tramite.partida.divorciados ? "Sí" : "No"}</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}

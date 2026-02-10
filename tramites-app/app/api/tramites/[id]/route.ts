@@ -26,11 +26,15 @@ export async function GET(
     const tramite = await prisma.tramite.findFirst({
       where: {
         id,
-        userId: user.id,
+        OR: [
+          { userId: user.id },
+          { guestEmail: session.user.email },
+        ],
       },
       include: {
         pago: true,
         documentos: true,
+        partida: true,
       },
     })
 
