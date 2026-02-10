@@ -160,8 +160,22 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
           <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/usuarios"
+              className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+            >
+              Usuarios
+            </Link>
+            <Link
+              href="/admin/tramites/nuevo"
+              className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Nuevo trámite
+            </Link>
+          </div>
         </div>
 
         {/* Empty State */}
