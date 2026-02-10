@@ -190,11 +190,8 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <p className="text-center text-gray-500 text-xs mb-2">
-            MisTramites - Estudio de Gestores Profesionales - Posadas, Misiones
-          </p>
-          <p className="text-center text-gray-400 text-xs">
-            Servicio privado de gestoria. No somos un organismo oficial del Estado.
+          <p className="text-center text-gray-500 text-xs">
+            © 2024 MisTramites - Todos los derechos reservados
           </p>
         </div>
       </footer>
