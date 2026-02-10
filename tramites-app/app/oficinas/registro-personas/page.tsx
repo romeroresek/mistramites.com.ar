@@ -21,12 +21,11 @@ const LOCALIDADES_MISIONES = [
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
-function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombresVal, setNombresVal, apellidoVal, setApellidoVal, fechaNacVal, setFechaNacVal }: {
+function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombreCompletoVal, setNombreCompletoVal, fechaNacVal, setFechaNacVal }: {
   label: string
   dniVal: string; setDniVal: (v: string) => void
   sexoVal: string; setSexoVal: (v: string) => void
-  nombresVal: string; setNombresVal: (v: string) => void
-  apellidoVal: string; setApellidoVal: (v: string) => void
+  nombreCompletoVal: string; setNombreCompletoVal: (v: string) => void
   fechaNacVal: string; setFechaNacVal: (v: string) => void
 }) {
   return (
@@ -47,12 +46,8 @@ function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombresV
         </div>
       </div>
       <div>
-        <label className={labelClass}>Apellido</label>
-        <input type="text" value={apellidoVal} onChange={(e) => setApellidoVal(e.target.value)} className={inputClass} required />
-      </div>
-      <div>
-        <label className={labelClass}>Nombres</label>
-        <input type="text" value={nombresVal} onChange={(e) => setNombresVal(e.target.value)} className={inputClass} required />
+        <label className={labelClass}>Apellido y nombre</label>
+        <input type="text" value={nombreCompletoVal} onChange={(e) => setNombreCompletoVal(e.target.value)} className={inputClass} required />
       </div>
       <div>
         <label className={labelClass}>Fecha de nacimiento</label>
@@ -76,41 +71,40 @@ export default function RegistroPersonas() {
 
   const [dni, setDni] = useState("")
   const [sexo, setSexo] = useState("")
-  const [nombres, setNombres] = useState("")
-  const [apellido, setApellido] = useState("")
+  const [nombreCompleto, setNombreCompleto] = useState("")
   const [fechaNacimiento, setFechaNacimiento] = useState("")
   const [ciudadNacimiento, setCiudadNacimiento] = useState("")
   const [fechaDefuncion, setFechaDefuncion] = useState("")
+  const [codigoPais, setCodigoPais] = useState("+54")
+  const [whatsapp, setWhatsapp] = useState("")
+  const [email, setEmail] = useState("")
 
   const [dni2, setDni2] = useState("")
   const [sexo2, setSexo2] = useState("")
-  const [nombres2, setNombres2] = useState("")
-  const [apellido2, setApellido2] = useState("")
+  const [nombreCompleto2, setNombreCompleto2] = useState("")
   const [fechaNacimiento2, setFechaNacimiento2] = useState("")
 
   const [fechaMatrimonio, setFechaMatrimonio] = useState("")
   const [ciudadMatrimonio, setCiudadMatrimonio] = useState("")
   const [divorciados, setDivorciados] = useState(false)
 
-  if (status === "unauthenticated") {
-    router.push("/login")
-    return null
-  }
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Cargando...</p>
-      </div>
-    )
-  }
+  const isLoggedIn = status === "authenticated" && session?.user?.email
 
   const resetForm = () => {
-    setDni(""); setSexo(""); setNombres(""); setApellido("")
+    setDni(""); setSexo(""); setNombreCompleto("")
     setFechaNacimiento(""); setCiudadNacimiento(""); setFechaDefuncion("")
-    setDni2(""); setSexo2(""); setNombres2(""); setApellido2("")
+    setDni2(""); setSexo2(""); setNombreCompleto2("")
     setFechaNacimiento2(""); setFechaMatrimonio(""); setCiudadMatrimonio("")
-    setDivorciados(false)
+    setDivorciados(false); setCodigoPais("+54"); setWhatsapp(""); setEmail("")
+  }
+
+  // Función para separar apellido y nombre
+  const separarNombre = (nombreCompleto: string) => {
+    const partes = nombreCompleto.trim().split(" ")
+    if (partes.length === 1) {
+      return { apellido: partes[0], nombres: "-" }
+    }
+    return { apellido: partes[0], nombres: partes.slice(1).join(" ") }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -120,9 +114,13 @@ export default function RegistroPersonas() {
     setLoading(true)
 
     try {
+      const { apellido, nombres } = separarNombre(nombreCompleto)
+
       const body: any = {
         tipoPartida: selectedPartida,
         dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
+        whatsapp: `${codigoPais}${whatsapp}`,
+        email: isLoggedIn ? undefined : email,
       }
 
       if (selectedPartida === "defuncion") {
@@ -130,10 +128,11 @@ export default function RegistroPersonas() {
       }
 
       if (selectedPartida === "matrimonio") {
+        const persona2 = separarNombre(nombreCompleto2)
         body.dni2 = dni2
         body.sexo2 = sexo2
-        body.nombres2 = nombres2
-        body.apellido2 = apellido2
+        body.nombres2 = persona2.nombres
+        body.apellido2 = persona2.apellido
         body.fechaNacimiento2 = fechaNacimiento2
         body.fechaMatrimonio = fechaMatrimonio
         body.ciudadMatrimonio = ciudadMatrimonio
@@ -227,8 +226,7 @@ export default function RegistroPersonas() {
                       label=""
                       dniVal={dni} setDniVal={setDni}
                       sexoVal={sexo} setSexoVal={setSexo}
-                      nombresVal={nombres} setNombresVal={setNombres}
-                      apellidoVal={apellido} setApellidoVal={setApellido}
+                      nombreCompletoVal={nombreCompleto} setNombreCompletoVal={setNombreCompleto}
                       fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
                     />
                     <div>
@@ -250,8 +248,7 @@ export default function RegistroPersonas() {
                       label=""
                       dniVal={dni} setDniVal={setDni}
                       sexoVal={sexo} setSexoVal={setSexo}
-                      nombresVal={nombres} setNombresVal={setNombres}
-                      apellidoVal={apellido} setApellidoVal={setApellido}
+                      nombreCompletoVal={nombreCompleto} setNombreCompletoVal={setNombreCompleto}
                       fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
                     />
                     <div>
@@ -277,8 +274,7 @@ export default function RegistroPersonas() {
                       label="Primera persona"
                       dniVal={dni} setDniVal={setDni}
                       sexoVal={sexo} setSexoVal={setSexo}
-                      nombresVal={nombres} setNombresVal={setNombres}
-                      apellidoVal={apellido} setApellidoVal={setApellido}
+                      nombreCompletoVal={nombreCompleto} setNombreCompletoVal={setNombreCompleto}
                       fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
                     />
 
@@ -287,8 +283,7 @@ export default function RegistroPersonas() {
                         label="Segunda persona"
                         dniVal={dni2} setDniVal={setDni2}
                         sexoVal={sexo2} setSexoVal={setSexo2}
-                        nombresVal={nombres2} setNombresVal={setNombres2}
-                        apellidoVal={apellido2} setApellidoVal={setApellido2}
+                        nombreCompletoVal={nombreCompleto2} setNombreCompletoVal={setNombreCompleto2}
                         fechaNacVal={fechaNacimiento2} setFechaNacVal={setFechaNacimiento2}
                       />
                     </div>
@@ -322,6 +317,61 @@ export default function RegistroPersonas() {
                       </div>
                     </div>
                   </>
+                )}
+
+                {/* WhatsApp */}
+                <div>
+                  <label className={labelClass}>WhatsApp de contacto</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={codigoPais}
+                      onChange={(e) => setCodigoPais(e.target.value)}
+                      className="w-24 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="+54">+54</option>
+                      <option value="+55">+55</option>
+                      <option value="+56">+56</option>
+                      <option value="+57">+57</option>
+                      <option value="+58">+58</option>
+                      <option value="+591">+591</option>
+                      <option value="+593">+593</option>
+                      <option value="+595">+595</option>
+                      <option value="+598">+598</option>
+                      <option value="+51">+51</option>
+                      <option value="+52">+52</option>
+                      <option value="+1">+1</option>
+                      <option value="+34">+34</option>
+                      <option value="+39">+39</option>
+                      <option value="+49">+49</option>
+                      <option value="+33">+33</option>
+                      <option value="+44">+44</option>
+                    </select>
+                    <input
+                      type="tel"
+                      value={whatsapp}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      required
+                      placeholder="3764123456"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Número sin 0 y sin 15. Ejemplo: 3764123456</p>
+                </div>
+
+                {/* Email - solo si no está logueado */}
+                {!isLoggedIn && (
+                  <div>
+                    <label className={labelClass}>Email de contacto</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={inputClass}
+                      required
+                      placeholder="tu@email.com"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Te enviaremos información sobre tu trámite a este email</p>
+                  </div>
                 )}
 
                 {/* Monto y submit */}

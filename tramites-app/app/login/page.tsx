@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn } from "next-auth/react"
+import { signIn, getSession } from "next-auth/react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -10,15 +10,25 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const error = searchParams.get("error")
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
+  const callbackUrl = searchParams.get("callbackUrl")
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState("")
 
-  const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl })
+  const getRedirectUrl = async () => {
+    if (callbackUrl) return callbackUrl
+    const session = await getSession()
+    if ((session?.user as any)?.role === "admin") {
+      return "/admin"
+    }
+    return "/mis-tramites"
+  }
+
+  const handleGoogleLogin = async () => {
+    // Para Google, usar página intermedia que redirige según rol
+    signIn("google", { callbackUrl: callbackUrl || "/auth/redirect" })
   }
 
   const handleCredentialsLogin = async (e: React.FormEvent) => {
@@ -36,7 +46,8 @@ function LoginContent() {
       if (result?.error) {
         setFormError("Email o contraseña incorrectos")
       } else {
-        router.push(callbackUrl)
+        const redirectUrl = await getRedirectUrl()
+        router.push(redirectUrl)
       }
     } catch {
       setFormError("Error al iniciar sesión")

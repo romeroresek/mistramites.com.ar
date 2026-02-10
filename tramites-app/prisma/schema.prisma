@@ -70,8 +70,9 @@ model VerificationToken {
 
 model Tramite {
   id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestEmail    String?
 
   oficina       String
   tipoTramite   String
@@ -97,6 +98,7 @@ model Partida {
   tramite          Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
 
   tipoPartida      String
+  whatsapp         String?
 
   dni              String
   sexo             String
@@ -141,8 +143,8 @@ model Pago {
   tramiteId     String    @unique
   tramite       Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
 
   monto         Float
   estado        String    @default("pendiente")

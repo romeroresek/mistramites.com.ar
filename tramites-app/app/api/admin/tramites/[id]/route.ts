@@ -68,7 +68,7 @@ export async function PUT(
     }
 
     const body = await req.json()
-    const { estado, monto, pagoEstado } = body
+    const { estado, monto, pagoEstado, partida } = body
 
     // Actualizar trámite
     const tramiteData: Record<string, unknown> = {}
@@ -91,6 +91,21 @@ export async function PUT(
       await prisma.pago.update({
         where: { id: tramite.pago.id },
         data: { estado: pagoEstado },
+      })
+    }
+
+    // Actualizar partida si se proporciona
+    if (partida && tramite.partida) {
+      await prisma.partida.update({
+        where: { id: tramite.partida.id },
+        data: {
+          dni: partida.dni,
+          sexo: partida.sexo,
+          apellido: partida.apellido,
+          nombres: partida.nombres,
+          fechaNacimiento: new Date(partida.fechaNacimiento),
+          ciudadNacimiento: partida.ciudadNacimiento || null,
+        },
       })
     }
 

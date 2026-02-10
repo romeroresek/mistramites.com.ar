@@ -45,6 +45,33 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    // Vincular trámites existentes con este email
+    const tramitesActualizados = await prisma.tramite.updateMany({
+      where: {
+        guestEmail: email,
+        userId: null,
+      },
+      data: {
+        userId: user.id,
+        guestEmail: null,
+      },
+    })
+
+    // También actualizar los pagos asociados
+    if (tramitesActualizados.count > 0) {
+      await prisma.pago.updateMany({
+        where: {
+          tramite: {
+            userId: user.id,
+          },
+          userId: null,
+        },
+        data: {
+          userId: user.id,
+        },
+      })
+    }
+
     return NextResponse.json({
       success: true,
       message: "Cuenta creada exitosamente",
@@ -53,6 +80,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         name: user.name,
       },
+      tramitesVinculados: tramitesActualizados.count,
     })
   } catch (error) {
     console.error("Error al registrar usuario:", error)

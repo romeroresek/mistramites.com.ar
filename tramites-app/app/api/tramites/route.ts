@@ -21,7 +21,12 @@ export async function GET(req: NextRequest) {
     }
 
     const tramites = await prisma.tramite.findMany({
-      where: { userId: user.id },
+      where: {
+        OR: [
+          { userId: user.id },
+          { guestEmail: session.user.email },
+        ],
+      },
       include: {
         documentos: true,
         pago: true,

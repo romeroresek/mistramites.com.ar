@@ -9,25 +9,40 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user?.email) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
-
     const body = await req.json()
     const { tipoPartida, dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
       fechaDefuncion, dni2, sexo2, nombres2, apellido2, fechaNacimiento2,
-      fechaMatrimonio, ciudadMatrimonio, divorciados } = body
+      fechaMatrimonio, ciudadMatrimonio, divorciados, whatsapp, email } = body
 
     if (!tipoPartida || !dni || !sexo || !nombres || !apellido || !fechaNacimiento) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    })
+    // Determinar userId y guestEmail
+    let userId: string | null = null
+    let guestEmail: string | null = null
+    let payerEmail: string | undefined
+    let payerName: string | undefined
 
-    if (!user) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
+    if (session?.user?.email) {
+      // Usuario logueado
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      })
+      if (user) {
+        userId = user.id
+        payerEmail = user.email || undefined
+        payerName = user.name || undefined
+      }
+    }
+
+    if (!userId) {
+      // Usuario no logueado - requiere email
+      if (!email) {
+        return NextResponse.json({ error: "Email requerido" }, { status: 400 })
+      }
+      guestEmail = email
+      payerEmail = email
     }
 
     const tipoNombre = tipoPartida === "nacimiento" ? "Partida de Nacimiento"
@@ -38,7 +53,8 @@ export async function POST(req: NextRequest) {
     const tramite = await prisma.$transaction(async (tx) => {
       const tramite = await tx.tramite.create({
         data: {
-          userId: user.id,
+          userId,
+          guestEmail,
           oficina: "Registro de las Personas",
           tipoTramite: tipoNombre,
           descripcion: `Solicitud de ${tipoNombre}`,
@@ -51,6 +67,7 @@ export async function POST(req: NextRequest) {
         data: {
           tramiteId: tramite.id,
           tipoPartida,
+          whatsapp: whatsapp || null,
           dni,
           sexo,
           nombres,
@@ -72,7 +89,7 @@ export async function POST(req: NextRequest) {
       await tx.pago.create({
         data: {
           tramiteId: tramite.id,
-          userId: user.id,
+          userId,
           monto: MONTO_PARTIDA,
           estado: "pendiente",
         },
@@ -96,14 +113,14 @@ export async function POST(req: NextRequest) {
         },
       ],
       payer: {
-        email: user.email || undefined,
-        name: user.name || undefined,
+        email: payerEmail,
+        name: payerName,
       },
       external_reference: tramite.id,
       back_urls: {
-        success: `${baseUrl}/mis-tramites`,
-        failure: `${baseUrl}/mis-tramites`,
-        pending: `${baseUrl}/mis-tramites`,
+        success: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}`,
+        failure: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=failure`,
+        pending: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=pending`,
       },
     }
 
@@ -124,7 +141,6 @@ export async function POST(req: NextRequest) {
 
     if (!mpResponse.ok) {
       console.error("Mercado Pago API Error:", JSON.stringify(result))
-      // Igual devolvemos el tramite, el usuario puede pagar desde mis-tramites
       return NextResponse.json({ tramiteId: tramite.id, initPoint: null })
     }
 

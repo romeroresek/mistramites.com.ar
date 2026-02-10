@@ -16,7 +16,8 @@ interface Tramite {
   archivoUrl: string | null
   createdAt: string
   updatedAt: string
-  user: { name: string; email: string }
+  user: { name: string; email: string } | null
+  guestEmail: string | null
   pago?: {
     id: string
     estado: string
@@ -62,6 +63,16 @@ export default function AdminTramiteDetalle() {
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState("")
+  const [showPagoDropdown, setShowPagoDropdown] = useState(false)
+  const [editPartida, setEditPartida] = useState(false)
+  const [partidaForm, setPartidaForm] = useState({
+    dni: "",
+    sexo: "",
+    apellido: "",
+    nombres: "",
+    fechaNacimiento: "",
+    ciudadNacimiento: "",
+  })
 
   const fetchTramite = async () => {
     try {
@@ -180,6 +191,41 @@ export default function AdminTramiteDetalle() {
     }
   }
 
+  const startPartidaEdit = () => {
+    if (tramite?.partida) {
+      setPartidaForm({
+        dni: tramite.partida.dni,
+        sexo: tramite.partida.sexo,
+        apellido: tramite.partida.apellido,
+        nombres: tramite.partida.nombres,
+        fechaNacimiento: tramite.partida.fechaNacimiento.split("T")[0],
+        ciudadNacimiento: tramite.partida.ciudadNacimiento || "",
+      })
+      setEditPartida(true)
+    }
+  }
+
+  const handlePartidaSave = async () => {
+    if (!tramite) return
+    setUpdating(true)
+    try {
+      const res = await fetch(`/api/admin/tramites/${tramite.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ partida: partidaForm }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setTramite(data)
+        setEditPartida(false)
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !tramite) return
@@ -258,7 +304,7 @@ export default function AdminTramiteDetalle() {
   }
 
   const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })
+    new Date(dateStr).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" })
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -292,16 +338,16 @@ export default function AdminTramiteDetalle() {
           <h2 className="text-base font-semibold text-gray-900 mb-4">{tramite.tipoTramite}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">Oficina:</span>
+              <span className="text-gray-500">Oficina</span>
               <p className="font-medium text-gray-900">{tramite.oficina}</p>
             </div>
             <div>
-              <span className="text-gray-500">Usuario:</span>
-              <p className="font-medium text-gray-900">{tramite.user.name}</p>
-              <p className="text-gray-500 text-xs">{tramite.user.email}</p>
+              <span className="text-gray-500">Usuario</span>
+              <p className="font-medium text-gray-900">{tramite.user?.name || "Invitado"}</p>
+              <p className="text-gray-500 text-xs">{tramite.user?.email || tramite.guestEmail}</p>
             </div>
             <div>
-              <span className="text-gray-500">Monto:</span>
+              <span className="text-gray-500">Monto</span>
               {editMode ? (
                 <div className="flex items-center gap-2 mt-1">
                   <input
@@ -338,37 +384,65 @@ export default function AdminTramiteDetalle() {
                 </div>
               )}
             </div>
-            <div>
-              <span className="text-gray-500">Pago:</span>
-              <div className="mt-1">
-                <select
-                  value={tramite.pago?.estado || "pendiente"}
-                  onChange={(e) => handlePagoEstadoChange(e.target.value)}
+            <div className="sm:col-span-2">
+              <span className="text-gray-500">Pago</span>
+              <div className="mt-1 relative inline-block">
+                <button
+                  onClick={() => setShowPagoDropdown(!showPagoDropdown)}
                   disabled={updating}
-                  className={`px-2 py-1 rounded text-xs font-medium border ${
+                  className={`px-3 py-1.5 rounded text-xs font-medium flex items-center gap-2 ${
                     tramite.pago?.estado === "confirmado"
-                      ? "bg-green-100 text-green-700 border-green-300"
-                      : "bg-yellow-100 text-yellow-700 border-yellow-300"
+                      ? "bg-green-500 text-white"
+                      : tramite.pago?.estado === "devuelto"
+                      ? "bg-gray-500 text-white"
+                      : "bg-yellow-500 text-white"
                   }`}
                 >
-                  <option value="pendiente">Pendiente</option>
-                  <option value="confirmado">Pagado</option>
-                </select>
+                  {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Cobro devuelto" : "Pendiente"}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                {showPagoDropdown && (
+                  <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 min-w-[140px]">
+                    <button
+                      onClick={() => { handlePagoEstadoChange("pendiente"); setShowPagoDropdown(false); }}
+                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
+                      Pendiente
+                    </button>
+                    <button
+                      onClick={() => { handlePagoEstadoChange("confirmado"); setShowPagoDropdown(false); }}
+                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                      Pagado
+                    </button>
+                    <button
+                      onClick={() => { handlePagoEstadoChange("devuelto"); setShowPagoDropdown(false); }}
+                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <span className="w-3 h-3 rounded-full bg-gray-500"></span>
+                      Cobro devuelto
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div>
-              <span className="text-gray-500">Creado:</span>
+              <span className="text-gray-500">Creado</span>
               <p className="font-medium text-gray-900">{formatDate(tramite.createdAt)}</p>
             </div>
             <div>
-              <span className="text-gray-500">Actualizado:</span>
+              <span className="text-gray-500">Actualizado</span>
               <p className="font-medium text-gray-900">{formatDate(tramite.updatedAt)}</p>
             </div>
           </div>
 
           {tramite.descripcion && (
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <span className="text-gray-500 text-sm">Descripción:</span>
+              <span className="text-gray-500 text-sm">Descripción</span>
               <p className="text-gray-900 text-sm">{tramite.descripcion}</p>
             </div>
           )}
@@ -458,41 +532,131 @@ export default function AdminTramiteDetalle() {
         {/* Datos de la partida */}
         {tramite.partida && (
           <div className="bg-white border border-gray-200 rounded p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Datos de la partida</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-500">DNI:</span>
-                <p className="font-medium text-gray-900">{tramite.partida.dni}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Sexo:</span>
-                <p className="font-medium text-gray-900">{tramite.partida.sexo === "M" ? "Masculino" : "Femenino"}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Apellido:</span>
-                <p className="font-medium text-gray-900">{tramite.partida.apellido}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Nombres:</span>
-                <p className="font-medium text-gray-900">{tramite.partida.nombres}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Fecha de nacimiento:</span>
-                <p className="font-medium text-gray-900">{formatDate(tramite.partida.fechaNacimiento)}</p>
-              </div>
-              {tramite.partida.ciudadNacimiento && (
-                <div>
-                  <span className="text-gray-500">Ciudad:</span>
-                  <p className="font-medium text-gray-900">{tramite.partida.ciudadNacimiento}</p>
-                </div>
-              )}
-              {tramite.partida.fechaDefuncion && (
-                <div>
-                  <span className="text-gray-500">Fecha de defunción:</span>
-                  <p className="font-medium text-gray-900">{formatDate(tramite.partida.fechaDefuncion)}</p>
-                </div>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-base font-semibold text-gray-900">Datos de la partida</h3>
+              {!editPartida && (
+                <button
+                  onClick={startPartidaEdit}
+                  className="text-blue-600 hover:text-blue-800"
+                  title="Editar"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
               )}
             </div>
+
+            {editPartida ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-gray-500 text-sm block mb-1">DNI</label>
+                    <input
+                      type="text"
+                      value={partidaForm.dni}
+                      onChange={(e) => setPartidaForm({ ...partidaForm, dni: e.target.value })}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-500 text-sm block mb-1">Sexo</label>
+                    <select
+                      value={partidaForm.sexo}
+                      onChange={(e) => setPartidaForm({ ...partidaForm, sexo: e.target.value })}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    >
+                      <option value="M">Masculino</option>
+                      <option value="F">Femenino</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-gray-500 text-sm block mb-1">Apellido</label>
+                    <input
+                      type="text"
+                      value={partidaForm.apellido}
+                      onChange={(e) => setPartidaForm({ ...partidaForm, apellido: e.target.value })}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-500 text-sm block mb-1">Nombres</label>
+                    <input
+                      type="text"
+                      value={partidaForm.nombres}
+                      onChange={(e) => setPartidaForm({ ...partidaForm, nombres: e.target.value })}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-500 text-sm block mb-1">Fecha de nacimiento</label>
+                    <input
+                      type="date"
+                      value={partidaForm.fechaNacimiento}
+                      onChange={(e) => setPartidaForm({ ...partidaForm, fechaNacimiento: e.target.value })}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-500 text-sm block mb-1">Ciudad</label>
+                    <input
+                      type="text"
+                      value={partidaForm.ciudadNacimiento}
+                      onChange={(e) => setPartidaForm({ ...partidaForm, ciudadNacimiento: e.target.value })}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={handlePartidaSave}
+                    disabled={updating}
+                    className="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {updating ? "Guardando..." : "Guardar"}
+                  </button>
+                  <button
+                    onClick={() => setEditPartida(false)}
+                    disabled={updating}
+                    className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-gray-500">DNI</span>
+                  <p className="font-medium text-gray-900">{tramite.partida.dni}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Sexo</span>
+                  <p className="font-medium text-gray-900">{tramite.partida.sexo === "M" ? "Masculino" : "Femenino"}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-gray-500">Apellido y nombre</span>
+                  <p className="font-medium text-gray-900">{tramite.partida.apellido} {tramite.partida.nombres}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Fecha de nacimiento</span>
+                  <p className="font-medium text-gray-900">{formatDate(tramite.partida.fechaNacimiento)}</p>
+                </div>
+                {tramite.partida.ciudadNacimiento && (
+                  <div>
+                    <span className="text-gray-500">Ciudad</span>
+                    <p className="font-medium text-gray-900">{tramite.partida.ciudadNacimiento}</p>
+                  </div>
+                )}
+                {tramite.partida.fechaDefuncion && (
+                  <div>
+                    <span className="text-gray-500">Fecha de defunción</span>
+                    <p className="font-medium text-gray-900">{formatDate(tramite.partida.fechaDefuncion)}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Persona 2 (matrimonio) */}
             {tramite.partida.tipoPartida === "matrimonio" && tramite.partida.dni2 && (
@@ -501,24 +665,20 @@ export default function AdminTramiteDetalle() {
                 <h4 className="font-medium text-gray-900 mb-3 text-sm">Segunda persona</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-500">DNI:</span>
+                    <span className="text-gray-500">DNI</span>
                     <p className="font-medium text-gray-900">{tramite.partida.dni2}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Sexo:</span>
+                    <span className="text-gray-500">Sexo</span>
                     <p className="font-medium text-gray-900">{tramite.partida.sexo2 === "M" ? "Masculino" : "Femenino"}</p>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Apellido:</span>
-                    <p className="font-medium text-gray-900">{tramite.partida.apellido2}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Nombres:</span>
-                    <p className="font-medium text-gray-900">{tramite.partida.nombres2}</p>
+                  <div className="sm:col-span-2">
+                    <span className="text-gray-500">Apellido y nombre</span>
+                    <p className="font-medium text-gray-900">{tramite.partida.apellido2} {tramite.partida.nombres2}</p>
                   </div>
                   {tramite.partida.fechaNacimiento2 && (
                     <div>
-                      <span className="text-gray-500">Fecha de nacimiento:</span>
+                      <span className="text-gray-500">Fecha de nacimiento</span>
                       <p className="font-medium text-gray-900">{formatDate(tramite.partida.fechaNacimiento2)}</p>
                     </div>
                   )}
@@ -529,18 +689,18 @@ export default function AdminTramiteDetalle() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   {tramite.partida.fechaMatrimonio && (
                     <div>
-                      <span className="text-gray-500">Fecha de matrimonio:</span>
+                      <span className="text-gray-500">Fecha de matrimonio</span>
                       <p className="font-medium text-gray-900">{formatDate(tramite.partida.fechaMatrimonio)}</p>
                     </div>
                   )}
                   {tramite.partida.ciudadMatrimonio && (
                     <div>
-                      <span className="text-gray-500">Ciudad:</span>
+                      <span className="text-gray-500">Ciudad</span>
                       <p className="font-medium text-gray-900">{tramite.partida.ciudadMatrimonio}</p>
                     </div>
                   )}
                   <div>
-                    <span className="text-gray-500">Divorciados:</span>
+                    <span className="text-gray-500">Divorciados</span>
                     <p className="font-medium text-gray-900">{tramite.partida.divorciados ? "Sí" : "No"}</p>
                   </div>
                 </div>

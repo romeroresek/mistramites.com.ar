@@ -11,7 +11,8 @@ interface Tramite {
   oficina: string
   tipoTramite: string
   estado: string
-  user: { name: string; email: string }
+  user: { name: string; email: string } | null
+  guestEmail: string | null
   monto: number
   createdAt: string
   pago?: {
@@ -192,15 +193,17 @@ export default function AdminPage() {
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 min-w-0 pr-2">
                   <p className="font-medium text-gray-900 text-sm truncate">{tramite.tipoTramite}</p>
-                  <p className="text-xs text-gray-500 truncate">{tramite.user.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{tramite.user.email}</p>
+                  <p className="text-xs text-gray-500 truncate">{tramite.user?.name || "Invitado"}</p>
+                  <p className="text-xs text-gray-400 truncate">{tramite.user?.email || tramite.guestEmail}</p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded ${
                   tramite.pago?.estado === "confirmado"
                     ? "bg-green-100 text-green-700"
+                    : tramite.pago?.estado === "devuelto"
+                    ? "bg-gray-100 text-gray-700"
                     : "bg-yellow-100 text-yellow-700"
                 }`}>
-                  {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
+                  {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs mb-2">
@@ -208,6 +211,9 @@ export default function AdminPage() {
                 <span className="font-semibold text-gray-900">
                   ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                 </span>
+              </div>
+              <div className="text-xs text-gray-400 mb-2">
+                {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
               </div>
               <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                 <Link
@@ -236,6 +242,7 @@ export default function AdminPage() {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Usuario</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Oficina</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Trámite</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Fecha</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Pago</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Estado</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Monto</th>
@@ -248,14 +255,17 @@ export default function AdminPage() {
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900">{index + 1}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     <div>
-                      <span className="font-medium">{tramite.user.name}</span>
-                      <span className="text-gray-500 ml-2 text-xs">{tramite.user.email}</span>
+                      <span className="font-medium">{tramite.user?.name || "Invitado"}</span>
+                      <span className="text-gray-500 ml-2 text-xs">{tramite.user?.email || tramite.guestEmail}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">{tramite.oficina}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">{tramite.tipoTramite}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
+                    {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     {getEstadoLabel(tramite.estado)}

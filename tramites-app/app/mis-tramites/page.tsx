@@ -191,14 +191,16 @@ function MisTramitesContent() {
                       <span className={`text-xs px-2 py-1 rounded ${
                         tramite.pago?.estado === "confirmado"
                           ? "bg-green-100 text-green-700"
+                          : tramite.pago?.estado === "devuelto"
+                          ? "bg-gray-100 text-gray-700"
                           : "bg-yellow-100 text-yellow-700"
                       }`}>
-                        {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
+                        {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-500">
-                        {new Date(tramite.createdAt).toLocaleDateString("es-AR")}
+                        {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
                       </span>
                       <span className="font-semibold text-gray-900">
                         ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
@@ -248,13 +250,13 @@ function MisTramitesContent() {
                       <td className="px-4 py-3 text-sm text-gray-900">{tramite.tipoTramite}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{tramite.oficina}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {new Date(tramite.createdAt).toLocaleDateString("es-AR")}
+                        {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {getEstadoLabel(tramite.estado)}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
+                        {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}

@@ -18,7 +18,7 @@ export default function RegistroPage() {
   const [success, setSuccess] = useState(false)
 
   const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/" })
+    signIn("google", { callbackUrl: "/auth/redirect" })
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -64,7 +64,7 @@ export default function RegistroPage() {
         })
 
         if (result?.ok) {
-          router.push("/")
+          router.push("/mis-tramites")
         } else {
           router.push("/login")
         }
