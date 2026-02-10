@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Metadata } from "next"
+import NavbarAuth from "./components/NavbarAuth"
 
 export const metadata: Metadata = {
   title: "TramitesMisiones | Servicios Profesionales",
@@ -21,9 +22,7 @@ export default function LandingPage() {
               <a href="#partidas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Partidas</a>
               <a href="#inmuebles" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Inmuebles</a>
               <a href="#apostillas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Apostillas</a>
-              <Link href="/login" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                Acceso Clientes
-              </Link>
+              <NavbarAuth />
             </div>
           </div>
         </div>
