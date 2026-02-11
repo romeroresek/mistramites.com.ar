@@ -2,8 +2,8 @@ import Link from "next/link"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "TramitesMisiones | Servicios Profesionales",
-  description: "Estudio de gestores profesionales. Gestionamos partidas, informes y apostillas ante organismos oficiales. Servicio privado de intermediacion.",
+  title: "TramitesMisiones | Servicios Profesionales de Gestión de Trámites en Misiones",
+  description: "Somos un estudio jurídico contable todos matriculados con sede en Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos de la Provincia y Nación. No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion administrativa, que incluye la tramitacion, pago de tasas correspondiente, seguimiento, eventuales reclamos por demoras y entrega de documentacion. Todos los tramites se realizan ante los organismos oficiales correspondientes (Registro Civil, Registro de la Propiedad, Catastro, Cancilleria, expedientes judiciales, etc.).",
 }
 
 export default function LandingPage() {
@@ -36,8 +36,8 @@ export default function LandingPage() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Hero */}
         <div className="mb-6 sm:mb-10">
-          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Servicios Profesionales</h1>
-          <p className="text-gray-600 text-sm">Realizamos sus trámites ante organismos oficiales</p>
+          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Servicios de Trámites en Misiones</h1>
+          <p className="text-gray-600 text-sm">Realizamos sus trámites ante organismos oficiales. Accede a tus documentos, registros e información pública en línea.</p>
         </div>
 
         {/* SECCION PARTIDAS */}
@@ -55,7 +55,14 @@ export default function LandingPage() {
                 <Link href="/oficinas/registro-personas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 text-sm mb-1">Actas del Registro Civil</h3>
-                    <p className="text-xs text-gray-600">Realizamos la busqueda, obtencion y legalizacion de actas de Nacimiento, Matrimonio y Defuncion.</p>
+                    <p className="text-xs text-gray-600 mb-2">Realizamos la busqueda, obtencion y legalizacion de actas de Nacimiento, Matrimonio y Defuncion.</p>
+                    <ul className="text-xs text-green-600 space-y-0.5">
+                      <li>✓ Búsqueda del acta de Nacimiento, Matrimonio, Defunción.</li>
+                      <li>✓ Legalización digital.</li>
+                      <li>✓ Con QR para verificación de trámite.</li>
+                      <li>✓ Validez Nacional.</li>
+                      <li>✓ Demora 24hs hábiles.</li>
+                    </ul>
                   </div>
                 </Link>
               </div>
@@ -75,18 +82,23 @@ export default function LandingPage() {
             </div>
             <div className="p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Nuestros gestores tramitan la Apostilla de la Haya para documentos que requieran validez internacional. Servicio profesional de intermediacion.
+                Este trámite permite solicitar a distancia la Apostilla o Legalización de documentos públicos que sean de naturaleza electrónica como así también con firma ológrafa para ser presentados en el exterior, sin la necesidad de gestionar turnos. Este trámite se encuentra alcanzado por las consideraciones establecidas en el inciso b) del Art. 10 de la Ley N° 19.549, respecto del silencio con sentido positivo. El plazo estipulado es de 20 días hábiles administrativos. Nuestros profesionales tramitan la Apostilla de la Haya para documentos que requieran validez internacional. Servicio profesional de intermediacion.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div className="border border-gray-200 rounded p-3">
-                  <h3 className="font-semibold text-gray-900 text-sm mb-1">Documentos que gestionamos</h3>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    <li>• Actas de Nacimiento, Matrimonio, Defuncion</li>
-                    <li>• Antecedentes Penales</li>
-                    <li>• Titulos y certificados</li>
-                    <li>• Otros documentos publicos</li>
-                  </ul>
-                </div>
+              <div className="grid grid-cols-1 gap-3 mb-4">
+                <Link href="/oficinas/apostillas">
+                  <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostilla de la Haya con validez Internacional</h3>
+                    <p className="text-xs text-gray-600 mb-2">Gestion de apostillas para documentos públicos ante Cancillería.</p>
+                    <ul className="text-xs text-green-600 space-y-0.5">
+                      <li>✓ Apostilla de la Haya acta de Nacimiento, Matrimonio, Defunción.</li>
+                      <li>✓ Antecedentes Penales, Títulos y Otros Documentos.</li>
+                      <li>✓ Apostilla con validez Internacional.</li>
+                      <li>✓ Envío en pdf con firma digital.</li>
+                      <li>✓ Código de verificación de trámite.</li>
+                      <li>✓ Demora 20 días hábiles administrativos.</li>
+                    </ul>
+                  </div>
+                </Link>
               </div>
               <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
                 Tramitar Apostilla
@@ -104,19 +116,33 @@ export default function LandingPage() {
             </div>
             <div className="p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Tramitamos la obtencion de informes catastrales e informes del Registro de la Propiedad Inmueble de Misiones. Servicio profesional con honorarios incluidos.
+                Tramitamos la obtencion de informes catastrales e informes del Registro de la Propiedad Inmueble de Misiones. Servicio profesional incluye tasas por trámite urgente y honorarios incluidos.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <Link href="/oficinas/registro-propiedad">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes de Dominio</h3>
-                    <p className="text-xs text-gray-600">Gestion de informes de dominio e inhibicion ante el Registro de la Propiedad.</p>
+                    <p className="text-xs text-gray-600 mb-2">Gestion de informes de dominio e inhibicion ante el Registro de la Propiedad.</p>
+                    <ul className="text-xs text-green-600 space-y-0.5">
+                      <li>✓ F3 - Informe de Búsqueda de Titularidad</li>
+                      <li>✓ F4 - Informe de Condiciones de Dominio</li>
+                      <li>✓ F5 - Informe de inhibiciones</li>
+                      <li>✓ Con firma digital</li>
+                      <li>✓ Envío en formato .pdf</li>
+                      <li>✓ Demora 25 días hábiles</li>
+                    </ul>
                   </div>
                 </Link>
                 <Link href="/oficinas/catastro">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes Catastrales</h3>
-                    <p className="text-xs text-gray-600">Gestion de informes ante la Direccion de Catastro provincial.</p>
+                    <p className="text-xs text-gray-600 mb-2">Gestion de informes ante la Direccion de Catastro provincial.</p>
+                    <ul className="text-xs text-green-600 space-y-0.5">
+                      <li>✓ Apto para valuaciones</li>
+                      <li>✓ Formato .pdf</li>
+                      <li>✓ Validez Nacional</li>
+                      <li>✓ Demora 7 días</li>
+                    </ul>
                   </div>
                 </Link>
               </div>
@@ -139,13 +165,7 @@ export default function LandingPage() {
           </div>
           <div className="p-3 sm:p-4">
             <p className="text-xs sm:text-sm text-gray-600 mb-3">
-              Somos un estudio jurídico contable todos matriculados con sede en Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos de la Provincia y Nación.
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 mb-3">
-              <strong>Importante:</strong> No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion administrativa, que incluye la tramitacion, pago de tasas correspondiente, seguimiento, eventuales reclamos por demoras y entrega de documentacion.
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600">
-              Todos los tramites se realizan ante los organismos oficiales correspondientes (Registro Civil, Registro de la Propiedad, Catastro, Cancilleria, expedientes judiciales, etc.).
+              <strong>Importante:</strong> Somos un estudio jurídico contable todos matriculados con sede en Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos de la Provincia y Nación. No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion administrativa, que incluye la tramitacion, pago de tasas correspondiente, seguimiento, eventuales reclamos por demoras y entrega de documentacion. Todos los tramites se realizan ante los organismos oficiales correspondientes (Registro Civil, Registro de la Propiedad, Catastro, Cancilleria, expedientes judiciales, etc.). TramitesMisiones te facilita el acceso a documentos, registros e información pública a través de contenidos y servicios gratuitos y pagos, con alto grado de elaboración, asistencia personalizada, digitalización y envío.
             </p>
           </div>
         </div>
