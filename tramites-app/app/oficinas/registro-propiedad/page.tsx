@@ -24,6 +24,25 @@ const DEPARTAMENTOS = [
   "Puerto Rico",
 ]
 
+const CODIGOS_PAIS = [
+  { codigo: "+54", pais: "Argentina", placeholder: "11 1234-5678" },
+  { codigo: "+595", pais: "Paraguay", placeholder: "981 123456" },
+  { codigo: "+598", pais: "Uruguay", placeholder: "99 123 456" },
+  { codigo: "+55", pais: "Brasil", placeholder: "11 91234-5678" },
+  { codigo: "+56", pais: "Chile", placeholder: "9 1234 5678" },
+  { codigo: "+57", pais: "Colombia", placeholder: "300 1234567" },
+  { codigo: "+51", pais: "Perú", placeholder: "912 345 678" },
+  { codigo: "+591", pais: "Bolivia", placeholder: "71234567" },
+  { codigo: "+58", pais: "Venezuela", placeholder: "412 1234567" },
+  { codigo: "+52", pais: "México", placeholder: "55 1234 5678" },
+  { codigo: "+1", pais: "USA/Canadá", placeholder: "555 123 4567" },
+  { codigo: "+34", pais: "España", placeholder: "612 345 678" },
+  { codigo: "+39", pais: "Italia", placeholder: "312 345 6789" },
+  { codigo: "+49", pais: "Alemania", placeholder: "151 1234 5678" },
+  { codigo: "+33", pais: "Francia", placeholder: "6 12 34 56 78" },
+  { codigo: "+44", pais: "Reino Unido", placeholder: "7911 123456" },
+]
+
 export default function RegistroPropiedad() {
   const { data: session } = useSession()
   const [selectedTramite, setSelectedTramite] = useState("")
@@ -31,7 +50,8 @@ export default function RegistroPropiedad() {
 
   // Datos del Solicitante (común a todos)
   const [email, setEmail] = useState("")
-  const [whatsappSolicitante, setWhatsappSolicitante] = useState("")
+  const [codigoPais, setCodigoPais] = useState("+54")
+  const [telefonoWhatsapp, setTelefonoWhatsapp] = useState("")
 
   // Datos para F3 y F5 (persona)
   const [nombrePersona, setNombrePersona] = useState("")
@@ -66,12 +86,13 @@ export default function RegistroPropiedad() {
   )
 
   const isLoggedIn = !!session?.user?.email
+  const whatsappCompleto = `${codigoPais}${telefonoWhatsapp.replace(/\D/g, "")}`
 
   const tramiteSeleccionado = TRAMITES.find((t) => t.id === selectedTramite)
 
   const buildDescription = () => {
     let desc = `DATOS DEL SOLICITANTE:\n`
-    desc += `- WhatsApp: ${whatsappSolicitante}\n\n`
+    desc += `- WhatsApp: ${whatsappCompleto}\n\n`
 
     if (selectedTramite === "f3-titularidad" || selectedTramite === "f5-inhibiciones") {
       desc += `DATOS DE LA PERSONA:\n`
@@ -92,7 +113,7 @@ export default function RegistroPropiedad() {
   }
 
   const isFormValid = () => {
-    if (!whatsappSolicitante) return false
+    if (!telefonoWhatsapp) return false
     if (!isLoggedIn && !email) return false
 
     if (selectedTramite === "f3-titularidad" || selectedTramite === "f5-inhibiciones") {
@@ -121,7 +142,7 @@ export default function RegistroPropiedad() {
           tipoTramite: tramiteSeleccionado!.nombre,
           descripcion: buildDescription(),
           monto: tramiteSeleccionado!.monto,
-          whatsapp: whatsappSolicitante,
+          whatsapp: whatsappCompleto,
           email: isLoggedIn ? undefined : email,
         }),
       })
@@ -144,7 +165,8 @@ export default function RegistroPropiedad() {
 
   const resetForm = () => {
     setEmail("")
-    setWhatsappSolicitante("")
+    setCodigoPais("+54")
+    setTelefonoWhatsapp("")
     setNombrePersona("")
     setDniPersona("")
     setMatricula("")
@@ -234,13 +256,30 @@ export default function RegistroPropiedad() {
                     <label className="block text-xs sm:text-sm text-gray-600 mb-1">
                       WhatsApp del Solicitante
                     </label>
-                    <input
-                      type="tel"
-                      value={whatsappSolicitante}
-                      onChange={(e) => setWhatsappSolicitante(e.target.value)}
-                      className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                      required
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={codigoPais}
+                        onChange={(e) => setCodigoPais(e.target.value)}
+                        className="px-2 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white"
+                      >
+                        {CODIGOS_PAIS.map((pais) => (
+                          <option key={pais.codigo} value={pais.codigo}>
+                            {pais.codigo} {pais.pais}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        value={telefonoWhatsapp}
+                        onChange={(e) => setTelefonoWhatsapp(e.target.value)}
+                        className="flex-1 px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        placeholder={CODIGOS_PAIS.find(p => p.codigo === codigoPais)?.placeholder || "Ej: 11 1234-5678"}
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Ingresá código de área sin 0 + número sin 15. Ej: 11 1234-5678
+                    </p>
                   </div>
                 </div>
               </div>

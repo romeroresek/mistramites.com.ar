@@ -89,7 +89,7 @@ export default function LandingPage() {
         <section id="inmuebles" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded">
             <div className="p-3 sm:p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Gestion de Informes de Inmuebles</h2>
+              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Informes de Inmuebles</h2>
               <p className="text-xs sm:text-sm text-gray-600">Servicio de trámites ante Catastro y Registro de la Propiedad</p>
             </div>
             <div className="p-3 sm:p-4">
@@ -126,7 +126,7 @@ export default function LandingPage() {
         <section id="apostillas" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded">
             <div className="p-3 sm:p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Gestion de Apostillas</h2>
+              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitud de Apostilla</h2>
               <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion de legalizacion para uso en el exterior</p>
             </div>
             <div className="p-3 sm:p-4">

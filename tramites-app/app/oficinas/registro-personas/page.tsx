@@ -21,6 +21,25 @@ const LOCALIDADES_MISIONES = [
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
+const CODIGOS_PAIS = [
+  { codigo: "+54", pais: "Argentina", placeholder: "11 1234-5678" },
+  { codigo: "+595", pais: "Paraguay", placeholder: "981 123456" },
+  { codigo: "+598", pais: "Uruguay", placeholder: "99 123 456" },
+  { codigo: "+55", pais: "Brasil", placeholder: "11 91234-5678" },
+  { codigo: "+56", pais: "Chile", placeholder: "9 1234 5678" },
+  { codigo: "+57", pais: "Colombia", placeholder: "300 1234567" },
+  { codigo: "+51", pais: "Perú", placeholder: "912 345 678" },
+  { codigo: "+591", pais: "Bolivia", placeholder: "71234567" },
+  { codigo: "+58", pais: "Venezuela", placeholder: "412 1234567" },
+  { codigo: "+52", pais: "México", placeholder: "55 1234 5678" },
+  { codigo: "+1", pais: "USA/Canadá", placeholder: "555 123 4567" },
+  { codigo: "+34", pais: "España", placeholder: "612 345 678" },
+  { codigo: "+39", pais: "Italia", placeholder: "312 345 6789" },
+  { codigo: "+49", pais: "Alemania", placeholder: "151 1234 5678" },
+  { codigo: "+33", pais: "Francia", placeholder: "6 12 34 56 78" },
+  { codigo: "+44", pais: "Reino Unido", placeholder: "7911 123456" },
+]
+
 function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombreCompletoVal, setNombreCompletoVal, fechaNacVal, setFechaNacVal }: {
   label: string
   dniVal: string; setDniVal: (v: string) => void
@@ -326,25 +345,13 @@ export default function RegistroPersonas() {
                     <select
                       value={codigoPais}
                       onChange={(e) => setCodigoPais(e.target.value)}
-                      className="w-24 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                     >
-                      <option value="+54">+54</option>
-                      <option value="+55">+55</option>
-                      <option value="+56">+56</option>
-                      <option value="+57">+57</option>
-                      <option value="+58">+58</option>
-                      <option value="+591">+591</option>
-                      <option value="+593">+593</option>
-                      <option value="+595">+595</option>
-                      <option value="+598">+598</option>
-                      <option value="+51">+51</option>
-                      <option value="+52">+52</option>
-                      <option value="+1">+1</option>
-                      <option value="+34">+34</option>
-                      <option value="+39">+39</option>
-                      <option value="+49">+49</option>
-                      <option value="+33">+33</option>
-                      <option value="+44">+44</option>
+                      {CODIGOS_PAIS.map((pais) => (
+                        <option key={pais.codigo} value={pais.codigo}>
+                          {pais.codigo} {pais.pais}
+                        </option>
+                      ))}
                     </select>
                     <input
                       type="tel"
@@ -352,10 +359,10 @@ export default function RegistroPersonas() {
                       onChange={(e) => setWhatsapp(e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                       required
-                      placeholder="3764123456"
+                      placeholder={CODIGOS_PAIS.find(p => p.codigo === codigoPais)?.placeholder || "11 1234-5678"}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Número sin 0 y sin 15. Ejemplo: 3764123456</p>
+                  <p className="text-xs text-gray-500 mt-1">Ingresá código de área sin 0 + número sin 15. Ej: 11 1234-5678</p>
                 </div>
 
                 {/* Email - solo si no está logueado */}
