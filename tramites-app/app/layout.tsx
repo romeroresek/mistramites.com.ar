@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from "next"
-import dynamic from "next/dynamic"
 import "./globals.css"
 import { Providers } from "./providers"
-
-// Lazy load: carga después del render inicial para no bloquear la página
-const NotificationPrompt = dynamic(
-  () => import("@/components/NotificationPrompt").then(mod => ({ default: mod.NotificationPrompt })),
-  { ssr: false }
-)
+import { LazyNotificationPrompt } from "@/components/LazyNotificationPrompt"
 
 export const metadata: Metadata = {
   title: "TramitesMisiones | Servicios Profesionales de Gestión de Trámites en Misiones",
@@ -45,7 +39,7 @@ export default function RootLayout({
       <body className="bg-gray-50">
         <Providers>
           {children}
-          <NotificationPrompt />
+          <LazyNotificationPrompt />
         </Providers>
       </body>
     </html>
