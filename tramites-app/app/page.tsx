@@ -19,8 +19,8 @@ export default function LandingPage() {
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">
               <a href="#partidas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Partidas</a>
-              <a href="#inmuebles" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Inmuebles</a>
               <a href="#apostillas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Apostillas</a>
+              <a href="#inmuebles" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Inmuebles</a>
               <Link
                 href="/mis-tramites"
                 className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700"
@@ -34,14 +34,6 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        {/* Aviso legal */}
-        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-6">
-          <p className="text-xs text-blue-800">
-            <strong>Aviso:</strong> Este es un servicio privado de gestoría. No somos un organismo oficial del Estado.
-            Nuestros profesionales matriculados realizan los trámites en su nombre ante los organismos correspondientes, cobrando honorarios por el servicio de intermediación.
-          </p>
-        </div>
-
         {/* Hero */}
         <div className="mb-6 sm:mb-10">
           <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Servicios Profesionales</h1>
@@ -59,28 +51,46 @@ export default function LandingPage() {
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
                 Nuestros profesionales tramitan la obtencion de actas de nacimiento, matrimonio y defuncion ante el Registro Civil. El servicio incluye honorarios de gestion.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-1 gap-3 mb-4">
                 <Link href="/oficinas/registro-personas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 text-sm mb-1">Actas del Registro Civil</h3>
                     <p className="text-xs text-gray-600">Realizamos la busqueda, obtencion y legalizacion de actas de Nacimiento, Matrimonio y Defuncion.</p>
                   </div>
                 </Link>
-                <Link href="/oficinas/apostillas">
-                  <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostillado de la Haya</h3>
-                    <p className="text-xs text-gray-600">Trámites de apostilla para documentos con validez internacional.</p>
-                  </div>
-                </Link>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Link href="/oficinas/registro-personas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                  Solicitar Partida
-                </Link>
-                <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded hover:bg-gray-50">
-                  Apostilla Partida
-                </Link>
+              <Link href="/oficinas/registro-personas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
+                Solicitar Partida
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* SECCION APOSTILLAS */}
+        <section id="apostillas" className="mb-6 sm:mb-10">
+          <div className="bg-white border border-gray-200 rounded">
+            <div className="p-3 sm:p-4 border-b border-gray-200">
+              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitud de Apostilla</h2>
+              <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion de legalizacion para uso en el exterior</p>
+            </div>
+            <div className="p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-4">
+                Nuestros gestores tramitan la Apostilla de la Haya para documentos que requieran validez internacional. Servicio profesional de intermediacion.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div className="border border-gray-200 rounded p-3">
+                  <h3 className="font-semibold text-gray-900 text-sm mb-1">Documentos que gestionamos</h3>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    <li>• Actas de Nacimiento, Matrimonio, Defuncion</li>
+                    <li>• Antecedentes Penales</li>
+                    <li>• Titulos y certificados</li>
+                    <li>• Otros documentos publicos</li>
+                  </ul>
+                </div>
               </div>
+              <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
+                Tramitar Apostilla
+              </Link>
             </div>
           </div>
         </section>
@@ -118,35 +128,6 @@ export default function LandingPage() {
                   Solicitar Catastral
                 </Link>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* SECCION APOSTILLAS */}
-        <section id="apostillas" className="mb-6 sm:mb-10">
-          <div className="bg-white border border-gray-200 rounded">
-            <div className="p-3 sm:p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitud de Apostilla</h2>
-              <p className="text-xs sm:text-sm text-gray-600">Servicio de gestion de legalizacion para uso en el exterior</p>
-            </div>
-            <div className="p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Nuestros gestores tramitan la Apostilla de la Haya para documentos que requieran validez internacional. Servicio profesional de intermediacion.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div className="border border-gray-200 rounded p-3">
-                  <h3 className="font-semibold text-gray-900 text-sm mb-1">Documentos que gestionamos</h3>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    <li>• Actas de Nacimiento, Matrimonio, Defuncion</li>
-                    <li>• Antecedentes Penales</li>
-                    <li>• Titulos y certificados</li>
-                    <li>• Otros documentos publicos</li>
-                  </ul>
-                </div>
-              </div>
-              <Link href="/oficinas/apostillas" className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700">
-                Tramitar Apostilla
-              </Link>
             </div>
           </div>
         </section>
