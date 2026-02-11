@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 
 export default function LandingPage() {
@@ -13,7 +14,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/icon-192x192.png" alt="TramitesMisiones" className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
             {/* Hamburger button */}
@@ -123,9 +124,11 @@ export default function LandingPage() {
                 <Link href="/oficinas/registro-personas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <div className="flex gap-3">
-                      <img
+                      <Image
                         src="/images-1.png"
                         alt="Actas del Registro Civil"
+                        width={80}
+                        height={80}
                         className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded flex-shrink-0 bg-gray-50"
                       />
                       <div>
@@ -166,9 +169,11 @@ export default function LandingPage() {
                 <Link href="/oficinas/apostillas">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <div className="flex gap-3">
-                      <img
+                      <Image
                         src="/escudo1.png"
                         alt="Apostilla de la Haya"
+                        width={80}
+                        height={80}
                         className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded flex-shrink-0 bg-gray-50"
                       />
                       <div>
@@ -209,9 +214,11 @@ export default function LandingPage() {
                 <Link href="/oficinas/registro-propiedad">
                   <div className="border border-gray-200 rounded p-3 hover:shadow-md transition-shadow">
                     <div className="flex gap-3">
-                      <img
+                      <Image
                         src="/inmueble.png"
                         alt="Informes de Dominio"
+                        width={80}
+                        height={80}
                         className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded flex-shrink-0 bg-gray-50"
                       />
                       <div>

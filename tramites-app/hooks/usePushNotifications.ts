@@ -38,7 +38,26 @@ export function usePushNotifications() {
     const checkStatus = async () => {
       try {
         const permission = Notification.permission
-        const registration = await navigator.serviceWorker.ready
+
+        // Timeout para evitar bloqueo si el service worker no está disponible
+        const timeoutPromise = new Promise<null>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), 3000)
+        )
+
+        const registration = await Promise.race([
+          navigator.serviceWorker.ready,
+          timeoutPromise
+        ])
+
+        if (!registration) {
+          setState((prev) => ({
+            ...prev,
+            isSupported: false,
+            isLoading: false,
+          }))
+          return
+        }
+
         const subscription = await registration.pushManager.getSubscription()
 
         setState({
@@ -51,8 +70,9 @@ export function usePushNotifications() {
       } catch {
         setState((prev) => ({
           ...prev,
+          isSupported: false,
           isLoading: false,
-          error: "Error al verificar estado de notificaciones",
+          error: null,
         }))
       }
     }
