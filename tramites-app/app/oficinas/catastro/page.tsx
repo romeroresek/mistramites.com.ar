@@ -1,7 +1,6 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -30,11 +29,11 @@ const DEPARTAMENTOS = [
 const MONTO_INFORME = 40000
 
 export default function Catastro() {
-  const { status } = useSession()
-  const router = useRouter()
+  const { data: session } = useSession()
   const [loading, setLoading] = useState(false)
 
   // Datos del Solicitante
+  const [email, setEmail] = useState("")
   const [whatsappSolicitante, setWhatsappSolicitante] = useState("")
 
   // Datos del Inmueble
@@ -63,10 +62,7 @@ export default function Catastro() {
     dep.toLowerCase().includes(searchLugar.toLowerCase())
   )
 
-  if (status === "unauthenticated") {
-    router.push("/login")
-    return null
-  }
+  const isLoggedIn = !!session?.user?.email
 
   const buildDescription = () => {
     const lines = [
@@ -79,7 +75,9 @@ export default function Catastro() {
   }
 
   const isFormValid = () => {
-    return whatsappSolicitante && titular && partidaInmobiliaria
+    if (!whatsappSolicitante || !titular || !partidaInmobiliaria) return false
+    if (!isLoggedIn && !email) return false
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,24 +96,18 @@ export default function Catastro() {
           descripcion: buildDescription(),
           monto: MONTO_INFORME,
           whatsapp: whatsappSolicitante,
+          email: isLoggedIn ? undefined : email,
         }),
       })
 
       if (!res.ok) throw new Error("Error al crear trámite")
 
-      const tramite = await res.json()
-
-      // Crear preferencia de pago y redirigir
-      const mpRes = await fetch("/api/mercadopago", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tramiteId: tramite.id }),
-      })
-
-      if (!mpRes.ok) throw new Error("Error al procesar pago")
-
-      const { initPoint } = await mpRes.json()
-      window.location.href = initPoint
+      const data = await res.json()
+      if (data.initPoint) {
+        window.location.href = data.initPoint
+      } else {
+        alert("Error al procesar el pago")
+      }
     } catch (error) {
       console.error(error)
       alert("Error al crear el trámite")
@@ -159,17 +151,34 @@ export default function Catastro() {
               <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
                 Datos del Solicitante
               </h3>
-              <div>
-                <label className="block text-xs sm:text-sm text-gray-600 mb-1">
-                  WhatsApp del Solicitante
-                </label>
-                <input
-                  type="tel"
-                  value={whatsappSolicitante}
-                  onChange={(e) => setWhatsappSolicitante(e.target.value)}
-                  className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                  required
-                />
+              <div className="space-y-3 sm:space-y-4">
+                {!isLoggedIn && (
+                  <div>
+                    <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                      placeholder="tu@email.com"
+                      required
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+                    WhatsApp del Solicitante
+                  </label>
+                  <input
+                    type="tel"
+                    value={whatsappSolicitante}
+                    onChange={(e) => setWhatsappSolicitante(e.target.value)}
+                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                </div>
               </div>
             </div>
 

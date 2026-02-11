@@ -41,57 +41,128 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: crear nuevo trámite
+// POST: crear nuevo trámite (permite usuarios logueados o invitados con email)
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user?.email) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
-
     const body = await req.json()
-    const { oficina, tipoTramite, descripcion, monto, whatsapp } = body
+    const { oficina, tipoTramite, descripcion, monto, whatsapp, email } = body
 
     if (!oficina || !tipoTramite || !monto) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    })
+    // Determinar userId y guestEmail
+    let userId: string | null = null
+    let guestEmail: string | null = null
+    let payerEmail: string | undefined
+    let payerName: string | undefined
 
-    if (!user) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
+    if (session?.user?.email) {
+      // Usuario logueado
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      })
+      if (user) {
+        userId = user.id
+        payerEmail = user.email || undefined
+        payerName = user.name || undefined
+      }
     }
 
-    const tramite = await prisma.tramite.create({
-      data: {
-        userId: user.id,
-        oficina,
-        tipoTramite,
-        descripcion: descripcion || "",
-        monto,
-        estado: "pendiente",
-        whatsapp: whatsapp || null,
-      },
-      include: {
-        documentos: true,
-        pago: true,
-      },
+    if (!userId) {
+      // Usuario no logueado - requiere email
+      if (!email) {
+        return NextResponse.json({ error: "Email requerido" }, { status: 400 })
+      }
+      guestEmail = email
+      payerEmail = email
+    }
+
+    // Crear trámite y pago
+    const tramite = await prisma.$transaction(async (tx) => {
+      const tramite = await tx.tramite.create({
+        data: {
+          userId,
+          guestEmail,
+          oficina,
+          tipoTramite,
+          descripcion: descripcion || "",
+          monto,
+          estado: "pendiente",
+          whatsapp: whatsapp || null,
+        },
+      })
+
+      await tx.pago.create({
+        data: {
+          tramiteId: tramite.id,
+          userId,
+          monto,
+          estado: "pendiente",
+        },
+      })
+
+      return tramite
     })
 
-    // Crear pago asociado
-    await prisma.pago.create({
-      data: {
-        tramiteId: tramite.id,
-        userId: user.id,
-        monto,
-        estado: "pendiente",
+    // Crear preferencia de Mercado Pago
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+    const webhookUrl = process.env.WEBHOOK_URL
+
+    const preferenceBody: Record<string, unknown> = {
+      items: [
+        {
+          id: tramite.id,
+          title: `${tipoTramite} - ${oficina}`,
+          quantity: 1,
+          unit_price: monto,
+          currency_id: "ARS",
+        },
+      ],
+      payer: {
+        email: payerEmail,
+        name: payerName,
       },
+      external_reference: tramite.id,
+      back_urls: {
+        success: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}`,
+        failure: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=failure`,
+        pending: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=pending`,
+      },
+    }
+
+    if (webhookUrl) {
+      preferenceBody.notification_url = `${webhookUrl}/api/mercadopago/webhook`
+    }
+
+    const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify(preferenceBody),
     })
 
-    return NextResponse.json(tramite, { status: 201 })
+    const result = await mpResponse.json()
+
+    if (!mpResponse.ok) {
+      console.error("Mercado Pago API Error:", JSON.stringify(result))
+      return NextResponse.json({ tramiteId: tramite.id, initPoint: null })
+    }
+
+    // Guardar el mercadopagoId en el pago
+    await prisma.pago.update({
+      where: { tramiteId: tramite.id },
+      data: { mercadopagoId: result.id },
+    })
+
+    return NextResponse.json({
+      tramiteId: tramite.id,
+      initPoint: result.init_point,
+    })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: "Error al crear trámite" }, { status: 500 })

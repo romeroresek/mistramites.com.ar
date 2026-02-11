@@ -1,7 +1,6 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { useState, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -21,21 +20,18 @@ const TIPOS_DOCUMENTO = [
 const MONTO_APOSTILLA = 40000
 
 export default function Apostillas() {
-  const { status } = useSession()
-  const router = useRouter()
+  const { data: session } = useSession()
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Campos del formulario
+  const [email, setEmail] = useState("")
   const [whatsappSolicitante, setWhatsappSolicitante] = useState("")
   const [nombreDocumento, setNombreDocumento] = useState("")
   const [tipoDocumento, setTipoDocumento] = useState("")
   const [archivo, setArchivo] = useState<File | null>(null)
 
-  if (status === "unauthenticated") {
-    router.push("/login")
-    return null
-  }
+  const isLoggedIn = !!session?.user?.email
 
   const buildDescription = () => {
     const lines = [
@@ -47,7 +43,9 @@ export default function Apostillas() {
   }
 
   const isFormValid = () => {
-    return whatsappSolicitante && nombreDocumento && tipoDocumento && archivo
+    if (!whatsappSolicitante || !nombreDocumento || !tipoDocumento || !archivo) return false
+    if (!isLoggedIn && !email) return false
+    return true
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,18 +71,19 @@ export default function Apostillas() {
           descripcion: buildDescription(),
           monto: MONTO_APOSTILLA,
           whatsapp: whatsappSolicitante,
+          email: isLoggedIn ? undefined : email,
         }),
       })
 
       if (!res.ok) throw new Error("Error al crear trámite")
 
-      const tramite = await res.json()
+      const data = await res.json()
 
       // Subir archivo si existe
-      if (archivo) {
+      if (archivo && data.tramiteId) {
         const formData = new FormData()
         formData.append("file", archivo)
-        formData.append("tramiteId", tramite.id)
+        formData.append("tramiteId", data.tramiteId)
 
         await fetch("/api/upload", {
           method: "POST",
@@ -92,17 +91,12 @@ export default function Apostillas() {
         })
       }
 
-      // Crear preferencia de pago y redirigir
-      const mpRes = await fetch("/api/mercadopago", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tramiteId: tramite.id }),
-      })
-
-      if (!mpRes.ok) throw new Error("Error al procesar pago")
-
-      const { initPoint } = await mpRes.json()
-      window.location.href = initPoint
+      // Redirigir a Mercado Pago
+      if (data.initPoint) {
+        window.location.href = data.initPoint
+      } else {
+        alert("Error al procesar el pago")
+      }
     } catch (error) {
       console.error(error)
       alert("Error al crear el trámite")
@@ -146,17 +140,34 @@ export default function Apostillas() {
               <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
                 Datos del Solicitante
               </h3>
-              <div>
-                <label className="block text-xs sm:text-sm text-gray-600 mb-1">
-                  WhatsApp del Solicitante
-                </label>
-                <input
-                  type="tel"
-                  value={whatsappSolicitante}
-                  onChange={(e) => setWhatsappSolicitante(e.target.value)}
-                  className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                  required
-                />
+              <div className="space-y-3 sm:space-y-4">
+                {!isLoggedIn && (
+                  <div>
+                    <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                      placeholder="tu@email.com"
+                      required
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+                    WhatsApp del Solicitante
+                  </label>
+                  <input
+                    type="tel"
+                    value={whatsappSolicitante}
+                    onChange={(e) => setWhatsappSolicitante(e.target.value)}
+                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                </div>
               </div>
             </div>
 

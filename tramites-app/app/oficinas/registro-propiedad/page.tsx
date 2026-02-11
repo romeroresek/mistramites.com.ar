@@ -1,7 +1,6 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -26,12 +25,12 @@ const DEPARTAMENTOS = [
 ]
 
 export default function RegistroPropiedad() {
-  const { status } = useSession()
-  const router = useRouter()
+  const { data: session } = useSession()
   const [selectedTramite, setSelectedTramite] = useState("")
   const [loading, setLoading] = useState(false)
 
   // Datos del Solicitante (común a todos)
+  const [email, setEmail] = useState("")
   const [whatsappSolicitante, setWhatsappSolicitante] = useState("")
 
   // Datos para F3 y F5 (persona)
@@ -66,10 +65,7 @@ export default function RegistroPropiedad() {
     dep.toLowerCase().includes(searchDepartamento.toLowerCase())
   )
 
-  if (status === "unauthenticated") {
-    router.push("/login")
-    return null
-  }
+  const isLoggedIn = !!session?.user?.email
 
   const tramiteSeleccionado = TRAMITES.find((t) => t.id === selectedTramite)
 
@@ -97,6 +93,7 @@ export default function RegistroPropiedad() {
 
   const isFormValid = () => {
     if (!whatsappSolicitante) return false
+    if (!isLoggedIn && !email) return false
 
     if (selectedTramite === "f3-titularidad" || selectedTramite === "f5-inhibiciones") {
       if (!nombrePersona || !dniPersona) return false
@@ -125,13 +122,18 @@ export default function RegistroPropiedad() {
           descripcion: buildDescription(),
           monto: tramiteSeleccionado!.monto,
           whatsapp: whatsappSolicitante,
+          email: isLoggedIn ? undefined : email,
         }),
       })
 
       if (!res.ok) throw new Error("Error al crear trámite")
 
-      const tramite = await res.json()
-      router.push(`/pago/${tramite.id}`)
+      const data = await res.json()
+      if (data.initPoint) {
+        window.location.href = data.initPoint
+      } else {
+        alert("Error al procesar el pago")
+      }
     } catch (error) {
       console.error(error)
       alert("Error al crear el trámite")
@@ -141,6 +143,7 @@ export default function RegistroPropiedad() {
   }
 
   const resetForm = () => {
+    setEmail("")
     setWhatsappSolicitante("")
     setNombrePersona("")
     setDniPersona("")
@@ -212,6 +215,21 @@ export default function RegistroPropiedad() {
                   Datos del Solicitante
                 </h3>
                 <div className="space-y-3 sm:space-y-4">
+                  {!isLoggedIn && (
+                    <div>
+                      <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        placeholder="tu@email.com"
+                        required
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-xs sm:text-sm text-gray-600 mb-1">
                       WhatsApp del Solicitante
