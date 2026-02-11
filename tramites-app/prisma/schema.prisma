@@ -158,3 +158,15 @@ model PushSubscription {
 
   @@map("push_subscriptions")
 }
+
+model PlantillaMensaje {
+  id        String   @id @default(cuid())
+  clave     String   @unique // ej: "tramiteListo", "enProceso"
+  nombre    String   // Nombre visible: "Trámite listo"
+  mensaje   String   // Mensaje con placeholders: "Hola {nombre}! Tu {tipo} está lista..."
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("plantillas_mensaje")
+}

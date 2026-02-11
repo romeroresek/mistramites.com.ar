@@ -5,7 +5,15 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { templates, templateList, generateWhatsAppLink, TemplateKey } from "@/lib/contactTemplates"
+import { generateWhatsAppLink } from "@/lib/contactTemplates"
+
+interface Plantilla {
+  id: string
+  clave: string
+  nombre: string
+  mensaje: string
+  activo: boolean
+}
 
 interface Tramite {
   id: string
@@ -76,7 +84,8 @@ export default function AdminTramiteDetalle() {
     fechaNacimiento: "",
     ciudadNacimiento: "",
   })
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>("tramiteListo")
+  const [plantillas, setPlantillas] = useState<Plantilla[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState("")
   const [copiedEmail, setCopiedEmail] = useState(false)
 
   const fetchTramite = async () => {
@@ -89,6 +98,18 @@ export default function AdminTramiteDetalle() {
       console.error(error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchPlantillas = async () => {
+    try {
+      const res = await fetch("/api/admin/plantillas")
+      if (!res.ok) return
+      const data = await res.json()
+      setPlantillas(data)
+      if (data.length > 0) setSelectedTemplate(data[0].clave)
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -109,7 +130,24 @@ export default function AdminTramiteDetalle() {
         })
         .catch(() => {})
     })
+
+    fetchPlantillas()
   }, [status, session, router, params.id])
+
+  // Generar mensaje reemplazando placeholders
+  const generarMensaje = (plantillaClave: string): string => {
+    const plantilla = plantillas.find(p => p.clave === plantillaClave)
+    if (!plantilla || !tramite) return ""
+
+    const nombre = tramite.partida?.nombres || tramite.user?.name || "Usuario"
+    const tipo = tramite.tipoTramite
+    const monto = tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })
+
+    return plantilla.mensaje
+      .replace(/\{nombre\}/g, nombre)
+      .replace(/\{tipo\}/g, tipo)
+      .replace(/\{monto\}/g, monto)
+  }
 
   const handleEstadoChange = async (nuevoEstado: string) => {
     if (!tramite) return
@@ -759,17 +797,29 @@ export default function AdminTramiteDetalle() {
           </div>
 
           {/* Selector de plantilla y envío */}
-          {(tramite.whatsapp || tramite.partida?.whatsapp) && (
+          {(tramite.whatsapp || tramite.partida?.whatsapp) && plantillas.length > 0 && (
             <div className="border-t border-gray-200 pt-4">
               <div className="mb-3">
-                <label className="text-gray-500 text-sm block mb-1">Plantilla de mensaje</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-gray-500 text-sm">Plantilla de mensaje</label>
+                  <Link
+                    href="/admin/plantillas"
+                    className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                    title="Editar plantillas"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </Link>
+                </div>
                 <select
                   value={selectedTemplate}
-                  onChange={(e) => setSelectedTemplate(e.target.value as TemplateKey)}
+                  onChange={(e) => setSelectedTemplate(e.target.value)}
                   className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded text-sm"
                 >
-                  {templateList.map((t) => (
-                    <option key={t.id} value={t.id}>{t.nombre}</option>
+                  {plantillas.map((p) => (
+                    <option key={p.clave} value={p.clave}>{p.nombre}</option>
                   ))}
                 </select>
               </div>
@@ -778,11 +828,7 @@ export default function AdminTramiteDetalle() {
               <div className="mb-4">
                 <label className="text-gray-500 text-sm block mb-1">Vista previa</label>
                 <div className="bg-gray-50 border border-gray-200 rounded p-3 text-sm text-gray-700">
-                  {templates[selectedTemplate].mensaje({
-                    nombre: tramite.partida?.nombres || tramite.user?.name || "Usuario",
-                    tipo: tramite.tipoTramite,
-                    monto: tramite.monto,
-                  })}
+                  {generarMensaje(selectedTemplate)}
                 </div>
               </div>
 
@@ -790,11 +836,7 @@ export default function AdminTramiteDetalle() {
               <a
                 href={generateWhatsAppLink(
                   (tramite.whatsapp || tramite.partida?.whatsapp)!,
-                  templates[selectedTemplate].mensaje({
-                    nombre: tramite.partida?.nombres || tramite.user?.name || "Usuario",
-                    tipo: tramite.tipoTramite,
-                    monto: tramite.monto,
-                  })
+                  generarMensaje(selectedTemplate)
                 )}
                 target="_blank"
                 rel="noopener noreferrer"

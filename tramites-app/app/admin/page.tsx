@@ -169,12 +169,20 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
           <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
-          <Link
-            href="/admin/usuarios"
-            className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-          >
-            Usuarios
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/plantillas"
+              className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+            >
+              Plantillas
+            </Link>
+            <Link
+              href="/admin/usuarios"
+              className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+            >
+              Usuarios
+            </Link>
+          </div>
         </div>
 
         {/* Empty State */}

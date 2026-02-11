@@ -1,0 +1,196 @@
+"use client"
+
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
+
+interface Plantilla {
+  id: string
+  clave: string
+  nombre: string
+  mensaje: string
+  activo: boolean
+}
+
+export default function PlantillasPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [plantillas, setPlantillas] = useState<Plantilla[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editando, setEditando] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ nombre: "", mensaje: "" })
+  const [saving, setSaving] = useState(false)
+
+  const fetchPlantillas = async () => {
+    try {
+      const res = await fetch("/api/admin/plantillas")
+      if (!res.ok) throw new Error("Error")
+      const data = await res.json()
+      setPlantillas(data)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (status === "loading") return
+    if (status === "unauthenticated") { router.push("/login"); return }
+    if (session?.user?.role !== "admin") { router.push("/"); return }
+
+    fetchPlantillas()
+  }, [status, session, router])
+
+  const handleEdit = (plantilla: Plantilla) => {
+    setEditando(plantilla.id)
+    setEditForm({ nombre: plantilla.nombre, mensaje: plantilla.mensaje })
+  }
+
+  const handleCancel = () => {
+    setEditando(null)
+    setEditForm({ nombre: "", mensaje: "" })
+  }
+
+  const handleSave = async (id: string) => {
+    setSaving(true)
+    try {
+      const res = await fetch("/api/admin/plantillas", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...editForm }),
+      })
+
+      if (!res.ok) throw new Error("Error")
+
+      const updated = await res.json()
+      setPlantillas(plantillas.map(p => p.id === id ? updated : p))
+      setEditando(null)
+    } catch (error) {
+      console.error(error)
+      alert("Error al guardar")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-600">Cargando...</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Navbar */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+          <div className="flex h-14 items-center justify-between">
+            <Link href="/admin" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              <span className="text-xs sm:text-sm">Volver</span>
+            </Link>
+            <Link href="/" className="flex items-center gap-2">
+              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <span className="font-semibold text-gray-800 hidden sm:inline">TramitesMisiones</span>
+            </Link>
+            <Link href="/api/auth/signout?callbackUrl=/" className="text-red-600 hover:text-red-800 text-xs sm:text-sm">
+              Salir
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main */}
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <h1 className="text-lg sm:text-2xl font-semibold text-gray-900 mb-2">Plantillas de Mensajes</h1>
+        <p className="text-gray-600 text-sm mb-6">
+          Editá las plantillas de mensajes para WhatsApp. Usá {"{nombre}"}, {"{tipo}"} y {"{monto}"} como variables.
+        </p>
+
+        <div className="space-y-4">
+          {plantillas.map((plantilla) => (
+            <div key={plantilla.id} className="bg-white border border-gray-200 rounded p-4">
+              {editando === plantilla.id ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input
+                      type="text"
+                      value={editForm.nombre}
+                      onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mensaje</label>
+                    <textarea
+                      value={editForm.mensaje}
+                      onChange={(e) => setEditForm({ ...editForm, mensaje: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Variables disponibles: {"{nombre}"} = nombre del usuario, {"{tipo}"} = tipo de trámite, {"{monto}"} = monto formateado
+                    </p>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      onClick={handleCancel}
+                      disabled={saving}
+                      className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => handleSave(plantilla.id)}
+                      disabled={saving}
+                      className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {saving ? "Guardando..." : "Guardar"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-gray-900">{plantilla.nombre}</h3>
+                    <button
+                      onClick={() => handleEdit(plantilla)}
+                      className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                      title="Editar plantilla"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 bg-gray-50 rounded p-3">
+                    {plantilla.mensaje}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">Clave: {plantilla.clave}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <p className="text-center text-gray-500 text-xs sm:text-sm">
+            © 2024 TramitesMisiones - Todos los derechos reservados
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
+}
