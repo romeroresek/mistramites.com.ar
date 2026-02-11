@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { oficina, tipoTramite, descripcion, monto } = body
+    const { oficina, tipoTramite, descripcion, monto, whatsapp } = body
 
     if (!oficina || !tipoTramite || !monto) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
         descripcion: descripcion || "",
         monto,
         estado: "pendiente",
+        whatsapp: whatsapp || null,
       },
       include: {
         documentos: true,

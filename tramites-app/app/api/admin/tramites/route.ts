@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { userId, oficina, tipoTramite, descripcion, monto, estado, pagoEstado } = body
+    const { userId, oficina, tipoTramite, descripcion, monto, estado, pagoEstado, partida } = body
 
     if (!userId || !oficina || !tipoTramite || !monto) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
     }
 
-    // Crear trámite y pago en transacción
+    // Crear trámite, pago y partida (si existe) en transacción
     const tramite = await prisma.$transaction(async (tx) => {
       const tramite = await tx.tramite.create({
         data: {
@@ -98,6 +98,32 @@ export async function POST(req: NextRequest) {
           estado: pagoEstado || "pendiente",
         },
       })
+
+      // Si hay datos de partida, crearla
+      if (partida && partida.tipoPartida) {
+        await tx.partida.create({
+          data: {
+            tramiteId: tramite.id,
+            tipoPartida: partida.tipoPartida,
+            dni: partida.dni,
+            sexo: partida.sexo,
+            nombres: partida.nombres,
+            apellido: partida.apellido,
+            fechaNacimiento: new Date(partida.fechaNacimiento),
+            ciudadNacimiento: partida.ciudadNacimiento || null,
+            fechaDefuncion: partida.fechaDefuncion ? new Date(partida.fechaDefuncion) : null,
+            dni2: partida.dni2 || null,
+            sexo2: partida.sexo2 || null,
+            nombres2: partida.nombres2 || null,
+            apellido2: partida.apellido2 || null,
+            fechaNacimiento2: partida.fechaNacimiento2 ? new Date(partida.fechaNacimiento2) : null,
+            fechaMatrimonio: partida.fechaMatrimonio ? new Date(partida.fechaMatrimonio) : null,
+            ciudadMatrimonio: partida.ciudadMatrimonio || null,
+            divorciados: partida.divorciados || false,
+            whatsapp: partida.whatsapp || null,
+          },
+        })
+      }
 
       return tramite
     })

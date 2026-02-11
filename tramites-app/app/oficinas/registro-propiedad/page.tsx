@@ -124,6 +124,7 @@ export default function RegistroPropiedad() {
           tipoTramite: tramiteSeleccionado!.nombre,
           descripcion: buildDescription(),
           monto: tramiteSeleccionado!.monto,
+          whatsapp: whatsappSolicitante,
         }),
       })
 

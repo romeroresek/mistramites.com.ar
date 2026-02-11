@@ -27,7 +27,28 @@ function MisTramitesContent() {
   const searchParams = useSearchParams()
   const [tramites, setTramites] = useState<Tramite[]>([])
   const [loading, setLoading] = useState(true)
+  const [pagando, setPagando] = useState<string | null>(null)
   const verifiedRef = useRef(false)
+
+  const handlePagar = async (tramiteId: string) => {
+    setPagando(tramiteId)
+    try {
+      const res = await fetch(`/api/tramites/${tramiteId}/pagar`, {
+        method: "POST",
+      })
+      const data = await res.json()
+      if (data.initPoint) {
+        window.location.href = data.initPoint
+      } else {
+        alert(data.error || "Error al generar el pago")
+        setPagando(null)
+      }
+    } catch (error) {
+      console.error("Error:", error)
+      alert("Error al procesar el pago")
+      setPagando(null)
+    }
+  }
 
   const fetchTramites = async (): Promise<Tramite[]> => {
     try {
@@ -207,6 +228,27 @@ function MisTramitesContent() {
                       </span>
                     </div>
                   </Link>
+                  {(tramite.pago?.estado === "pendiente" || !tramite.pago) && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <button
+                        onClick={() => handlePagar(tramite.id)}
+                        disabled={pagando === tramite.id}
+                        className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-blue-400"
+                      >
+                        {pagando === tramite.id ? (
+                          "Procesando..."
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                              <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                            Pagar ${tramite.monto.toLocaleString("es-AR")}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
                   {tramite.archivoUrl && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
                       <a
@@ -269,6 +311,15 @@ function MisTramitesContent() {
                           >
                             Ver detalles
                           </Link>
+                          {(tramite.pago?.estado === "pendiente" || !tramite.pago) && (
+                            <button
+                              onClick={() => handlePagar(tramite.id)}
+                              disabled={pagando === tramite.id}
+                              className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-blue-400"
+                            >
+                              {pagando === tramite.id ? "..." : "Pagar"}
+                            </button>
+                          )}
                           {tramite.archivoUrl && (
                             <a
                               href={tramite.archivoUrl}

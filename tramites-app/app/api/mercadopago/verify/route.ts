@@ -70,10 +70,30 @@ export async function POST(req: NextRequest) {
         break
     }
 
-    // Actualizar estado del pago
+    // Extraer datos del pagador
+    const payer = paymentData.payer
+    const payerEmail = payer?.email || null
+    const payerName = payer?.first_name && payer?.last_name
+      ? `${payer.first_name} ${payer.last_name}`
+      : payer?.first_name || null
+    const payerDni = payer?.identification?.number || null
+    const paymentMethod = paymentData.payment_method_id || null
+    const paymentDate = paymentData.date_approved
+      ? new Date(paymentData.date_approved)
+      : null
+
+    // Actualizar estado del pago con datos del pagador
     await prisma.pago.update({
       where: { tramiteId: externalReference },
-      data: { estado: pagoEstado },
+      data: {
+        estado: pagoEstado,
+        paymentId: String(paymentData.id),
+        payerEmail,
+        payerName,
+        payerDni,
+        paymentMethod,
+        paymentDate,
+      },
     })
 
     // Actualizar estado del trámite si fue aprobado

@@ -18,6 +18,12 @@ interface Tramite {
   pago?: {
     estado: string
     mercadopagoId: string | null
+    paymentId: string | null
+    payerEmail: string | null
+    payerName: string | null
+    payerDni: string | null
+    paymentMethod: string | null
+    paymentDate: string | null
   }
 }
 
@@ -163,20 +169,12 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
           <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
-          <div className="flex gap-2">
-            <Link
-              href="/admin/usuarios"
-              className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-            >
-              Usuarios
-            </Link>
-            <Link
-              href="/admin/tramites/nuevo"
-              className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Nuevo trámite
-            </Link>
-          </div>
+          <Link
+            href="/admin/usuarios"
+            className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+          >
+            Usuarios
+          </Link>
         </div>
 
         {/* Empty State */}
@@ -215,6 +213,15 @@ export default function AdminPage() {
               <div className="text-xs text-gray-400 mb-2">
                 {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
               </div>
+              {tramite.pago?.payerEmail && (
+                <div className="text-xs bg-blue-50 rounded p-2 mb-2">
+                  <div className="font-medium text-blue-800">Pagador MP:</div>
+                  <div className="text-blue-600">{tramite.pago.payerName || "-"}</div>
+                  <div className="text-blue-500">{tramite.pago.payerEmail}</div>
+                  {tramite.pago.payerDni && <div className="text-blue-400">DNI: {tramite.pago.payerDni}</div>}
+                  {tramite.pago.paymentId && <div className="text-blue-400">ID: {tramite.pago.paymentId}</div>}
+                </div>
+              )}
               <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                 <Link
                   href={`/admin/tramites/${tramite.id}`}
@@ -240,11 +247,10 @@ export default function AdminPage() {
               <tr className="border-b">
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">#</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Usuario</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Oficina</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Trámite</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Fecha</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Pago</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Estado</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Pagador MP</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Monto</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Acciones</th>
               </tr>
@@ -256,19 +262,42 @@ export default function AdminPage() {
                   <td className="px-4 py-3 text-sm text-gray-900">
                     <div>
                       <span className="font-medium">{tramite.user?.name ?? "Invitado"}</span>
-                      <span className="text-gray-500 ml-2 text-xs">{tramite.user?.email ?? tramite.guestEmail}</span>
+                      <div className="text-gray-500 text-xs">{tramite.user?.email ?? tramite.guestEmail}</div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{tramite.oficina}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{tramite.tipoTramite}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    <div className="font-medium">{tramite.tipoTramite}</div>
+                    <div className="text-xs text-gray-500">{tramite.oficina}</div>
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      tramite.pago?.estado === "confirmado"
+                        ? "bg-green-100 text-green-700"
+                        : tramite.pago?.estado === "devuelto"
+                        ? "bg-gray-100 text-gray-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}>
+                      {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    {getEstadoLabel(tramite.estado)}
+                    {tramite.pago?.payerEmail ? (
+                      <div>
+                        <div className="font-medium text-xs">{tramite.pago.payerName || "-"}</div>
+                        <div className="text-xs text-gray-500">{tramite.pago.payerEmail}</div>
+                        {tramite.pago.payerDni && (
+                          <div className="text-xs text-gray-400">DNI: {tramite.pago.payerDni}</div>
+                        )}
+                        {tramite.pago.paymentId && (
+                          <div className="text-xs text-blue-500">ID: {tramite.pago.paymentId}</div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-xs">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}

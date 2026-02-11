@@ -72,6 +72,7 @@ export default function Apostillas() {
           tipoTramite: `Apostilla - ${tipoDocumento}`,
           descripcion: buildDescription(),
           monto: MONTO_APOSTILLA,
+          whatsapp: whatsappSolicitante,
         }),
       })
 

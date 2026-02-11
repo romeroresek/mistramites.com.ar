@@ -14,15 +14,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -33,28 +32,26 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String?   @unique
-  emailVerified DateTime?
-  name          String?
-  image         String?
-  password      String?
-  role          String    @default("usuario")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
+  id                String             @id @default(cuid())
+  email             String?            @unique
+  emailVerified     DateTime?
+  name              String?
+  image             String?
+  role              String             @default("usuario")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  password          String?
   accounts          Account[]
-  sessions          Session[]
-  tramites          Tramite[]
   pagos             Pago[]
   pushSubscriptions PushSubscription[]
+  sessions          Session[]
+  tramites          Tramite[]
 
   @@map("users")
 }
@@ -69,25 +66,22 @@ model VerificationToken {
 }
 
 model Tramite {
-  id            String    @id @default(cuid())
-  userId        String?
-  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  guestEmail    String?
-
-  oficina       String
-  tipoTramite   String
-  estado        String    @default("pendiente")
-
-  descripcion   String?
-  monto         Float
-  archivoUrl    String?
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  documentos    Documento[]
-  pago          Pago?
-  partida       Partida?
+  id          String      @id @default(cuid())
+  userId      String?
+  oficina     String
+  tipoTramite String
+  estado      String      @default("pendiente")
+  descripcion String?
+  monto       Float
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  archivoUrl  String?
+  guestEmail  String?
+  whatsapp    String?
+  documentos  Documento[]
+  pago        Pago?
+  partida     Partida?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("tramites")
 }
@@ -95,45 +89,37 @@ model Tramite {
 model Partida {
   id               String    @id @default(cuid())
   tramiteId        String    @unique
-  tramite          Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
-
   tipoPartida      String
-  whatsapp         String?
-
   dni              String
   sexo             String
   nombres          String
   apellido         String
   fechaNacimiento  DateTime
   ciudadNacimiento String?
-
   fechaDefuncion   DateTime?
-
   dni2             String?
   sexo2            String?
   nombres2         String?
   apellido2        String?
   fechaNacimiento2 DateTime?
-
   fechaMatrimonio  DateTime?
   ciudadMatrimonio String?
   divorciados      Boolean   @default(false)
-
   createdAt        DateTime  @default(now())
+  whatsapp         String?
+  tramite          Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
 
   @@map("partidas")
 }
 
 model Documento {
-  id            String    @id @default(cuid())
-  tramiteId     String
-  tramite       Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
-
-  nombre        String
-  tipo          String
-  url           String
-
-  createdAt     DateTime  @default(now())
+  id        String   @id @default(cuid())
+  tramiteId String
+  nombre    String
+  tipo      String
+  url       String
+  createdAt DateTime @default(now())
+  tramite   Tramite  @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
 
   @@map("documentos")
 }
@@ -141,18 +127,21 @@ model Documento {
 model Pago {
   id            String    @id @default(cuid())
   tramiteId     String    @unique
-  tramite       Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
-
   userId        String?
-  user          User?     @relation(fields: [userId], references: [id])
-
   monto         Float
   estado        String    @default("pendiente")
-
   mercadopagoId String?
-
+  // Datos del pagador real de Mercado Pago
+  paymentId     String?   // ID del pago en MP
+  payerEmail    String?   // Email del que pagó
+  payerName     String?   // Nombre del que pagó
+  payerDni      String?   // DNI del que pagó
+  paymentMethod String?   // Método de pago (credit_card, debit_card, etc)
+  paymentDate   DateTime? // Fecha real del pago
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  tramite       Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
+  user          User?     @relation(fields: [userId], references: [id])
 
   @@map("pagos")
 }
@@ -160,14 +149,12 @@ model Pago {
 model PushSubscription {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   endpoint  String   @unique
   p256dh    String
   auth      String
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("push_subscriptions")
 }

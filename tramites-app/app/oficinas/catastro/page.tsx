@@ -97,6 +97,7 @@ export default function Catastro() {
           tipoTramite: "Informe Catastral",
           descripcion: buildDescription(),
           monto: MONTO_INFORME,
+          whatsapp: whatsappSolicitante,
         }),
       })
 

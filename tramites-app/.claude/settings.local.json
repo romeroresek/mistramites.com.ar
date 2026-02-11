@@ -10,7 +10,8 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(git config:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Manejar usuario null en preferencia de MercadoPago\n\nUsar guestEmail como fallback cuando el trámite no tiene usuario\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Manejar usuario null en preferencia de MercadoPago\n\nUsar guestEmail como fallback cuando el trámite no tiene usuario\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(curl:*)"
     ]
   }
 }
