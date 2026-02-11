@@ -18,22 +18,24 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        console.log("[AUTH] Intento de login con email:", credentials?.email)
-
         if (!credentials?.email || !credentials?.password) {
-          console.log("[AUTH] Error: Credenciales vacías")
           return null
         }
 
+        // Solo traer los campos necesarios para autenticación
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            password: true,
+            role: true,
+          },
         })
 
-        console.log("[AUTH] Usuario encontrado:", user ? "Sí" : "No")
-        console.log("[AUTH] Usuario tiene password:", user?.password ? "Sí" : "No")
-
-        if (!user || !user.password) {
-          console.log("[AUTH] Error: Usuario no encontrado o sin password")
+        if (!user?.password) {
           return null
         }
 
@@ -42,14 +44,10 @@ export const authOptions: NextAuthOptions = {
           user.password
         )
 
-        console.log("[AUTH] Password válido:", isValidPassword)
-
         if (!isValidPassword) {
-          console.log("[AUTH] Error: Contraseña incorrecta")
           return null
         }
 
-        console.log("[AUTH] Login exitoso para:", user.email)
         return {
           id: user.id,
           email: user.email,
@@ -67,33 +65,22 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       // Para Google OAuth, crear/actualizar usuario en la DB
       if (account?.provider === "google" && user.email) {
-        const existingUser = await prisma.user.findUnique({
+        // Usar upsert para una sola operación de DB
+        const dbUser = await prisma.user.upsert({
           where: { email: user.email },
+          update: {
+            name: user.name,
+            image: user.image,
+          },
+          create: {
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          },
+          select: { id: true, role: true },
         })
-
-        if (!existingUser) {
-          // Crear usuario nuevo
-          const newUser = await prisma.user.create({
-            data: {
-              email: user.email,
-              name: user.name,
-              image: user.image,
-            },
-          })
-          user.id = newUser.id
-          ;(user as any).role = newUser.role
-        } else {
-          // Actualizar datos y usar ID existente
-          await prisma.user.update({
-            where: { email: user.email },
-            data: {
-              name: user.name,
-              image: user.image,
-            },
-          })
-          user.id = existingUser.id
-          ;(user as any).role = existingUser.role
-        }
+        user.id = dbUser.id
+        ;(user as any).role = dbUser.role
       }
       return true
     },
