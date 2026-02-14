@@ -1,8 +1,13 @@
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import type { NextAuthOptions } from "next-auth"
-import bcrypt from "bcryptjs"
-import { prisma } from "./prisma"
+
+// Carga diferida: Prisma y bcrypt solo se cargan en login (authorize/signIn),
+// no al devolver la sesión JWT. Reduce cold start en la primera carga de la app.
+async function getPrisma() {
+  const { prisma } = await import("./prisma")
+  return prisma
+}
 
 export const authOptions: NextAuthOptions = {
   // NO usar PrismaAdapter con CredentialsProvider - causa conflictos
@@ -21,6 +26,9 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
+
+        const prisma = await getPrisma()
+        const { default: bcrypt } = await import("bcryptjs")
 
         // Solo traer los campos necesarios para autenticación
         const user = await prisma.user.findUnique({
@@ -65,6 +73,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       // Para Google OAuth, crear/actualizar usuario en la DB
       if (account?.provider === "google" && user.email) {
+        const prisma = await getPrisma()
         // Usar upsert para una sola operación de DB
         const dbUser = await prisma.user.upsert({
           where: { email: user.email },
