@@ -79,7 +79,7 @@ export default function NuevoTramite() {
       }
 
       router.push(`/admin/tramites/${data.id}`)
-    } catch (error) {
+    } catch {
       setError("Error al crear trámite")
     } finally {
       setCreating(false)

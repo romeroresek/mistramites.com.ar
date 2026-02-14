@@ -81,7 +81,7 @@ export default function AdminUsuarios() {
       setPassword("")
       setRole("usuario")
       fetchUsuarios()
-    } catch (error) {
+    } catch {
       setError("Error al crear usuario")
     } finally {
       setCreating(false)

@@ -3,24 +3,24 @@
 import { useState, useEffect } from "react"
 import { usePushNotifications } from "@/hooks/usePushNotifications"
 
+function getDismissedInitial(): boolean {
+  if (typeof window === "undefined") return false
+  return localStorage.getItem("notification-prompt-dismissed") === "true"
+}
+
 export function NotificationPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
+  const [dismissed, setDismissed] = useState(getDismissedInitial)
   const { isSupported, isSubscribed, permission, isLoading, subscribe } =
     usePushNotifications()
 
   useEffect(() => {
-    const wasDismissed = localStorage.getItem("notification-prompt-dismissed")
-    if (wasDismissed) {
-      setDismissed(true)
-      return
-    }
-
+    if (dismissed) return
     if (isSupported && !isSubscribed && permission === "default") {
       const timer = setTimeout(() => setShowPrompt(true), 3000)
       return () => clearTimeout(timer)
     }
-  }, [isSupported, isSubscribed, permission])
+  }, [dismissed, isSupported, isSubscribed, permission])
 
   const handleEnable = async () => {
     const success = await subscribe()

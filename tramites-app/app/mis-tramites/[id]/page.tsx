@@ -91,6 +91,7 @@ export default function TramiteDetalle() {
         }
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch solo al montar o cambiar id/sesión
   }, [status, router, params.id])
 
   const handlePagar = async () => {

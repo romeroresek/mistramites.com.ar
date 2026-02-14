@@ -137,7 +137,7 @@ export default function RegistroPersonas() {
     try {
       const { apellido, nombres } = separarNombre(nombreCompleto)
 
-      const body: any = {
+      const body: Record<string, unknown> = {
         tipoPartida: selectedPartida,
         dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
         whatsapp: `${codigoPais}${whatsapp}`,

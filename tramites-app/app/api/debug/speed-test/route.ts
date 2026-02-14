@@ -15,7 +15,7 @@ export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`
     results.db_connect_ms = Math.round(performance.now() - dbConnectStart)
-  } catch (e) {
+  } catch {
     results.db_connect_error = -1
   }
 
@@ -24,7 +24,7 @@ export async function GET() {
   try {
     await prisma.user.count()
     results.db_query_simple_ms = Math.round(performance.now() - queryStart)
-  } catch (e) {
+  } catch {
     results.db_query_simple_error = -1
   }
 
@@ -36,7 +36,7 @@ export async function GET() {
       select: { id: true },
     })
     results.db_query_indexed_ms = Math.round(performance.now() - queryIndexStart)
-  } catch (e) {
+  } catch {
     results.db_query_indexed_error = -1
   }
 
@@ -53,19 +53,49 @@ export async function GET() {
       include: { user: true, pago: true },
     })
     results.db_query_complex_ms = Math.round(performance.now() - complexStart)
-  } catch (e) {
+  } catch {
     results.db_query_complex_error = -1
   }
 
   results.total_ms = Math.round(performance.now() - startTotal)
 
+  // Umbrales para análisis (ms)
+  const DB_LENTO = 800
+  const DB_ACEPTABLE = 300
+  const BCRYPT_NORMAL_MAX = 350
+  const TOTAL_LENTO = 2000
+  const TOTAL_ACEPTABLE = 800
+
+  const dbConnect = results.db_connect_ms ?? 0
+  const total = results.total_ms
+  const bcryptMs = results.bcrypt_compare_ms ?? 0
+
+  const analysis = {
+    conexion_db:
+      dbConnect >= DB_LENTO
+        ? `Lento (${dbConnect}ms) — cold start DB o pooler lejano`
+        : dbConnect >= DB_ACEPTABLE
+          ? `Aceptable (${dbConnect}ms)`
+          : `Rápido (${dbConnect}ms)`,
+    bcrypt:
+      bcryptMs > BCRYPT_NORMAL_MAX
+        ? `Lento (${bcryptMs}ms) — normal en CPU limitada`
+        : `OK (${bcryptMs}ms)`,
+    total:
+      total >= TOTAL_LENTO
+        ? `Lento (${total}ms) — revisar conexión DB y/o cold start`
+        : total >= TOTAL_ACEPTABLE
+          ? `Aceptable (${total}ms)`
+          : `Rápido (${total}ms)`,
+    recomendacion:
+      total >= TOTAL_LENTO || dbConnect >= DB_LENTO
+        ? "Usar connection pooler en DATABASE_URL; considerar warm-up (cron) si es serverless."
+        : null,
+  }
+
   return NextResponse.json({
     timestamp: new Date().toISOString(),
     results,
-    analysis: {
-      db_latency: results.db_connect_ms > 500 ? "LENTO (cold start?)" : "OK",
-      bcrypt: results.bcrypt_compare_ms > 200 ? "Normal (100-300ms esperado)" : "Rápido",
-      overall: results.total_ms > 1000 ? "Revisar conexión DB" : "OK",
-    },
+    analysis,
   })
 }

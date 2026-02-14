@@ -1,6 +1,7 @@
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
-import type { NextAuthOptions } from "next-auth"
+import type { NextAuthOptions, Session } from "next-auth"
+import type { JWT } from "next-auth/jwt"
 
 // Carga diferida: Prisma y bcrypt solo se cargan en login (authorize/signIn),
 // no al devolver la sesión JWT. Reduce cold start en la primera carga de la app.
@@ -89,21 +90,21 @@ export const authOptions: NextAuthOptions = {
           select: { id: true, role: true },
         })
         user.id = dbUser.id
-        ;(user as any).role = dbUser.role
+        user.role = dbUser.role
       }
       return true
     },
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }: { token: JWT; user?: { id?: string; role?: string } }) {
       if (user) {
         token.id = user.id
         token.role = user.role || "usuario"
       }
       return token
     },
-    async session({ session, token }: any) {
-      if (token) {
-        session.user.id = token.id
-        session.user.role = token.role
+    async session({ session, token }: { session: Session; token: JWT }) {
+      if (token && session.user) {
+        (session.user as { id?: string; role?: string }).id = token.id as string
+        (session.user as { id?: string; role?: string }).role = token.role as string
       }
       return session
     },

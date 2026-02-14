@@ -121,6 +121,7 @@ export default function AdminPage() {
     }
 
     fetchTramites().then((data) => verifyPendingPayments(data))
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch/verify solo al montar o cambiar sesión
   }, [status, session, router])
 
   if (loading) {
@@ -129,15 +130,6 @@ export default function AdminPage() {
         <p className="text-gray-600">Cargando...</p>
       </div>
     )
-  }
-
-  const getEstadoLabel = (estado: string) => {
-    switch (estado) {
-      case "completado": return "Completado"
-      case "en_proceso": return "En proceso"
-      case "rechazado": return "Rechazado"
-      default: return "Pendiente"
-    }
   }
 
   return (

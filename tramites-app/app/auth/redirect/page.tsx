@@ -17,7 +17,7 @@ export default function AuthRedirect() {
     }
 
     if (status === "authenticated") {
-      const role = (session?.user as any)?.role
+      const role = session?.user?.role
       if (role === "admin") {
         router.push("/admin")
       } else {

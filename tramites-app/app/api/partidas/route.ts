@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
     const webhookUrl = process.env.WEBHOOK_URL
 
-    const preferenceBody: any = {
+    const preferenceBody: Record<string, unknown> = {
       items: [
         {
           id: tramite.id,

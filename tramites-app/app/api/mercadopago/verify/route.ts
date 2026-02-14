@@ -4,6 +4,15 @@ import { authOptions } from "@/lib/auth"
 import { MercadoPagoConfig, Payment } from "mercadopago"
 import { prisma } from "@/lib/prisma"
 
+interface MpPaymentData {
+  id?: number
+  status?: string
+  external_reference?: string
+  payer?: { email?: string; first_name?: string; last_name?: string; identification?: { number?: string } }
+  payment_method_id?: string
+  date_approved?: string
+}
+
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
 })
@@ -18,12 +27,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { paymentId, tramiteId } = body
 
-    let paymentData: any = null
+    let paymentData: MpPaymentData | null = null
 
     if (paymentId) {
       // Verificar por payment_id directo (viene del redirect de MP)
       const payment = new Payment(client)
-      paymentData = await payment.get({ id: Number(paymentId) })
+      paymentData = (await payment.get({ id: Number(paymentId) })) as MpPaymentData
     } else if (tramiteId) {
       // Buscar pagos por external_reference (tramiteId)
       const response = await fetch(
@@ -34,7 +43,7 @@ export async function POST(req: NextRequest) {
           },
         }
       )
-      const searchData = await response.json()
+      const searchData = await response.json() as { results?: MpPaymentData[] }
       if (searchData.results && searchData.results.length > 0) {
         paymentData = searchData.results[0]
       }
@@ -109,8 +118,8 @@ export async function POST(req: NextRequest) {
       pagoEstado,
       tramiteEstado,
     })
-  } catch (error: any) {
-    console.error("Error verificando pago:", error?.message)
+  } catch (error: unknown) {
+    console.error("Error verificando pago:", error instanceof Error ? error.message : error)
     return NextResponse.json({ error: "Error al verificar pago" }, { status: 500 })
   }
 }

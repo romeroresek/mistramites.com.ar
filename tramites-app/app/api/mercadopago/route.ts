@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     // Llamar a la API REST de Mercado Pago directamente
     const isProduction = baseUrl.startsWith("https://")
 
-    const preferenceBody: any = {
+    const preferenceBody: Record<string, unknown> = {
       items: [
         {
           id: tramiteId,
@@ -97,9 +97,9 @@ export async function POST(req: NextRequest) {
       preferenceId: result.id,
       initPoint: result.init_point,
     })
-  } catch (error: any) {
-    console.error("Mercado Pago Error:", error?.message)
+  } catch (error: unknown) {
+    console.error("Mercado Pago Error:", error instanceof Error ? error.message : error)
     console.error("Full error:", error)
-    return NextResponse.json({ error: "Error al crear preferencia de pago", details: error?.message }, { status: 500 })
+    return NextResponse.json({ error: "Error al crear preferencia de pago", details: error instanceof Error ? error.message : undefined }, { status: 500 })
   }
 }

@@ -26,7 +26,7 @@ export async function POST(
     }
 
     // Verificar que el trámite pertenece al usuario
-    if (tramite.userId !== (session.user as any).id) {
+    if (tramite.userId !== session.user.id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
@@ -39,7 +39,7 @@ export async function POST(
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
     const webhookUrl = process.env.WEBHOOK_URL
 
-    const preferenceBody: any = {
+    const preferenceBody: Record<string, unknown> = {
       items: [
         {
           id: tramite.id,

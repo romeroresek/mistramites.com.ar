@@ -205,7 +205,7 @@ function MisTramitesContent() {
           >
             Inicio
           </Link>
-          {(session?.user as any)?.role === "admin" && (
+          {session?.user?.role === "admin" && (
             <Link
               href="/admin"
               onClick={() => setMenuOpen(false)}

@@ -133,6 +133,7 @@ export default function AdminTramiteDetalle() {
     })
 
     fetchPlantillas()
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch solo al montar o cambiar id/sesión
   }, [status, session, router, params.id])
 
   // Generar mensaje reemplazando placeholders

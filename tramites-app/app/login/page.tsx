@@ -20,7 +20,7 @@ function LoginContent() {
   const getRedirectUrl = async () => {
     if (callbackUrl) return callbackUrl
     const session = await getSession()
-    if ((session?.user as any)?.role === "admin") {
+    if (session?.user?.role === "admin") {
       return "/admin"
     }
     return "/mis-tramites"
