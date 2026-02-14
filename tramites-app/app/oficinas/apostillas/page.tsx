@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react"
 import { useState, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useToast } from "@/components/Toast"
 
 const TIPOS_DOCUMENTO = [
   "Partida de Registro civil",
@@ -40,6 +41,7 @@ const CODIGOS_PAIS = [
 
 export default function Apostillas() {
   const { data: session } = useSession()
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -117,11 +119,11 @@ export default function Apostillas() {
       if (data.initPoint) {
         window.location.href = data.initPoint
       } else {
-        alert("Error al procesar el pago")
+        toast.showError(data?.error || "Error al procesar el pago")
       }
     } catch (error) {
       console.error(error)
-      alert("Error al crear el trámite")
+      toast.showError("Error al crear el trámite")
     } finally {
       setLoading(false)
     }
@@ -140,7 +142,7 @@ export default function Apostillas() {
               Volver
             </Link>
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
             <div className="w-16"></div>

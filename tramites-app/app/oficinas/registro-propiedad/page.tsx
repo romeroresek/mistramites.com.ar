@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
+import { useToast } from "@/components/Toast"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -45,6 +46,7 @@ const CODIGOS_PAIS = [
 
 export default function RegistroPropiedad() {
   const { data: session } = useSession()
+  const toast = useToast()
   const [selectedTramite, setSelectedTramite] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -153,11 +155,11 @@ export default function RegistroPropiedad() {
       if (data.initPoint) {
         window.location.href = data.initPoint
       } else {
-        alert("Error al procesar el pago")
+        toast.showError(data?.error || "Error al procesar el pago")
       }
     } catch (error) {
       console.error(error)
-      alert("Error al crear el trámite")
+      toast.showError("Error al crear el trámite")
     } finally {
       setLoading(false)
     }
@@ -191,7 +193,7 @@ export default function RegistroPropiedad() {
               Volver
             </Link>
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
             <div className="w-16"></div>

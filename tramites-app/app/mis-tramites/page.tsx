@@ -3,9 +3,10 @@
 import { Suspense } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useToast } from "@/components/Toast"
 
 interface Tramite {
   id: string
@@ -25,11 +26,62 @@ function MisTramitesContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const toast = useToast()
   const [tramites, setTramites] = useState<Tramite[]>([])
   const [loading, setLoading] = useState(true)
   const [pagando, setPagando] = useState<string | null>(null)
   const verifiedRef = useRef(false)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const fetchTramites = useCallback(async (): Promise<Tramite[]> => {
+    try {
+      const res = await fetch("/api/tramites")
+      const data = await res.json()
+      if (res.ok && Array.isArray(data)) {
+        setTramites(data)
+        return data
+      }
+      if (data?.error) {
+        toast.showError(data.error)
+      }
+      setTramites([])
+      return []
+    } catch (error) {
+      console.error(error)
+      toast.showError("Error al cargar los trámites")
+      setTramites([])
+      return []
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
+
+  const verifyPendingPayments = useCallback(
+    async (tramitesList: Tramite[]) => {
+      if (!Array.isArray(tramitesList)) return
+      const pendientes = tramitesList.filter(
+        (t) => t.pago?.estado === "pendiente" && t.pago?.mercadopagoId
+      )
+      if (pendientes.length === 0) return
+
+      try {
+        const res = await fetch("/api/mercadopago/verify-batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tramiteIds: pendientes.map((t) => t.id),
+          }),
+        })
+        const data = await res.json()
+        if (data.updated) {
+          await fetchTramites()
+        }
+      } catch (err) {
+        console.error("Error verificando pagos:", err)
+      }
+    },
+    [fetchTramites]
+  )
 
   const handlePagar = async (tramiteId: string) => {
     setPagando(tramiteId)
@@ -41,62 +93,13 @@ function MisTramitesContent() {
       if (data.initPoint) {
         window.location.href = data.initPoint
       } else {
-        alert(data.error || "Error al generar el pago")
+        toast.showError(data.error || "Error al generar el pago")
         setPagando(null)
       }
     } catch (error) {
       console.error("Error:", error)
-      alert("Error al procesar el pago")
+      toast.showError("Error al procesar el pago")
       setPagando(null)
-    }
-  }
-
-  const fetchTramites = async (): Promise<Tramite[]> => {
-    try {
-      const res = await fetch("/api/tramites")
-      const data = await res.json()
-      if (Array.isArray(data)) {
-        setTramites(data)
-        return data
-      }
-      setTramites([])
-      return []
-    } catch (error) {
-      console.error(error)
-      setTramites([])
-      return []
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const verifyPendingPayments = async (tramitesList: Tramite[]) => {
-    if (!Array.isArray(tramitesList)) return
-    const pendientes = tramitesList.filter(
-      (t) => t.pago?.estado === "pendiente" && t.pago?.mercadopagoId
-    )
-
-    if (pendientes.length === 0) return
-
-    let updated = false
-    for (const tramite of pendientes) {
-      try {
-        const res = await fetch("/api/mercadopago/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tramiteId: tramite.id }),
-        })
-        const data = await res.json()
-        if (data.pagoEstado === "confirmado") {
-          updated = true
-        }
-      } catch (err) {
-        console.error("Error verificando pago:", err)
-      }
-    }
-
-    if (updated) {
-      await fetchTramites()
     }
   }
 
@@ -126,7 +129,7 @@ function MisTramitesContent() {
         fetchTramites().then((data) => verifyPendingPayments(data))
       }
     }
-  }, [status, router, searchParams])
+  }, [status, router, searchParams, fetchTramites, verifyPendingPayments])
 
   if (status === "loading" || loading) {
     return (
@@ -152,7 +155,7 @@ function MisTramitesContent() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
             <button

@@ -100,11 +100,19 @@ export function usePushNotifications() {
 
       const registration = await navigator.serviceWorker.ready
 
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      if (!vapidKey) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: "Notificaciones no configuradas",
+        }))
+        return false
+      }
+
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-        ),
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
       })
 
       const response = await fetch("/api/push/subscribe", {

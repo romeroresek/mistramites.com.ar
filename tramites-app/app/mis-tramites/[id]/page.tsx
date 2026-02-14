@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useToast } from "@/components/Toast"
 
 interface Tramite {
   id: string
@@ -45,6 +46,7 @@ export default function TramiteDetalle() {
   const { status } = useSession()
   const router = useRouter()
   const params = useParams()
+  const toast = useToast()
   const [tramite, setTramite] = useState<Tramite | null>(null)
   const [loading, setLoading] = useState(true)
   const [processingPayment, setProcessingPayment] = useState(false)
@@ -107,11 +109,11 @@ export default function TramiteDetalle() {
       if (data.initPoint) {
         window.location.href = data.initPoint
       } else {
-        alert("Error al procesar el pago")
+        toast.showError(data?.error || "Error al procesar el pago")
       }
     } catch (error) {
       console.error(error)
-      alert("Error al procesar el pago")
+      toast.showError("Error al procesar el pago")
     } finally {
       setProcessingPayment(false)
     }
@@ -158,7 +160,7 @@ export default function TramiteDetalle() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
             <button

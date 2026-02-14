@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useToast } from "@/components/Toast"
 
 const LOCALIDADES_MISIONES = [
   "Alba Posse", "Almafuerte", "Apóstoles", "Aristóbulo del Valle", "Azara",
@@ -85,6 +86,7 @@ const PARTIDAS = [
 export default function RegistroPersonas() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const toast = useToast()
   const [selectedPartida, setSelectedPartida] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -167,7 +169,7 @@ export default function RegistroPersonas() {
       const data = await res.json()
 
       if (!res.ok) {
-        alert(data.error || "Error al crear la solicitud")
+        toast.showError(data.error || "Error al crear la solicitud")
         return
       }
 
@@ -178,7 +180,7 @@ export default function RegistroPersonas() {
       }
     } catch (error) {
       console.error(error)
-      alert("Error al procesar la solicitud")
+      toast.showError("Error al procesar la solicitud")
     } finally {
       setLoading(false)
     }
@@ -197,7 +199,7 @@ export default function RegistroPersonas() {
               Volver
             </Link>
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
             <div className="w-16"></div>

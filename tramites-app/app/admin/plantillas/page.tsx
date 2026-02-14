@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useToast } from "@/components/Toast"
 
 interface Plantilla {
   id: string
@@ -17,6 +18,7 @@ interface Plantilla {
 export default function PlantillasPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const toast = useToast()
   const [plantillas, setPlantillas] = useState<Plantilla[]>([])
   const [loading, setLoading] = useState(true)
   const [editando, setEditando] = useState<string | null>(null)
@@ -71,7 +73,7 @@ export default function PlantillasPage() {
       setEditando(null)
     } catch (error) {
       console.error(error)
-      alert("Error al guardar")
+      toast.showError("Error al guardar")
     } finally {
       setSaving(false)
     }
@@ -92,7 +94,7 @@ export default function PlantillasPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
               <span className="font-semibold text-gray-800">TramitesMisiones</span>
             </Link>
             <button
