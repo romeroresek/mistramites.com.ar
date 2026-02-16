@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
+// Forzar renderizado dinámico (no pre-renderizar durante build)
+export const dynamic = 'force-dynamic'
+
 // ENDPOINT TEMPORAL DE DIAGNÓSTICO - ELIMINAR EN PRODUCCIÓN
 export async function POST(req: NextRequest) {
   try {

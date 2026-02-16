@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
+// Forzar renderizado dinámico (no pre-renderizar durante build)
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const results: Record<string, number> = {}
   const startTotal = performance.now()
