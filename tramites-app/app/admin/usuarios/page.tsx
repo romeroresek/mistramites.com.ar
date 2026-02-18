@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { ArrowLeft, LayoutDashboard, Home, FileText, LogOut } from "lucide-react"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 
 interface Usuario {
   id: string
@@ -90,25 +92,32 @@ export default function AdminUsuarios() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Cargando...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-sm text-gray-600">Cargando...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4">
-          <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">TramitesMisiones</span>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex h-14 items-center justify-between gap-2">
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 min-h-[44px] shrink-0 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-2 -ml-2"
+            >
+              <ArrowLeft className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-medium">Volver</span>
+            </Link>
+            <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8 shrink-0" />
+              <span className="font-semibold text-gray-800 truncate">TramitesMisiones</span>
             </Link>
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded -m-1"
               aria-label="Abrir menú"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -133,11 +142,11 @@ export default function AdminUsuarios() {
           menuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
           <span className="text-sm font-medium text-gray-700">Menú Admin</span>
           <button
             onClick={() => setMenuOpen(false)}
-            className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded -m-1"
             aria-label="Cerrar menú"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -149,52 +158,56 @@ export default function AdminUsuarios() {
           <Link
             href="/admin"
             onClick={() => setMenuOpen(false)}
-            className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center gap-2"
           >
+            <LayoutDashboard className="w-4 h-4 shrink-0" />
             Panel Admin
           </Link>
           <Link
             href="/"
             onClick={() => setMenuOpen(false)}
-            className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center gap-2"
           >
+            <Home className="w-4 h-4 shrink-0" />
             Inicio
           </Link>
           <Link
             href="/mis-tramites"
             onClick={() => setMenuOpen(false)}
-            className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center gap-2"
           >
+            <FileText className="w-4 h-4 shrink-0" />
             Mis Trámites
           </Link>
           <hr className="my-1" />
           <Link
             href="/api/auth/signout?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
-            className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
+            className="px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg min-h-[44px] flex items-center gap-2"
           >
+            <LogOut className="w-4 h-4 shrink-0" />
             Salir
           </Link>
         </div>
       </div>
 
       {/* Main */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Usuarios</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Usuarios</h1>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800"
           >
             Nuevo usuario
           </button>
         </div>
 
         {/* Lista de usuarios */}
-        <div className="bg-white border border-gray-200 rounded overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           {usuarios.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-gray-500">No hay usuarios registrados.</p>
+              <p className="text-sm text-gray-500">No hay usuarios registrados.</p>
             </div>
           ) : (
             <table className="w-full">
@@ -242,12 +255,13 @@ export default function AdminUsuarios() {
         </div>
       </footer>
 
-      {/* Modal crear usuario */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white border border-gray-200 rounded p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Crear usuario</h3>
-
+      {/* Drawer (Bottom Sheet) crear usuario */}
+      <Drawer open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) setError("") }}>
+        <DrawerContent className="max-h-[90vh] flex flex-col">
+          <DrawerHeader className="text-left flex-shrink-0 border-b border-gray-200">
+            <DrawerTitle>Crear usuario</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 pb-6">
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
@@ -255,7 +269,7 @@ export default function AdminUsuarios() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -266,7 +280,7 @@ export default function AdminUsuarios() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -277,7 +291,7 @@ export default function AdminUsuarios() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                   minLength={6}
                 />
@@ -288,7 +302,7 @@ export default function AdminUsuarios() {
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="usuario">Usuario</option>
                   <option value="admin">Administrador</option>
@@ -299,27 +313,27 @@ export default function AdminUsuarios() {
                 <p className="text-sm text-red-600">{error}</p>
               )}
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setError("") }}
                   disabled={creating}
-                  className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
+                  className="flex-1 min-h-[44px] inline-flex items-center justify-center px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 min-h-[44px] inline-flex items-center justify-center px-4 py-3 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
                 >
                   {creating ? "Creando..." : "Crear usuario"}
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      )}
+        </DrawerContent>
+      </Drawer>
     </div>
   )
 }

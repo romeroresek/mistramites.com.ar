@@ -138,6 +138,52 @@ npm start
 
 Render desplegará automáticamente cuando hagas push a main.
 
+## Guía de estilos (mobile-first)
+
+Para mantener el mismo aspecto en todo el sitio (/, /admin, /mis-tramites, etc.) usamos estas convenciones:
+
+### Layout general
+- **Página**: `min-h-screen bg-gray-50` o `bg-gray-100` según sección.
+- **Contenido principal**: `max-w-7xl mx-auto px-4 sm:px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]`.
+- **Footer**: `bg-white border-t border-gray-200`, contenido `max-w-7xl mx-auto px-4 py-4`, texto `text-center text-gray-500 text-xs sm:text-sm`.
+
+### Navegación
+- **Navbar**: `bg-white border-b border-gray-200 sticky top-0 z-40`, contenedor `max-w-7xl mx-auto px-4`, altura `h-14`.
+- **Botón menú (hamburguesa)**: área táctil mínimo 44px: `min-w-[44px] min-h-[44px] flex items-center justify-center ... rounded -m-1`.
+- **Menú lateral**: `fixed top-0 right-0 ... w-56 bg-white ... rounded-bl-lg`, ítems con `px-3 py-2 text-sm`, cierre con área táctil ≥44px.
+
+### Cards y contenedores
+- **Card**: `bg-white border border-gray-200 rounded-lg`, padding `p-4`.
+- **Card con cabecera**: cabecera `p-4 border-b border-gray-200`, cuerpo `p-4`.
+- **Cards táctiles (links)**: envolver en `Link` con `block min-h-[44px]`, card con `rounded-lg p-3 hover:shadow-md active:bg-gray-50`.
+
+### Botones
+- **Primario (CTA)**: `min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800`.
+- **Secundario / outline**: `min-h-[44px] px-4 py-3 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 active:bg-gray-100`.
+- **Danger**: `... bg-red-600 ... hover:bg-red-700` y para texto/link `text-red-600 hover:bg-red-50`.
+
+### Tipografía
+- **Título de página**: `text-xl sm:text-2xl font-semibold text-gray-900`.
+- **Título de sección/card**: `text-sm sm:text-base font-semibold text-gray-900`.
+- **Cuerpo**: `text-sm text-gray-600` (evitar `text-xs` en bloques largos).
+- **Secundario / metadatos**: `text-sm text-gray-500` o `text-gray-400`.
+
+### Áreas táctiles y accesibilidad
+- **Mínimo recomendado**: 44px de altura (o min-h-[44px]) en botones y enlaces principales.
+- **Viewport**: no usar `userScalable: false`; permitir zoom para accesibilidad.
+- **Safe area**: en `main`, usar `pb-[max(1.5rem,env(safe-area-inset-bottom))]` para dispositivos con barra de inicio.
+
+### Tablas (desktop)
+- Contenedor: `bg-white border border-gray-200 rounded-lg overflow-x-auto`.
+- Celdas: `px-4 py-3 text-sm`, cabeceras `font-semibold text-gray-600`.
+
+### Modales / diálogos
+- Overlay: `fixed inset-0 bg-black/50 ... z-50 p-4`.
+- Contenido: `bg-white border border-gray-200 rounded-lg p-6 max-w-md w-full`.
+- Botones de acción: mismos estilos que botones primario/secundario con `min-h-[44px]` donde aplique.
+
+---
+
 ## Estructura del Proyecto
 
 \`\`\`

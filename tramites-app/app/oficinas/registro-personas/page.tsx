@@ -19,27 +19,8 @@ const LOCALIDADES_MISIONES = [
   "San Pedro", "San Vicente", "Santa Ana", "Santo Pipó", "Wanda"
 ].sort()
 
-const inputClass = "w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+const inputClass = "w-full min-w-0 px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
-
-const CODIGOS_PAIS = [
-  { codigo: "+54", pais: "Argentina", placeholder: "11 1234-5678" },
-  { codigo: "+595", pais: "Paraguay", placeholder: "981 123456" },
-  { codigo: "+598", pais: "Uruguay", placeholder: "99 123 456" },
-  { codigo: "+55", pais: "Brasil", placeholder: "11 91234-5678" },
-  { codigo: "+56", pais: "Chile", placeholder: "9 1234 5678" },
-  { codigo: "+57", pais: "Colombia", placeholder: "300 1234567" },
-  { codigo: "+51", pais: "Perú", placeholder: "912 345 678" },
-  { codigo: "+591", pais: "Bolivia", placeholder: "71234567" },
-  { codigo: "+58", pais: "Venezuela", placeholder: "412 1234567" },
-  { codigo: "+52", pais: "México", placeholder: "55 1234 5678" },
-  { codigo: "+1", pais: "USA/Canadá", placeholder: "555 123 4567" },
-  { codigo: "+34", pais: "España", placeholder: "612 345 678" },
-  { codigo: "+39", pais: "Italia", placeholder: "312 345 6789" },
-  { codigo: "+49", pais: "Alemania", placeholder: "151 1234 5678" },
-  { codigo: "+33", pais: "Francia", placeholder: "6 12 34 56 78" },
-  { codigo: "+44", pais: "Reino Unido", placeholder: "7911 123456" },
-]
 
 function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombreCompletoVal, setNombreCompletoVal, fechaNacVal, setFechaNacVal }: {
   label: string
@@ -49,9 +30,9 @@ function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombreCo
   fechaNacVal: string; setFechaNacVal: (v: string) => void
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0">
       {label && <h3 className="font-semibold text-gray-900 border-b pb-2">{label}</h3>}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className={labelClass}>DNI</label>
           <input type="text" value={dniVal} onChange={(e) => setDniVal(e.target.value)} className={inputClass} required maxLength={10} />
@@ -96,7 +77,6 @@ export default function RegistroPersonas() {
   const [fechaNacimiento, setFechaNacimiento] = useState("")
   const [ciudadNacimiento, setCiudadNacimiento] = useState("")
   const [fechaDefuncion, setFechaDefuncion] = useState("")
-  const [codigoPais, setCodigoPais] = useState("+54")
   const [whatsapp, setWhatsapp] = useState("")
   const [email, setEmail] = useState("")
 
@@ -116,7 +96,7 @@ export default function RegistroPersonas() {
     setFechaNacimiento(""); setCiudadNacimiento(""); setFechaDefuncion("")
     setDni2(""); setSexo2(""); setNombreCompleto2("")
     setFechaNacimiento2(""); setFechaMatrimonio(""); setCiudadMatrimonio("")
-    setDivorciados(false); setCodigoPais("+54"); setWhatsapp(""); setEmail("")
+    setDivorciados(false); setWhatsapp(""); setEmail("")
   }
 
   // Función para separar apellido y nombre
@@ -140,7 +120,7 @@ export default function RegistroPersonas() {
       const body: Record<string, unknown> = {
         tipoPartida: selectedPartida,
         dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
-        whatsapp: `${codigoPais}${whatsapp}`,
+        whatsapp: `+54${whatsapp.replace(/\D/g, "")}`,
         email: isLoggedIn ? undefined : email,
       }
 
@@ -187,12 +167,12 @@ export default function RegistroPersonas() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+            <Link href="/" className="flex items-center gap-2 min-h-[44px] text-gray-600 hover:text-gray-900 rounded-lg px-2 -ml-2 hover:bg-gray-100">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
@@ -208,16 +188,16 @@ export default function RegistroPersonas() {
       </nav>
 
       {/* Main */}
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white border border-gray-200 rounded">
+      <main className="max-w-2xl mx-auto px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] min-w-0">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <h2 className="font-semibold text-gray-900">Solicitar Partida</h2>
             <p className="text-sm text-gray-600">Seleccioná el tipo de partida y completá los datos</p>
           </div>
 
-          <div className="p-4">
+          <div className="p-4 min-w-0">
             {/* Tipo de partida */}
-            <div className="mb-6">
+            <div className="mb-6 min-w-0">
               <label className={labelClass}>Tipo de partida</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
                 {PARTIDAS.map((p) => (
@@ -225,7 +205,7 @@ export default function RegistroPersonas() {
                     key={p.id}
                     type="button"
                     onClick={() => { setSelectedPartida(p.id); resetForm() }}
-                    className={`p-3 border rounded text-sm text-left transition-colors ${
+                    className={`min-h-[44px] p-3 border rounded-lg text-sm text-left transition-colors ${
                       selectedPartida === p.id
                         ? "border-blue-600 bg-blue-50 text-blue-700"
                         : "border-gray-300 hover:border-gray-400 text-gray-700"
@@ -239,7 +219,7 @@ export default function RegistroPersonas() {
 
             {/* Formulario */}
             {selectedPartida && (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6 w-full min-w-0 max-w-full overflow-hidden">
                 {/* Nacimiento */}
                 {selectedPartida === "nacimiento" && (
                   <>
@@ -340,31 +320,21 @@ export default function RegistroPersonas() {
                   </>
                 )}
 
-                {/* WhatsApp */}
-                <div>
+                {/* WhatsApp: +54 fijo y número en un solo renglón */}
+                <div className="w-full min-w-0">
                   <label className={labelClass}>WhatsApp de contacto</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={codigoPais}
-                      onChange={(e) => setCodigoPais(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                    >
-                      {CODIGOS_PAIS.map((pais) => (
-                        <option key={pais.codigo} value={pais.codigo}>
-                          {pais.codigo} {pais.pais}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="flex items-stretch w-full min-w-0 rounded-lg border border-gray-300 overflow-hidden bg-white">
+                    <span className="inline-flex items-center px-3 py-2.5 bg-gray-100 text-gray-700 text-sm border-r border-gray-300 shrink-0">+54</span>
                     <input
                       type="tel"
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="flex-1 min-w-0 w-full px-3 py-2.5 border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                      placeholder="11 1234-5678"
                       required
-                      placeholder={CODIGOS_PAIS.find(p => p.codigo === codigoPais)?.placeholder || "11 1234-5678"}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Ingresá código de área sin 0 + número sin 15. Ej: 11 1234-5678</p>
+                  <p className="text-sm text-gray-500 mt-1">Ingresá código de área sin 0 + número sin 15. Ej: 11 1234 5678</p>
                 </div>
 
                 {/* Email - solo si no está logueado */}
@@ -393,7 +363,7 @@ export default function RegistroPersonas() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Procesando..." : "Continuar al pago"}
                   </button>

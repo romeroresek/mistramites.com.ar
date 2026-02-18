@@ -7,6 +7,7 @@ import { useEffect, useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
+import { ArrowLeft } from "lucide-react"
 
 interface Tramite {
   id: string
@@ -133,8 +134,8 @@ function MisTramitesContent() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Cargando...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-sm text-gray-600">Cargando...</p>
       </div>
     )
   }
@@ -149,18 +150,25 @@ function MisTramitesContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4">
-          <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">TramitesMisiones</span>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex h-14 items-center justify-between gap-2">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 min-h-[44px] shrink-0 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-2 -ml-2"
+            >
+              <ArrowLeft className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-medium">Volver</span>
+            </Link>
+            <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
+              <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8 shrink-0" />
+              <span className="font-semibold text-gray-800 truncate">TramitesMisiones</span>
             </Link>
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded -m-1"
               aria-label="Abrir menú"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -185,11 +193,11 @@ function MisTramitesContent() {
           menuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
           <span className="text-sm font-medium text-gray-700">Menú</span>
           <button
             onClick={() => setMenuOpen(false)}
-            className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded -m-1"
             aria-label="Cerrar menú"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -201,7 +209,7 @@ function MisTramitesContent() {
           <Link
             href="/"
             onClick={() => setMenuOpen(false)}
-            className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center"
           >
             Inicio
           </Link>
@@ -209,7 +217,7 @@ function MisTramitesContent() {
             <Link
               href="/admin"
               onClick={() => setMenuOpen(false)}
-              className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+              className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center"
             >
               Panel Admin
             </Link>
@@ -218,7 +226,7 @@ function MisTramitesContent() {
           <Link
             href="/api/auth/signout?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
-            className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
+            className="px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg min-h-[44px] flex items-center"
           >
             Salir
           </Link>
@@ -226,23 +234,23 @@ function MisTramitesContent() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Mis Trámites</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Mis Trámites</h1>
           <Link
             href="/"
-            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700"
+            className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800"
           >
             Nuevo trámite
           </Link>
         </div>
 
         {tramites.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded p-6 sm:p-8 text-center">
-            <p className="text-gray-600 mb-4 text-sm sm:text-base">No tenés trámites registrados</p>
+          <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 text-center">
+            <p className="text-sm text-gray-600 mb-4">No tenés trámites registrados</p>
             <Link
               href="/"
-              className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800"
             >
               Iniciar un trámite
             </Link>
@@ -254,15 +262,15 @@ function MisTramitesContent() {
               {tramites.map((tramite) => (
                 <div
                   key={tramite.id}
-                  className="bg-white border border-gray-200 rounded p-3"
+                  className="bg-white border border-gray-200 rounded-lg p-4"
                 >
-                  <Link href={`/mis-tramites/${tramite.id}`}>
+                  <Link href={`/mis-tramites/${tramite.id}`} className="block min-h-[44px]">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="font-medium text-gray-900 text-sm truncate">{tramite.tipoTramite}</p>
-                        <p className="text-xs text-gray-500 truncate">{tramite.oficina}</p>
+                        <p className="text-sm text-gray-500 truncate">{tramite.oficina}</p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded ${
+                      <span className={`text-sm px-2 py-1 rounded ${
                         tramite.pago?.estado === "confirmado"
                           ? "bg-green-100 text-green-700"
                           : tramite.pago?.estado === "devuelto"
@@ -272,7 +280,7 @@ function MisTramitesContent() {
                         {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
+                    <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-500">
                         {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
                       </span>
@@ -286,7 +294,7 @@ function MisTramitesContent() {
                       <button
                         onClick={() => handlePagar(tramite.id)}
                         disabled={pagando === tramite.id}
-                        className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-blue-400"
+                        className="flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 disabled:opacity-70"
                       >
                         {pagando === tramite.id ? (
                           "Procesando..."
@@ -308,7 +316,7 @@ function MisTramitesContent() {
                         href={tramite.archivoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                        className="flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 active:bg-green-800"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -324,7 +332,7 @@ function MisTramitesContent() {
             </div>
 
             {/* Desktop Table */}
-            <div className="hidden md:block bg-white border border-gray-200 rounded overflow-x-auto">
+            <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
@@ -368,7 +376,7 @@ function MisTramitesContent() {
                             <button
                               onClick={() => handlePagar(tramite.id)}
                               disabled={pagando === tramite.id}
-                              className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-blue-400"
+                              className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-70"
                             >
                               {pagando === tramite.id ? "..." : "Pagar"}
                             </button>
@@ -378,7 +386,7 @@ function MisTramitesContent() {
                               href={tramite.archivoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                              className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -414,8 +422,8 @@ function MisTramitesContent() {
 export default function MisTramites() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Cargando...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-sm text-gray-600">Cargando...</p>
       </div>
     }>
       <MisTramitesContent />

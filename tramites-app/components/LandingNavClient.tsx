@@ -3,9 +3,13 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
+import { useSession } from "next-auth/react"
+import { LogOut, LayoutDashboard } from "lucide-react"
 
 export function LandingNavClient() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === "admin"
 
   return (
     <>
@@ -25,7 +29,7 @@ export function LandingNavClient() {
             </Link>
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded -m-1"
               aria-label="Abrir menú"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -71,9 +75,25 @@ export function LandingNavClient() {
             Inmuebles
           </a>
           <hr className="my-1" />
-          <Link href="/mis-tramites" onClick={() => setMenuOpen(false)} className="px-3 py-2 bg-blue-600 text-white text-sm text-center rounded hover:bg-blue-700">
+          <Link href="/mis-tramites" onClick={() => setMenuOpen(false)} className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">
             Mis Tramites
           </Link>
+          {isAdmin && (
+            <Link href="/admin" onClick={() => setMenuOpen(false)} className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2">
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              Panel de admin
+            </Link>
+          )}
+          {session && (
+            <a
+              href="/api/auth/signout?callbackUrl=/"
+              onClick={() => setMenuOpen(false)}
+              className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              Cerrar sesión
+            </a>
+          )}
           <a
             href="https://wa.me/543764889861"
             target="_blank"

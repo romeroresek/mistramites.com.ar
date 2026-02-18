@@ -20,25 +20,6 @@ const TIPOS_DOCUMENTO = [
 
 const MONTO_APOSTILLA = 40000
 
-const CODIGOS_PAIS = [
-  { codigo: "+54", pais: "Argentina", placeholder: "11 1234-5678" },
-  { codigo: "+595", pais: "Paraguay", placeholder: "981 123456" },
-  { codigo: "+598", pais: "Uruguay", placeholder: "99 123 456" },
-  { codigo: "+55", pais: "Brasil", placeholder: "11 91234-5678" },
-  { codigo: "+56", pais: "Chile", placeholder: "9 1234 5678" },
-  { codigo: "+57", pais: "Colombia", placeholder: "300 1234567" },
-  { codigo: "+51", pais: "Perú", placeholder: "912 345 678" },
-  { codigo: "+591", pais: "Bolivia", placeholder: "71234567" },
-  { codigo: "+58", pais: "Venezuela", placeholder: "412 1234567" },
-  { codigo: "+52", pais: "México", placeholder: "55 1234 5678" },
-  { codigo: "+1", pais: "USA/Canadá", placeholder: "555 123 4567" },
-  { codigo: "+34", pais: "España", placeholder: "612 345 678" },
-  { codigo: "+39", pais: "Italia", placeholder: "312 345 6789" },
-  { codigo: "+49", pais: "Alemania", placeholder: "151 1234 5678" },
-  { codigo: "+33", pais: "Francia", placeholder: "6 12 34 56 78" },
-  { codigo: "+44", pais: "Reino Unido", placeholder: "7911 123456" },
-]
-
 export default function Apostillas() {
   const { data: session } = useSession()
   const toast = useToast()
@@ -47,7 +28,6 @@ export default function Apostillas() {
 
   // Campos del formulario
   const [email, setEmail] = useState("")
-  const [codigoPais, setCodigoPais] = useState("+54")
   const [telefonoWhatsapp, setTelefonoWhatsapp] = useState("")
   const [nombreDocumento, setNombreDocumento] = useState("")
   const [tipoDocumento, setTipoDocumento] = useState("")
@@ -55,7 +35,7 @@ export default function Apostillas() {
 
   const isLoggedIn = !!session?.user?.email
 
-  const whatsappCompleto = `${codigoPais}${telefonoWhatsapp.replace(/\D/g, "")}`
+  const whatsappCompleto = `+54${telefonoWhatsapp.replace(/\D/g, "")}`
 
   const buildDescription = () => {
     const lines = [
@@ -130,12 +110,12 @@ export default function Apostillas() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+            <Link href="/" className="flex items-center gap-2 min-h-[44px] text-gray-600 hover:text-gray-900 rounded-lg px-2 -ml-2 hover:bg-gray-100">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
@@ -151,94 +131,80 @@ export default function Apostillas() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="bg-white border border-gray-200 rounded">
-          <div className="p-3 sm:p-4 border-b border-gray-200">
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Apostilla de Documento Público</h1>
-            <p className="text-gray-600 text-xs sm:text-sm">Completá los datos para apostillar tu documento</p>
+      <main className="max-w-2xl mx-auto px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] min-w-0">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <h1 className="text-xl sm:text-xl font-semibold text-gray-900">Apostilla de Documento Público</h1>
+            <p className="text-gray-600 text-sm mt-0.5">Completá los datos para apostillar tu documento</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-3 sm:p-4">
+          <form onSubmit={handleSubmit} className="p-4 min-w-0">
             {/* Datos del Solicitante */}
-            <div className="mb-5 sm:mb-6">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
+            <div className="mb-5 sm:mb-6 min-w-0">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
                 Datos del Solicitante
               </h3>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 {!isLoggedIn && (
-                  <div>
-                    <label className="block text-xs sm:text-sm text-gray-600 mb-1">
-                      Email
-                    </label>
+                  <div className="min-w-0">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                      className="w-full min-w-0 px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="tu@email.com"
                       required
                     />
                   </div>
                 )}
-                <div>
-                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">
-                    WhatsApp del Solicitante
-                  </label>
-                  <div className="flex gap-2">
-                    <select
-                      value={codigoPais}
-                      onChange={(e) => setCodigoPais(e.target.value)}
-                      className="px-2 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white"
-                    >
-                      {CODIGOS_PAIS.map((pais) => (
-                        <option key={pais.codigo} value={pais.codigo}>
-                          {pais.codigo} {pais.pais}
-                        </option>
-                      ))}
-                    </select>
+                <div className="min-w-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp del Solicitante</label>
+                  <div className="flex items-stretch w-full min-w-0 rounded-lg border border-gray-300 overflow-hidden bg-white">
+                    <span className="inline-flex items-center px-3 py-2.5 bg-gray-100 text-gray-700 text-sm border-r border-gray-300 shrink-0">+54</span>
                     <input
                       type="tel"
                       value={telefonoWhatsapp}
                       onChange={(e) => setTelefonoWhatsapp(e.target.value)}
-                      className="flex-1 px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                      placeholder={CODIGOS_PAIS.find(p => p.codigo === codigoPais)?.placeholder || "Ej: 11 1234-5678"}
+                      className="flex-1 min-w-0 w-full px-3 py-2.5 border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                      placeholder="11 1234-5678"
                       required
                     />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Ingresá código de área sin 0 + número sin 15. Ej: 11 1234-5678
+                  <p className="text-sm text-gray-500 mt-1">
+                    Ingresá código de área sin 0 + número sin 15. Ej: 11 1234 5678
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Datos del Documento */}
-            <div className="mb-5 sm:mb-6">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
+            <div className="mb-5 sm:mb-6 min-w-0">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
                 Datos del documento a Apostillar
               </h3>
-              <div className="space-y-3 sm:space-y-4">
-                <div>
-                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+              <div className="space-y-4">
+                <div className="min-w-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Apellido y Nombre según figuran en el documento a Apostillar
                   </label>
                   <input
                     type="text"
                     value={nombreDocumento}
                     onChange={(e) => setNombreDocumento(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                    className="w-full min-w-0 px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+                <div className="min-w-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Tipo de documento a Apostillar
                   </label>
                   <select
                     value={tipoDocumento}
                     onChange={(e) => setTipoDocumento(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white"
+                    className="w-full min-w-0 px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                     required
                   >
                     <option value="">Seleccionar...</option>
@@ -250,11 +216,9 @@ export default function Apostillas() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">
-                    Adjuntar documento
-                  </label>
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Adjuntar documento</label>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -265,22 +229,22 @@ export default function Apostillas() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2.5 sm:py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                      className="min-h-[44px] shrink-0 inline-flex items-center justify-center px-4 py-2.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100"
                     >
                       Seleccionar archivo
                     </button>
-                    <span className="text-sm text-gray-500 truncate flex-1">
+                    <span className="text-sm text-gray-500 truncate min-w-0">
                       {archivo ? archivo.name : "Sin archivos seleccionados"}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">PDF, JPG o PNG</p>
+                  <p className="text-sm text-gray-500 mt-1">PDF, JPG o PNG</p>
                 </div>
               </div>
             </div>
 
             {/* Resumen y botón */}
-            <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
-              <div className="flex justify-between items-center">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 min-w-0">
+              <div className="flex justify-between items-center gap-2">
                 <span className="text-sm text-gray-600">Monto a pagar:</span>
                 <span className="text-lg sm:text-xl font-semibold text-gray-900">
                   ${MONTO_APOSTILLA.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
@@ -291,7 +255,7 @@ export default function Apostillas() {
             <button
               type="submit"
               disabled={!isFormValid() || loading}
-              className="w-full px-4 py-3 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Procesando..." : "Continuar al pago"}
             </button>
