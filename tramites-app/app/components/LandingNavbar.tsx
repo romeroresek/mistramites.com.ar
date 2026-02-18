@@ -12,8 +12,8 @@ export default function LandingNavbar() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex h-14 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/icon-192x192.png" alt="TramitesMisiones" width={32} height={32} className="w-8 h-8" />
-            <span className="font-semibold text-gray-800 hidden sm:inline">TramitesMisiones</span>
+            <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
+            <span className="font-semibold text-gray-800 hidden sm:inline">Trámites Misiones</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <a href="#partidas" className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm">Partidas</a>

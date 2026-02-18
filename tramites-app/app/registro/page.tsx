@@ -82,8 +82,8 @@ export default function RegistroPage() {
         {/* Logo */}
         <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Image src="/icon-192x192.png" alt="TramitesMisiones" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" />
-            <span className="text-xl sm:text-2xl font-semibold text-gray-800">TramitesMisiones</span>
+            <Image src="/icon-192x192.png" alt="Trámites Misiones" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" />
+            <span className="text-xl sm:text-2xl font-semibold text-gray-800">Trámites Misiones</span>
           </Link>
         </div>
 
@@ -239,7 +239,7 @@ export default function RegistroPage() {
 
         {/* Footer */}
         <p className="text-center text-gray-500 text-xs sm:text-sm mt-4">
-          © 2024 TramitesMisiones - Todos los derechos reservados
+          © 2024 Trámites Misiones - Todos los derechos reservados
         </p>
       </div>
     </div>

@@ -19,13 +19,13 @@ export function LandingNavClient() {
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/icon-192x192.png"
-                alt="TramitesMisiones"
+                alt="Trámites Misiones"
                 width={32}
                 height={32}
                 className="w-8 h-8"
                 priority
               />
-              <span className="font-semibold text-gray-800">TramitesMisiones</span>
+              <span className="font-semibold text-gray-800">Trámites Misiones</span>
             </Link>
             <button
               onClick={() => setMenuOpen(true)}

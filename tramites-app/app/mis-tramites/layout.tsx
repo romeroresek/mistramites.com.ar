@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     "Consultá el estado de tus trámites: partidas, apostillas e informes. Seguimiento de solicitudes y descarga de documentación.",
   robots: { index: false, follow: true },
   openGraph: {
-    title: "Mis Trámites | TramitesMisiones",
+    title: "Mis Trámites | Trámites Misiones",
     description: "Consultá el estado de tus trámites y documentación.",
   },
 }

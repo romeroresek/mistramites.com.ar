@@ -8,8 +8,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tramitesmisiones.co
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "TramitesMisiones | Servicios Profesionales de Gestión de Trámites en Misiones",
-    template: "%s | TramitesMisiones",
+    default: "Trámites Misiones | Servicios Profesionales de Gestión de Trámites en Misiones",
+    template: "%s | Trámites Misiones",
   },
   description: "Somos un estudio jurídico contable todos matriculados con sede en Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos de la Provincia y Nación. No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion administrativa.",
   keywords: [
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     "trámites online Argentina",
     "gestión documental Misiones",
   ],
-  authors: [{ name: "TramitesMisiones" }],
-  creator: "TramitesMisiones",
-  publisher: "TramitesMisiones",
+  authors: [{ name: "Trámites Misiones" }],
+  creator: "Trámites Misiones",
+  publisher: "Trámites Misiones",
   formatDetection: {
     telephone: false,
   },
@@ -38,19 +38,19 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "TramitesMisiones",
+    title: "Trámites Misiones",
   },
   openGraph: {
     type: "website",
     locale: "es_AR",
-    siteName: "TramitesMisiones",
-    title: "TramitesMisiones | Gestión de Trámites en Misiones",
+    siteName: "Trámites Misiones",
+    title: "Trámites Misiones | Gestión de Trámites en Misiones",
     description: "Servicios profesionales de trámites ante organismos oficiales. Partidas, apostillas, informes de dominio y catastrales en Misiones.",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "TramitesMisiones | Gestión de Trámites en Misiones",
+    title: "Trámites Misiones | Gestión de Trámites en Misiones",
     description: "Servicios profesionales de trámites ante organismos oficiales. Partidas, apostillas, informes en Misiones.",
   },
   robots: {
@@ -81,7 +81,7 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LegalService",
-    name: "TramitesMisiones",
+    name: "Trámites Misiones",
     description: "Servicios profesionales de gestión de trámites ante organismos oficiales en Misiones: partidas de nacimiento, matrimonio y defunción, apostilla de la Haya, informes de dominio y catastrales.",
     url: siteUrl,
     areaServed: { "@type": "State", name: "Misiones", containedInPlace: { "@type": "Country", name: "Argentina" } },

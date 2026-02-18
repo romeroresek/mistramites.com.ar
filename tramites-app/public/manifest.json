@@ -1,6 +1,6 @@
 {
-  "name": "TramitesMisiones - Sistema de Tramites",
-  "short_name": "TramitesMisiones",
+  "name": "Trámites Misiones - Sistema de Tramites",
+  "short_name": "Trámites Misiones",
   "description": "Plataforma para realizar tramites en linea",
   "start_url": "/",
   "display": "standalone",

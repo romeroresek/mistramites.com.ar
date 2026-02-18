@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "trámites online Misiones",
   ],
   openGraph: {
-    title: "Partidas, Apostillas e Informes | TramitesMisiones",
+    title: "Partidas, Apostillas e Informes | Trámites Misiones",
     description:
       "Solicitá partidas, apostillas e informes en Misiones. Trámites ante organismos oficiales.",
     url: "/oficinas",
