@@ -24,8 +24,9 @@ export function LandingNavClient() {
                 height={32}
                 className="w-8 h-8"
                 priority
+                suppressHydrationWarning
               />
-              <span className="font-semibold text-gray-800">Trámites Misiones</span>
+              <span className="font-semibold text-gray-800" suppressHydrationWarning>Trámites Misiones</span>
             </Link>
             <button
               onClick={() => setMenuOpen(true)}

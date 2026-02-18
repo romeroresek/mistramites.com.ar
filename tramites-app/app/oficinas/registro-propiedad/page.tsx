@@ -147,7 +147,6 @@ export default function RegistroPropiedad() {
 
   const resetForm = () => {
     setEmail("")
-    setCodigoPais("+54")
     setTelefonoWhatsapp("")
     setNombrePersona("")
     setDniPersona("")
