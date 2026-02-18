@@ -138,6 +138,21 @@ npm start
 
 Render desplegará automáticamente cuando hagas push a main.
 
+### 7. Error "Failed to find Server Action" (contenedores / múltiples despliegues)
+
+Si en logs aparece `Failed to find Server Action "g"` (u otra letra), suele deberse a que cada build genera IDs distintos y el cliente tiene caché de una versión anterior. **Solución:** definir una clave fija en el entorno de **build** (y runtime):
+
+1. Generar una clave (base64, 32 bytes):
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
+2. Añadir en las variables de entorno del servicio (build y run):
+   ```
+   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=<la_clave_generada>
+   ```
+
+Así todos los builds y réplicas usan la misma clave y se evita el error.
+
 ## Guía de estilos (mobile-first)
 
 Para mantener el mismo aspecto en todo el sitio (/, /admin, /mis-tramites, etc.) usamos estas convenciones:
