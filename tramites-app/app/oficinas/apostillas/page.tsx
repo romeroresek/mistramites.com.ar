@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useRef } from "react"
+import { useState, useRef, Suspense } from "react"
 import { useToast } from "@/components/Toast"
 import { PageNavbar } from "@/components/PageNavbar"
 
@@ -21,6 +21,14 @@ const TIPOS_DOCUMENTO = [
 const MONTO_APOSTILLA = 40000
 
 export default function Apostillas() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-100 flex items-center justify-center"><p className="text-gray-600">Cargando...</p></div>}>
+      <ApostillasContent />
+    </Suspense>
+  )
+}
+
+function ApostillasContent() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()

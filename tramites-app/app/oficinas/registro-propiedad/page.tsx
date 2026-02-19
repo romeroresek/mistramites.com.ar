@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { useToast } from "@/components/Toast"
 import { PageNavbar } from "@/components/PageNavbar"
 
@@ -26,6 +26,14 @@ const DEPARTAMENTOS = [
 ]
 
 export default function RegistroPropiedad() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-100 flex items-center justify-center"><p className="text-gray-600">Cargando...</p></div>}>
+      <RegistroPropiedadContent />
+    </Suspense>
+  )
+}
+
+function RegistroPropiedadContent() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
