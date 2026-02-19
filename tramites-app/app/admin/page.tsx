@@ -278,9 +278,9 @@ export default function AdminPage() {
     const tramiteId = searchParams.get("tramiteId")
     const initPoint = searchParams.get("initPoint")
     if (initPoint) {
-      toast.showSuccess("Trámite creado. Completá email y WhatsApp del cliente para que pueda iniciar sesión y recibir el link de pago.")
+      toast.showSuccess("Trámite creado. Completá el email del cliente para que pueda iniciar sesión y copiá el link de pago.")
     } else {
-      toast.showSuccess("Trámite creado. Completá email y WhatsApp del cliente para que pueda iniciar sesión.")
+      toast.showSuccess("Trámite creado. Completá el email del cliente para que pueda iniciar sesión.")
     }
     if (tramiteId) setCreadoContactoTramiteId(tramiteId)
     if (initPoint) setCreadoPaymentLink(initPoint)
@@ -288,14 +288,18 @@ export default function AdminPage() {
     router.replace("/admin", { scroll: false })
   }, [searchParams, router, toast])
 
+  // No sobrescribir el formulario si el usuario ya editó (la respuesta puede llegar después)
+  const creadoContactoFormEditado = useRef(false)
+
   // Al abrir el drawer de contacto, cargar datos del trámite
   useEffect(() => {
     if (!creadoContactoTramiteId) return
+    creadoContactoFormEditado.current = false
     setCreadoContactoLoading(true)
     fetch(`/api/admin/tramites/${creadoContactoTramiteId}`)
       .then((res) => res.ok ? res.json() : null)
       .then((t: Tramite | null) => {
-        if (t) {
+        if (t && !creadoContactoFormEditado.current) {
           setCreadoContactoForm({
             email: t.guestEmail || t.user?.email || "",
             whatsapp: t.whatsapp || t.partida?.whatsapp || "",
@@ -310,22 +314,25 @@ export default function AdminPage() {
   const guardarCreadoContacto = async () => {
     if (!creadoContactoTramiteId) return
     setCreadoContactoSaving(true)
+    const email = creadoContactoForm.email?.trim() || null
     try {
       const res = await fetch(`/api/admin/tramites/${creadoContactoTramiteId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          guestEmail: creadoContactoForm.email || null,
-          whatsapp: creadoContactoForm.whatsapp || null,
-        }),
+        body: JSON.stringify({ guestEmail: email }),
       })
       if (res.ok) {
         await fetchTramites()
         setCreadoContactoTramiteId(null)
         setCreadoPaymentLink(null)
+        toast.showSuccess("Datos del cliente guardados")
+      } else {
+        const err = await res.json().catch(() => ({}))
+        toast.showError(err?.error || "No se pudieron guardar los datos")
       }
     } catch (error) {
       console.error(error)
+      toast.showError("Error al guardar. Intentá de nuevo.")
     } finally {
       setCreadoContactoSaving(false)
     }
@@ -861,13 +868,13 @@ export default function AdminPage() {
         </DrawerContent>
       </Drawer>
 
-      {/* Drawer: completar email y WhatsApp del cliente al volver de crear trámite */}
+      {/* Drawer: completar email del cliente al volver de crear trámite */}
       <Drawer open={!!creadoContactoTramiteId} onOpenChange={(open) => { if (!open) cerrarCreadoContacto() }}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Datos del cliente</DrawerTitle>
             <DrawerDescription>
-              Completá el email y WhatsApp del cliente para que pueda iniciar sesión y recibir el link de pago por WhatsApp.
+              Completá el email del cliente para que pueda iniciar sesión. El link de pago podés copiarlo abajo y enviarlo por el medio que prefieras.
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4">
@@ -881,19 +888,11 @@ export default function AdminPage() {
                     id="creado-email"
                     type="email"
                     value={creadoContactoForm.email}
-                    onChange={(e) => setCreadoContactoForm((f) => ({ ...f, email: e.target.value }))}
+                    onChange={(e) => {
+                      creadoContactoFormEditado.current = true
+                      setCreadoContactoForm((f) => ({ ...f, email: e.target.value }))
+                    }}
                     placeholder="cliente@ejemplo.com"
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="creado-whatsapp" className="text-gray-700 text-sm block mb-1">WhatsApp del cliente</label>
-                  <input
-                    id="creado-whatsapp"
-                    type="tel"
-                    value={creadoContactoForm.whatsapp}
-                    onChange={(e) => setCreadoContactoForm((f) => ({ ...f, whatsapp: e.target.value }))}
-                    placeholder="Ej: 3764123456"
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
                   />
                 </div>

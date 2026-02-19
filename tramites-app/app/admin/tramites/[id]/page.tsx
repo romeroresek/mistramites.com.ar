@@ -464,7 +464,7 @@ export default function AdminTramiteDetalle() {
             <div>
               <span className="text-gray-500">Usuario</span>
               <p className="font-medium text-gray-900">{tramite.user?.name || "Invitado"}</p>
-              <p className="text-gray-500 text-xs">{tramite.user?.email || tramite.guestEmail}</p>
+              <p className="text-gray-500 text-xs">{tramite.guestEmail || tramite.user?.email}</p>
             </div>
             <div>
               <span className="text-gray-500">Monto</span>
@@ -919,12 +919,12 @@ export default function AdminTramiteDetalle() {
                 <span className="text-gray-500 text-sm">Email</span>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="font-medium text-gray-900 text-sm">
-                    {tramite.user?.email || tramite.guestEmail || "No disponible"}
+                    {tramite.guestEmail || tramite.user?.email || "No disponible"}
                   </p>
-                  {(tramite.user?.email || tramite.guestEmail) && (
+                  {(tramite.guestEmail || tramite.user?.email) && (
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(tramite.user?.email || tramite.guestEmail || "")
+                        navigator.clipboard.writeText(tramite.guestEmail || tramite.user?.email || "")
                         setCopiedEmail(true)
                         setTimeout(() => setCopiedEmail(false), 2000)
                       }}
