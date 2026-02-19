@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { notifyAdminsNewTramite } from "@/lib/tramiteNotifications"
 
 // GET: obtener todos los trámites del usuario
 export async function GET(_req: NextRequest) {
@@ -158,6 +159,12 @@ export async function POST(req: NextRequest) {
       where: { tramiteId: tramite.id },
       data: { mercadopagoId: result.id },
     })
+
+    // Notificar a los admins del nuevo pedido
+    notifyAdminsNewTramite({
+      tipoTramite,
+      partida: null,
+    }).catch((err) => console.error("Error notifying admins:", err))
 
     return NextResponse.json({
       tramiteId: tramite.id,

@@ -39,21 +39,22 @@ model Session {
 }
 
 model User {
-  id                String             @id @default(cuid())
-  email             String?            @unique
-  emailVerified     DateTime?
-  name              String?
-  image             String?
-  role              String             @default("usuario")
-  whatsapp          String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  password          String?
-  accounts          Account[]
-  pagos             Pago[]
-  pushSubscriptions PushSubscription[]
-  sessions          Session[]
-  tramites          Tramite[]
+  id                       String             @id @default(cuid())
+  email                    String?            @unique
+  emailVerified            DateTime?
+  name                     String?
+  image                    String?
+  role                     String             @default("usuario")
+  whatsapp                 String?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  password                 String?
+  pushNotificationsEnabled Boolean            @default(false)
+  accounts                 Account[]
+  pagos                    Pago[]
+  pushSubscriptions        PushSubscription[]
+  sessions                 Session[]
+  tramites                 Tramite[]
 
   @@map("users")
 }

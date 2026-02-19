@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload } from "lucide-react"
+import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff } from "lucide-react"
 import { useToast } from "@/components/Toast"
 import { generateWhatsAppLink } from "@/lib/contactTemplates"
+import { usePushNotifications } from "@/hooks/usePushNotifications"
 import {
   Drawer,
   DrawerContent,
@@ -84,6 +85,9 @@ export default function AdminPage() {
   const [uploadTramite, setUploadTramite] = useState<Tramite | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState("")
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
+  const pushNotifications = usePushNotifications()
 
   const fetchTramites = async () => {
     try {
@@ -319,6 +323,57 @@ export default function AdminPage() {
     }
   }
 
+  const fetchPushSettings = async () => {
+    try {
+      const res = await fetch("/api/admin/push-settings")
+      if (res.ok) {
+        const data = await res.json()
+        setPushEnabled(data.enabled)
+      }
+    } catch (error) {
+      console.error("Error fetching push settings:", error)
+    }
+  }
+
+  const togglePushNotifications = async () => {
+    if (pushLoading) return
+    setPushLoading(true)
+
+    try {
+      // Si está desactivado y queremos activar, primero suscribir al browser
+      if (!pushEnabled) {
+        if (!pushNotifications.isSubscribed) {
+          const success = await pushNotifications.subscribe()
+          if (!success) {
+            toast.showError("No se pudo activar las notificaciones. Verificá los permisos del navegador.")
+            setPushLoading(false)
+            return
+          }
+        }
+      }
+
+      // Actualizar en el servidor
+      const res = await fetch("/api/admin/push-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !pushEnabled }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setPushEnabled(data.enabled)
+        toast.showSuccess(data.enabled ? "Notificaciones activadas" : "Notificaciones desactivadas")
+      } else {
+        toast.showError("Error al actualizar configuración")
+      }
+    } catch (error) {
+      console.error("Error toggling push:", error)
+      toast.showError("Error al actualizar notificaciones")
+    } finally {
+      setPushLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (status === "loading") return
 
@@ -334,6 +389,7 @@ export default function AdminPage() {
 
     fetchTramites().then((data) => verifyPaymentsWithMp(data))
     fetchPlantillas()
+    fetchPushSettings()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch/verify solo al montar o cambiar sesión
   }, [status, session, router])
 
@@ -512,6 +568,17 @@ export default function AdminPage() {
             Mis Trámites
           </Link>
           <hr className="my-1" />
+          <button
+            onClick={togglePushNotifications}
+            disabled={pushLoading || !pushNotifications.isSupported}
+            className={`px-3 py-2.5 text-sm rounded-lg min-h-[44px] flex items-center gap-2 w-full text-left disabled:opacity-50 ${
+              pushEnabled ? "text-green-600 hover:bg-green-50" : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            {pushEnabled ? <Bell className="w-4 h-4 shrink-0" /> : <BellOff className="w-4 h-4 shrink-0" />}
+            {pushLoading ? "Cargando..." : pushEnabled ? "Notificaciones ON" : "Notificaciones OFF"}
+          </button>
+          <hr className="my-1" />
           <Link
             href="/cerrar-sesion?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
@@ -583,98 +650,118 @@ export default function AdminPage() {
         <div className="md:hidden space-y-3">
           {tramites.map((tramite) => (
             <div key={tramite.id} className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="font-medium text-gray-900 text-sm truncate">{tramite.tipoTramite}</p>
-              <p className="text-sm text-gray-400 mb-2">
-                Fecha Pedido: {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
-              </p>
+              {/* Usuario */}
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 text-sm truncate">{tramite.user?.name ?? "Invitado"}</p>
+                  <p className="text-gray-400 text-xs truncate">{tramite.user?.email ?? tramite.guestEmail}</p>
+                  {getWhatsappNumber(tramite) && (
+                    <button
+                      onClick={() => openWhatsappModal(tramite)}
+                      className="text-green-600 hover:text-green-700 text-xs flex items-center gap-1 mt-0.5"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                      </svg>
+                      {getWhatsappNumber(tramite)}
+                    </button>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-gray-900 text-sm">{tramite.tipoTramite}</p>
+                  <p className="text-gray-400 text-xs">{new Date(tramite.createdAt).toLocaleDateString("es-AR")}</p>
+                </div>
+              </div>
+
+              {/* Detalle (Partida) */}
               {tramite.partida && (
-                <div className="mb-2">
-                  {tramite.partida.dni && <p className="text-sm text-gray-500 truncate">DNI: {tramite.partida.dni}</p>}
-                  <p className="text-sm text-gray-700 truncate">{tramite.partida.apellido}, {tramite.partida.nombres}</p>
-                  {tramite.partida.ciudadNacimiento && <p className="text-sm text-gray-400 truncate">{tramite.partida.ciudadNacimiento}</p>}
+                <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                  <p className="text-gray-900 text-sm font-medium">
+                    {tramite.partida.apellido}, {tramite.partida.nombres}
+                    {tramite.partida.sexo && <span className="text-gray-500 font-normal"> ({tramite.partida.sexo})</span>}
+                  </p>
+                  {tramite.partida.dni && <p className="text-gray-500 text-xs">DNI: {tramite.partida.dni}</p>}
+                  {tramite.partida.fechaNacimiento && (
+                    <p className="text-gray-500 text-xs">Nac: {new Date(tramite.partida.fechaNacimiento).toLocaleDateString("es-AR")}</p>
+                  )}
+                  {tramite.partida.ciudadNacimiento && <p className="text-gray-400 text-xs">{tramite.partida.ciudadNacimiento}</p>}
                 </div>
               )}
-              <div className="flex items-center gap-3 text-sm mb-2">
-                <span className="text-gray-900">Pago:</span>
-                <select
-                  value={tramite.pago?.estado || "pendiente"}
-                  onChange={(e) => updateTramiteStatus(tramite.id, "pagoEstado", e.target.value)}
-                  className={`text-sm px-2 py-1 rounded border border-gray-200 cursor-pointer focus:outline-none ${tramite.pago?.estado === "confirmado"
-                    ? "text-green-600"
-                    : tramite.pago?.estado === "devuelto"
-                      ? "text-gray-500"
-                      : "text-yellow-600"
-                    }`}
-                >
-                  <option value="pendiente">pendiente</option>
-                  <option value="confirmado">confirmado</option>
-                  <option value="devuelto">devuelto</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2 text-sm mb-2">
-                <span className="text-gray-900">Trámite:</span>
-                <select
-                  value={tramite.estado === "listo" ? "completado" : tramite.estado}
-                  onChange={(e) => updateTramiteStatus(tramite.id, "estado", e.target.value)}
-                  className={`text-sm px-2 py-1 rounded border border-gray-200 cursor-pointer focus:outline-none ${tramite.estado === "listo" || tramite.estado === "completado"
-                    ? "text-green-600"
-                    : tramite.estado === "rechazado"
-                      ? "text-red-600"
-                      : tramite.estado === "en_proceso"
-                        ? "text-blue-600"
-                        : "text-yellow-600"
-                    }`}
-                >
-                  <option value="pendiente">pendiente</option>
-                  <option value="en_proceso">en proceso</option>
-                  <option value="completado">Completado</option>
-                  <option value="rechazado">rechazado</option>
-                </select>
-              </div>
-              {tramite.pago?.payerEmail ? (
-                <div className="text-sm bg-blue-50 rounded-lg p-3 mb-2">
-                  <div className="font-medium text-blue-800">Pagador MP:</div>
-                  <div className="text-blue-600">{tramite.pago.payerName || "-"}</div>
-                  <div className="text-blue-500">{tramite.pago.payerEmail}</div>
-                  {tramite.pago.payerDni && <div className="text-blue-400">DNI: {tramite.pago.payerDni}</div>}
-                  {tramite.pago.paymentId && <div className="text-blue-400">ID: {tramite.pago.paymentId}</div>}
-                </div>
-              ) : tieneLinkPago(tramite) && (
-                <div className="text-sm bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => copiarLinkPagoLista(tramite.id)}
-                    className="inline-flex items-center gap-2 text-amber-800 hover:text-amber-900 font-medium"
-                    title="Copiar link de pago"
-                    aria-label="Copiar link de pago"
+
+              {/* Estados */}
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Pago:</span>
+                  <select
+                    value={tramite.pago?.estado || "pendiente"}
+                    onChange={(e) => updateTramiteStatus(tramite.id, "pagoEstado", e.target.value)}
+                    className={`px-2 py-0.5 rounded text-xs border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 ${tramite.pago?.estado === "confirmado"
+                      ? "bg-green-100 text-green-700 focus:ring-green-300"
+                      : tramite.pago?.estado === "devuelto"
+                        ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
+                        : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                      }`}
                   >
-                    <LinkIcon className="w-4 h-4 shrink-0" />
-                    <span>Copiar link de pago</span>
-                  </button>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="confirmado">Pagado</option>
+                    <option value="devuelto">Devuelto</option>
+                  </select>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Estado:</span>
+                  <select
+                    value={tramite.estado === "listo" ? "completado" : tramite.estado}
+                    onChange={(e) => updateTramiteStatus(tramite.id, "estado", e.target.value)}
+                    className={`px-2 py-0.5 rounded text-xs border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 ${tramite.estado === "listo" || tramite.estado === "completado"
+                      ? "bg-green-100 text-green-700 focus:ring-green-300"
+                      : tramite.estado === "rechazado"
+                        ? "bg-red-100 text-red-700 focus:ring-red-300"
+                        : tramite.estado === "en_proceso"
+                          ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
+                          : tramite.estado === "iniciado"
+                            ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
+                            : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                      }`}
+                  >
+                    <option value="pendiente">Pendiente</option>
+                    <option value="en_proceso">En proceso</option>
+                    <option value="iniciado">Iniciado</option>
+                    <option value="completado">Completado</option>
+                    <option value="rechazado">Rechazado</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Link de pago */}
+              {tieneLinkPago(tramite) && !tramite.pago?.paymentId && (
+                <button
+                  onClick={() => copiarLinkPagoLista(tramite.id)}
+                  className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 mb-3"
+                >
+                  <LinkIcon className="w-3 h-3" />
+                  Copiar link de pago
+                </button>
               )}
-              <div className="flex justify-end gap-1.5 pt-1.5 mt-1.5 border-t border-gray-100">
-                {getWhatsappNumber(tramite) && (
-                  <button
-                    onClick={() => openWhatsappModal(tramite)}
-                    className="inline-flex items-center justify-center p-1.5 text-green-600 hover:text-green-800 rounded-md hover:bg-green-50"
-                    title="Enviar WhatsApp"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                  </button>
-                )}
+
+              {/* Acciones */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  onClick={() => openUploadModal(tramite)}
+                  className={`p-1.5 rounded ${tramite.archivoUrl ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"}`}
+                  title={tramite.archivoUrl ? "Documento cargado" : "Subir documento"}
+                >
+                  <Upload className="w-4 h-4" />
+                </button>
                 <Link
                   href={`/admin/tramites/${tramite.id}`}
-                  className="inline-flex items-center justify-center p-1.5 text-blue-600 hover:text-blue-800 rounded-md hover:bg-blue-50"
-                  title="Editar"
+                  className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                  title="Ver detalle"
                 >
                   <Pencil className="w-4 h-4" />
                 </Link>
                 <button
                   onClick={() => setDeleteId(tramite.id)}
-                  className="inline-flex items-center justify-center p-1.5 text-red-600 hover:text-red-800 rounded-md hover:bg-red-50"
+                  className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                   title="Eliminar"
                 >
                   <Trash2 className="w-4 h-4" />
