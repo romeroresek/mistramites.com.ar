@@ -39,6 +39,8 @@ export async function GET(_req: NextRequest) {
             nombres: true,
             apellido: true,
             dni: true,
+            sexo: true,
+            fechaNacimiento: true,
             ciudadNacimiento: true,
             whatsapp: true,
           },
