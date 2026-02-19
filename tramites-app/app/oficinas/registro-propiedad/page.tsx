@@ -1,10 +1,10 @@
 "use client"
 
 import { useSession } from "next-auth/react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import { useToast } from "@/components/Toast"
-import Link from "next/link"
-import Image from "next/image"
+import { PageNavbar } from "@/components/PageNavbar"
 
 const TRAMITES = [
   { id: "f3-titularidad", nombre: "F3- Búsqueda de Titularidad", monto: 50000 },
@@ -27,12 +27,17 @@ const DEPARTAMENTOS = [
 
 export default function RegistroPropiedad() {
   const { data: session } = useSession()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const toast = useToast()
+  const returnUrl = searchParams.get("returnUrl") ?? undefined
   const [selectedTramite, setSelectedTramite] = useState("")
   const [loading, setLoading] = useState(false)
 
   // Datos del Solicitante (común a todos)
   const [email, setEmail] = useState("")
+  const [codigoPais, setCodigoPais] = useState("+54")
+  const [customCodigoPais, setCustomCodigoPais] = useState("")
   const [telefonoWhatsapp, setTelefonoWhatsapp] = useState("")
 
   // Datos para F3 y F5 (persona)
@@ -68,7 +73,10 @@ export default function RegistroPropiedad() {
   )
 
   const isLoggedIn = !!session?.user?.email
-  const whatsappCompleto = `+54${telefonoWhatsapp.replace(/\D/g, "")}`
+  const prefijoWhatsapp = codigoPais === "otro"
+    ? (customCodigoPais.trim().replace(/^(\d+)$/, "+$1") || "+")
+    : codigoPais
+  const whatsappCompleto = `${prefijoWhatsapp}${telefonoWhatsapp.replace(/\D/g, "")}`
 
   const tramiteSeleccionado = TRAMITES.find((t) => t.id === selectedTramite)
 
@@ -97,6 +105,7 @@ export default function RegistroPropiedad() {
   const isFormValid = () => {
     if (!telefonoWhatsapp) return false
     if (!isLoggedIn && !email) return false
+    if (codigoPais === "otro" && !customCodigoPais.trim()) return false
 
     if (selectedTramite === "f3-titularidad" || selectedTramite === "f5-inhibiciones") {
       if (!nombrePersona || !dniPersona) return false
@@ -132,7 +141,11 @@ export default function RegistroPropiedad() {
       if (!res.ok) throw new Error("Error al crear trámite")
 
       const data = await res.json()
-      if (data.initPoint) {
+      if (returnUrl) {
+        const params = new URLSearchParams({ creado: "1", tramiteId: data.tramiteId })
+        if (data.initPoint) params.set("initPoint", data.initPoint)
+        router.push(returnUrl + (returnUrl.includes("?") ? "&" : "?") + params.toString())
+      } else if (data.initPoint) {
         window.location.href = data.initPoint
       } else {
         toast.showError(data?.error || "Error al procesar el pago")
@@ -160,28 +173,11 @@ export default function RegistroPropiedad() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              Volver
-            </Link>
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">Trámites Misiones</span>
-            </Link>
-            <div className="w-16"></div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <PageNavbar backHref={returnUrl ? `/?returnUrl=${encodeURIComponent(returnUrl)}` : "/"} />
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="w-full max-w-2xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="bg-white border border-gray-200 rounded">
           <div className="p-3 sm:p-4 border-b border-gray-200">
             <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Registro Propiedad Inmueble</h1>
@@ -238,7 +234,37 @@ export default function RegistroPropiedad() {
                       WhatsApp del Solicitante
                     </label>
                     <div className="flex items-stretch w-full min-w-0 rounded-lg border border-gray-300 overflow-hidden bg-white">
-                      <span className="inline-flex items-center px-3 py-2.5 bg-gray-100 text-gray-700 text-sm border-r border-gray-300 shrink-0">+54</span>
+                      <select
+                        value={codigoPais}
+                        onChange={(e) => setCodigoPais(e.target.value)}
+                        className="appearance-none bg-gray-100 text-gray-700 text-sm px-2 py-2.5 border-r border-gray-300 shrink-0 focus:outline-none cursor-pointer"
+                      >
+                        <option value="+54">🇦🇷 +54</option>
+                        <option value="+55">🇧🇷 +55</option>
+                        <option value="+56">🇨🇱 +56</option>
+                        <option value="+57">🇨🇴 +57</option>
+                        <option value="+58">🇻🇪 +58</option>
+                        <option value="+51">🇵🇪 +51</option>
+                        <option value="+595">🇵🇾 +595</option>
+                        <option value="+598">🇺🇾 +598</option>
+                        <option value="+591">🇧🇴 +591</option>
+                        <option value="+593">🇪🇨 +593</option>
+                        <option value="+52">🇲🇽 +52</option>
+                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+39">🇮🇹 +39</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="otro">Otro</option>
+                      </select>
+                      {codigoPais === "otro" && (
+                        <input
+                          type="text"
+                          value={customCodigoPais}
+                          onChange={(e) => setCustomCodigoPais(e.target.value)}
+                          placeholder="+XXX"
+                          className="w-20 min-w-0 px-2 py-2.5 border-r border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                          aria-label="Código de país"
+                        />
+                      )}
                       <input
                         type="tel"
                         value={telefonoWhatsapp}
@@ -249,7 +275,7 @@ export default function RegistroPropiedad() {
                       />
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
-                      Ingresá código de área sin 0 + número sin 15. Ej: 11 1234-5678
+                      Ingresá código de área sin 0 + número sin 15. Ej: 11 1234-5678. Si tu país no está, elegí &quot;Otro&quot; e ingresá el código (ej. +49).
                     </p>
                   </div>
                 </div>
@@ -431,7 +457,7 @@ export default function RegistroPropiedad() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

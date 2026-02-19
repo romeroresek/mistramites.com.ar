@@ -90,7 +90,8 @@ export default function TramiteDetalle() {
             .catch((err) => console.error("Error verificando pago:", err))
         }
       })
-    }
+
+}
   // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch solo al montar o cambiar id/sesión
   }, [status, router, params.id])
 
@@ -122,7 +123,8 @@ export default function TramiteDetalle() {
 
   const getEstadoLabel = (estado: string) => {
     switch (estado) {
-      case "completado": return "Completado"
+      case "completado":
+      case "listo": return "Completado"
       case "en_proceso": return "En proceso"
       case "rechazado": return "Rechazado"
       default: return "Pendiente"
@@ -155,10 +157,10 @@ export default function TramiteDetalle() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
@@ -220,7 +222,7 @@ export default function TramiteDetalle() {
           </Link>
           <hr className="my-1" />
           <Link
-            href="/api/auth/signout?callbackUrl=/"
+            href="/cerrar-sesion?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
             className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
           >
@@ -230,7 +232,7 @@ export default function TramiteDetalle() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="w-full max-w-3xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <h1 className="text-lg sm:text-2xl font-semibold text-gray-900 mb-4">Detalle del trámite</h1>
 
         <div className="bg-white border border-gray-200 rounded">
@@ -241,9 +243,12 @@ export default function TramiteDetalle() {
                 <h2 className="text-base font-semibold text-gray-900">{tramite.tipoTramite}</h2>
                 <p className="text-sm text-gray-600">{tramite.oficina}</p>
               </div>
-              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded whitespace-nowrap">
-                {getEstadoLabel(tramite.estado)}
-              </span>
+              <div className="text-right shrink-0">
+                <label className="text-xs text-gray-500">Estado del Trámite</label>
+                <span className="block text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded whitespace-nowrap mt-0.5">
+                  {getEstadoLabel(tramite.estado)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -265,8 +270,14 @@ export default function TramiteDetalle() {
               </div>
               <div>
                 <label className="text-xs text-gray-500">Estado del Pago</label>
-                <p className={`text-sm font-semibold ${tramite.pago?.estado === "confirmado" ? "text-green-600" : "text-yellow-600"}`}>
-                  {tramite.pago?.estado === "confirmado" ? "Pagado" : "Pendiente"}
+                <p className={`text-sm font-semibold ${
+                  tramite.pago?.estado === "confirmado" ? "text-green-600"
+                  : tramite.pago?.estado === "devuelto" ? "text-gray-600"
+                  : "text-yellow-600"
+                }`}>
+                  {tramite.pago?.estado === "confirmado" ? "Pagado"
+                    : tramite.pago?.estado === "devuelto" ? "Devuelto"
+                    : "Pendiente"}
                 </p>
               </div>
             </div>
@@ -310,19 +321,33 @@ export default function TramiteDetalle() {
                       <p className="text-xs text-gray-500">Tu trámite está listo para descargar</p>
                     </div>
                   </div>
-                  <a
-                    href={tramite.archivoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 flex items-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="7 10 12 15 17 10"/>
-                      <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Descargar
-                  </a>
+                  {tramite.pago?.estado === "confirmado" ? (
+                    <a
+                      href={tramite.archivoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 flex items-center gap-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Descargar
+                    </a>
+                  ) : (
+                    <span
+                      className="px-4 py-2 bg-gray-300 text-gray-500 text-sm rounded cursor-not-allowed flex items-center gap-2"
+                      title="Debés pagar el trámite para descargar el documento"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Descargar
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -430,7 +455,7 @@ export default function TramiteDetalle() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

@@ -77,6 +77,11 @@ export async function POST(req: NextRequest) {
         pagoEstado = "rechazado"
         tramiteEstado = "pendiente"
         break
+      case "refunded":
+      case "charged_back":
+        pagoEstado = "devuelto"
+        tramiteEstado = "pendiente"
+        break
     }
 
     // Extraer datos del pagador
@@ -105,7 +110,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Actualizar estado del trámite si fue aprobado
+    // Solo actualizar estado del trámite cuando el pago se aprueba (el estado del trámite es independiente del pago)
     if (paymentData.status === "approved") {
       await prisma.tramite.update({
         where: { id: externalReference },

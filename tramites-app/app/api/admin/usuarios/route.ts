@@ -13,20 +13,26 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
-    const usuarios = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        _count: {
-          select: { tramites: true }
-        }
-      },
-      orderBy: { createdAt: "desc" },
-    })
-
+    const baseSelect = {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      createdAt: true,
+      _count: { select: { tramites: true } as const },
+    } as const
+    let usuarios: Array<Record<string, unknown>>
+    try {
+      usuarios = await prisma.user.findMany({
+        select: { ...baseSelect, whatsapp: true },
+        orderBy: { createdAt: "desc" },
+      })
+    } catch {
+      usuarios = await prisma.user.findMany({
+        select: baseSelect,
+        orderBy: { createdAt: "desc" },
+      }) as Array<Record<string, unknown>>
+    }
     return NextResponse.json(usuarios)
   } catch (error) {
     console.error(error)
@@ -44,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { email, name, password, role } = body
+    const { email, name, password, role, whatsapp } = body
 
     if (!email || !name || !password) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
@@ -62,21 +68,19 @@ export async function POST(req: NextRequest) {
     // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const usuario = await prisma.user.create({
-      data: {
-        email,
-        name,
-        password: hashedPassword,
-        role: role || "usuario",
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-      },
-    })
+    const baseData = { email, name, password: hashedPassword, role: role || "usuario" }
+    let usuario
+    try {
+      usuario = await prisma.user.create({
+        data: { ...baseData, ...(whatsapp !== undefined && { whatsapp: whatsapp || null }) },
+        select: { id: true, email: true, name: true, role: true, createdAt: true },
+      })
+    } catch {
+      usuario = await prisma.user.create({
+        data: baseData,
+        select: { id: true, email: true, name: true, role: true, createdAt: true },
+      })
+    }
 
     return NextResponse.json(usuario, { status: 201 })
   } catch (error) {

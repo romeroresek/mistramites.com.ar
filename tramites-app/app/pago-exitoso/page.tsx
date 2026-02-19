@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
+import { PageNavbar } from "@/components/PageNavbar"
 import { Suspense } from "react"
 
 function PagoExitosoContent() {
@@ -17,21 +17,11 @@ function PagoExitosoContent() {
   const isPending = paymentStatus === "pending"
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex h-14 items-center justify-center">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">Trámites Misiones</span>
-            </Link>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <PageNavbar backHref="/mis-tramites" />
 
       {/* Main */}
-      <main className="max-w-lg mx-auto px-4 py-12">
+      <main className="w-full max-w-lg mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="bg-white border border-gray-200 rounded p-6 text-center">
           {isFailure ? (
             <>
@@ -119,7 +109,7 @@ function PagoExitosoContent() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

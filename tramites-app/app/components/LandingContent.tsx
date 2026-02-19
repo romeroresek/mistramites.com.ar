@@ -8,10 +8,10 @@ export default function LandingContent() {
   const { data: session, status } = useSession()
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
@@ -33,7 +33,7 @@ export default function LandingContent() {
                     Mis Tramites
                   </Link>
                   <Link
-                    href="/api/auth/signout?callbackUrl=/"
+                    href="/cerrar-sesion?callbackUrl=/"
                     className="text-red-600 hover:text-red-800 text-xs sm:text-sm"
                   >
                     Salir
@@ -53,7 +53,7 @@ export default function LandingContent() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="w-full max-w-7xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {/* Aviso legal */}
         <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-6">
           <p className="text-xs text-blue-800">
@@ -212,7 +212,7 @@ export default function LandingContent() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

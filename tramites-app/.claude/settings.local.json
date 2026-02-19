@@ -13,7 +13,11 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Manejar usuario null en preferencia de MercadoPago\n\nUsar guestEmail como fallback cuando el trámite no tiene usuario\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(curl:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(Test-Path \"D:\\\\mistramites.com.ar\\\\tramites-app\\\\README.md\")",
+      "Bash(npx next build:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -142,7 +142,8 @@ function MisTramitesContent() {
 
   const getEstadoLabel = (estado: string) => {
     switch (estado) {
-      case "completado": return "Completado"
+      case "completado":
+      case "listo": return "Completado"
       case "en_proceso": return "En proceso"
       case "rechazado": return "Rechazado"
       default: return "Pendiente"
@@ -150,17 +151,17 @@ function MisTramitesContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="flex h-14 items-center justify-between gap-2">
             <Link
               href="/"
               className="flex items-center gap-1.5 min-h-[44px] shrink-0 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-2 -ml-2"
+              aria-label="Volver"
             >
-              <ArrowLeft className="w-5 h-5 shrink-0" />
-              <span className="text-sm font-medium">Volver</span>
+              <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
             </Link>
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
               <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" />
@@ -224,7 +225,7 @@ function MisTramitesContent() {
           )}
           <hr className="my-1" />
           <Link
-            href="/api/auth/signout?callbackUrl=/"
+            href="/cerrar-sesion?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
             className="px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg min-h-[44px] flex items-center"
           >
@@ -234,15 +235,9 @@ function MisTramitesContent() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
+      <main className="w-full max-w-7xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="mb-4 sm:mb-6">
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Mis Trámites</h1>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800"
-          >
-            Nuevo trámite
-          </Link>
         </div>
 
         {tramites.length === 0 ? (
@@ -409,7 +404,7 @@ function MisTramitesContent() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

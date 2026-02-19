@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, LayoutDashboard, Home, FileText, LogOut } from "lucide-react"
+import { ArrowLeft, LayoutDashboard, Home, FileText, LogOut, Pencil } from "lucide-react"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 
 interface Usuario {
@@ -13,6 +13,7 @@ interface Usuario {
   email: string
   name: string
   role: string
+  whatsapp?: string | null
   createdAt: string
   _count: { tramites: number }
 }
@@ -25,10 +26,12 @@ export default function AdminUsuarios() {
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState("")
+  const [editUser, setEditUser] = useState<Usuario | null>(null)
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [whatsapp, setWhatsapp] = useState("")
   const [role, setRole] = useState("usuario")
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -67,7 +70,7 @@ export default function AdminUsuarios() {
       const res = await fetch("/api/admin/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password, whatsapp: whatsapp || undefined, role }),
       })
 
       const data = await res.json()
@@ -81,10 +84,67 @@ export default function AdminUsuarios() {
       setName("")
       setEmail("")
       setPassword("")
+      setWhatsapp("")
       setRole("usuario")
       fetchUsuarios()
     } catch {
       setError("Error al crear usuario")
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const openEdit = (usuario: Usuario) => {
+    setEditUser(usuario)
+    setName(usuario.name)
+    setEmail(usuario.email)
+    setWhatsapp(usuario.whatsapp || "")
+    setRole(usuario.role)
+    setPassword("")
+    setError("")
+    setShowModal(true)
+  }
+
+  const openCreate = () => {
+    setEditUser(null)
+    setName("")
+    setEmail("")
+    setPassword("")
+    setWhatsapp("")
+    setRole("usuario")
+    setError("")
+    setShowModal(true)
+  }
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editUser) return
+    setCreating(true)
+    setError("")
+
+    try {
+      const body: Record<string, string> = { name, email, role }
+      if (password) body.password = password
+      body.whatsapp = whatsapp || ""
+
+      const res = await fetch(`/api/admin/usuarios/${editUser.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Error al actualizar usuario")
+        return
+      }
+
+      setShowModal(false)
+      setEditUser(null)
+      fetchUsuarios()
+    } catch {
+      setError("Error al actualizar usuario")
     } finally {
       setCreating(false)
     }
@@ -99,17 +159,17 @@ export default function AdminUsuarios() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="flex h-14 items-center justify-between gap-2">
             <Link
               href="/admin"
               className="flex items-center gap-1.5 min-h-[44px] shrink-0 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-2 -ml-2"
+              aria-label="Volver"
             >
-              <ArrowLeft className="w-5 h-5 shrink-0" />
-              <span className="text-sm font-medium">Volver</span>
+              <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
             </Link>
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
               <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" />
@@ -181,7 +241,7 @@ export default function AdminUsuarios() {
           </Link>
           <hr className="my-1" />
           <Link
-            href="/api/auth/signout?callbackUrl=/"
+            href="/cerrar-sesion?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
             className="px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg min-h-[44px] flex items-center gap-2"
           >
@@ -192,77 +252,121 @@ export default function AdminUsuarios() {
       </div>
 
       {/* Main */}
-      <main className="max-w-7xl mx-auto px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <main className="w-full max-w-7xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Usuarios</h1>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={openCreate}
             className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800"
           >
             Nuevo usuario
           </button>
         </div>
 
-        {/* Lista de usuarios */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {usuarios.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-sm text-gray-500">No hay usuarios registrados.</p>
+        {usuarios.length === 0 ? (
+          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+            <p className="text-sm text-gray-500">No hay usuarios registrados.</p>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+              {usuarios.map((usuario) => (
+                <div key={usuario.id} className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className="font-medium text-gray-900 text-sm">{usuario.name}</p>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${
+                      usuario.role === "admin"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}>
+                      {usuario.role === "admin" ? "Admin" : "Usuario"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 break-all">{usuario.email}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                      <span>{usuario._count.tramites} trámite{usuario._count.tramites !== 1 ? "s" : ""}</span>
+                      <span>Reg. {new Date(usuario.createdAt).toLocaleDateString("es-AR")}</span>
+                    </div>
+                    <button
+                      onClick={() => openEdit(usuario)}
+                      className="min-h-[44px] inline-flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-800 rounded-lg hover:bg-blue-50"
+                      title="Editar"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Nombre</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Email</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Rol</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Trámites</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Registrado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usuarios.map((usuario) => (
-                  <tr key={usuario.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{usuario.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{usuario.email}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        usuario.role === "admin"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}>
-                        {usuario.role === "admin" ? "Admin" : "Usuario"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{usuario._count.tramites}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
-                      {new Date(usuario.createdAt).toLocaleDateString("es-AR")}
-                    </td>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Nombre</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Email</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Rol</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Trámites</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Registrado</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {usuarios.map((usuario) => (
+                    <tr key={usuario.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{usuario.name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{usuario.email}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          usuario.role === "admin"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {usuario.role === "admin" ? "Admin" : "Usuario"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{usuario._count.tramites}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {new Date(usuario.createdAt).toLocaleDateString("es-AR")}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <button
+                          onClick={() => openEdit(usuario)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Editar"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </main>
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>
         </div>
       </footer>
 
-      {/* Drawer (Bottom Sheet) crear usuario */}
-      <Drawer open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) setError("") }}>
+      {/* Drawer (Bottom Sheet) crear/editar usuario */}
+      <Drawer open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) { setError(""); setEditUser(null) } }}>
         <DrawerContent className="max-h-[90vh] flex flex-col">
           <DrawerHeader className="text-left flex-shrink-0 border-b border-gray-200">
-            <DrawerTitle>Crear usuario</DrawerTitle>
+            <DrawerTitle>{editUser ? "Editar usuario" : "Crear usuario"}</DrawerTitle>
           </DrawerHeader>
           <div className="flex-1 min-h-0 overflow-y-auto p-4 pb-6">
-            <form onSubmit={handleCreate} className="space-y-4">
+            <form onSubmit={editUser ? handleEdit : handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
                 <input
@@ -286,14 +390,28 @@ export default function AdminUsuarios() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="+54 9 376 4..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {editUser ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña"}
+                </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  required={!editUser}
                   minLength={6}
+                  placeholder={editUser ? "••••••" : ""}
                 />
               </div>
 
@@ -316,7 +434,7 @@ export default function AdminUsuarios() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); setError("") }}
+                  onClick={() => { setShowModal(false); setError(""); setEditUser(null) }}
                   disabled={creating}
                   className="flex-1 min-h-[44px] inline-flex items-center justify-center px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100"
                 >
@@ -327,7 +445,7 @@ export default function AdminUsuarios() {
                   disabled={creating}
                   className="flex-1 min-h-[44px] inline-flex items-center justify-center px-4 py-3 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
                 >
-                  {creating ? "Creando..." : "Crear usuario"}
+                  {creating ? (editUser ? "Guardando..." : "Creando...") : (editUser ? "Guardar cambios" : "Crear usuario")}
                 </button>
               </div>
             </form>

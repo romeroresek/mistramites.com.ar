@@ -5,15 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { generateWhatsAppLink } from "@/lib/contactTemplates"
-
-interface Plantilla {
-  id: string
-  clave: string
-  nombre: string
-  mensaje: string
-  activo: boolean
-}
+import { ArrowLeft } from "lucide-react"
 
 interface Tramite {
   id: string
@@ -84,10 +76,24 @@ export default function AdminTramiteDetalle() {
     fechaNacimiento: "",
     ciudadNacimiento: "",
   })
-  const [plantillas, setPlantillas] = useState<Plantilla[]>([])
-  const [selectedTemplate, setSelectedTemplate] = useState("")
+  const [editContacto, setEditContacto] = useState(false)
+  const [contactoForm, setContactoForm] = useState({ email: "", whatsapp: "" })
   const [copiedEmail, setCopiedEmail] = useState(false)
+  const [copiedLinkPago, setCopiedLinkPago] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const linkPagoMercadoPago =
+    tramite?.pago?.estado === "pendiente" && tramite.pago?.mercadopagoId
+      ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago.mercadopagoId}`
+      : null
+
+  const copiarLinkPago = () => {
+    if (!linkPagoMercadoPago) return
+    navigator.clipboard.writeText(linkPagoMercadoPago).then(() => {
+      setCopiedLinkPago(true)
+      setTimeout(() => setCopiedLinkPago(false), 2000)
+    })
+  }
 
   const fetchTramite = async () => {
     try {
@@ -99,18 +105,6 @@ export default function AdminTramiteDetalle() {
       console.error(error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const fetchPlantillas = async () => {
-    try {
-      const res = await fetch("/api/admin/plantillas")
-      if (!res.ok) return
-      const data = await res.json()
-      setPlantillas(data)
-      if (data.length > 0) setSelectedTemplate(data[0].clave)
-    } catch (error) {
-      console.error(error)
     }
   }
 
@@ -132,24 +126,8 @@ export default function AdminTramiteDetalle() {
         .catch(() => {})
     })
 
-    fetchPlantillas()
   // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch solo al montar o cambiar id/sesión
   }, [status, session, router, params.id])
-
-  // Generar mensaje reemplazando placeholders
-  const generarMensaje = (plantillaClave: string): string => {
-    const plantilla = plantillas.find(p => p.clave === plantillaClave)
-    if (!plantilla || !tramite) return ""
-
-    const nombre = tramite.partida?.nombres || tramite.user?.name || "Usuario"
-    const tipo = tramite.tipoTramite
-    const monto = tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })
-
-    return plantilla.mensaje
-      .replace(/\{nombre\}/g, nombre)
-      .replace(/\{tipo\}/g, tipo)
-      .replace(/\{monto\}/g, monto)
-  }
 
   const handleEstadoChange = async (nuevoEstado: string) => {
     if (!tramite) return
@@ -271,6 +249,37 @@ export default function AdminTramiteDetalle() {
     }
   }
 
+  const startContactoEdit = () => {
+    if (tramite) {
+      setContactoForm({
+        email: tramite.guestEmail || tramite.user?.email || "",
+        whatsapp: tramite.whatsapp || tramite.partida?.whatsapp || "",
+      })
+      setEditContacto(true)
+    }
+  }
+
+  const handleContactoSave = async () => {
+    if (!tramite) return
+    setUpdating(true)
+    try {
+      const res = await fetch(`/api/admin/tramites/${tramite.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guestEmail: contactoForm.email, whatsapp: contactoForm.whatsapp }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setTramite(data)
+        setEditContacto(false)
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !tramite) return
@@ -352,18 +361,25 @@ export default function AdminTramiteDetalle() {
     new Date(dateStr).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" })
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4">
-          <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">Trámites Misiones</span>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
+          <div className="flex h-14 items-center justify-between gap-2">
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 min-h-[44px] shrink-0 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-2 -ml-2"
+              aria-label="Volver"
+            >
+              <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
+            </Link>
+            <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
+              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" />
+              <span className="font-semibold text-gray-800 truncate">Trámites Misiones</span>
             </Link>
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded -m-1"
               aria-label="Abrir menú"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -424,7 +440,7 @@ export default function AdminTramiteDetalle() {
           </Link>
           <hr className="my-1" />
           <Link
-            href="/api/auth/signout?callbackUrl=/"
+            href="/cerrar-sesion?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
             className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
           >
@@ -434,13 +450,13 @@ export default function AdminTramiteDetalle() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4">
+      <main className="w-full max-w-4xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-4">
         <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Detalle del trámite</h1>
 
         {/* Info general */}
         <div className="bg-white border border-gray-200 rounded p-4">
           <h2 className="text-base font-semibold text-gray-900 mb-4">{tramite.tipoTramite}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-500">Oficina</span>
               <p className="font-medium text-gray-900">{tramite.oficina}</p>
@@ -488,8 +504,8 @@ export default function AdminTramiteDetalle() {
                 </div>
               )}
             </div>
-            <div className="sm:col-span-2">
-              <span className="text-gray-500">Pago</span>
+            <div>
+              <div className="text-gray-500">Pago</div>
               <div className="mt-1 relative inline-block">
                 <button
                   onClick={() => setShowPagoDropdown(!showPagoDropdown)}
@@ -502,7 +518,7 @@ export default function AdminTramiteDetalle() {
                       : "bg-yellow-500 text-white"
                   }`}
                 >
-                  {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Cobro devuelto" : "Pendiente"}
+                  {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
@@ -528,12 +544,33 @@ export default function AdminTramiteDetalle() {
                       className="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2"
                     >
                       <span className="w-3 h-3 rounded-full bg-gray-500"></span>
-                      Cobro devuelto
+                      Devuelto
                     </button>
                   </div>
                 )}
               </div>
             </div>
+            {linkPagoMercadoPago && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <span className="text-gray-500 text-sm block mb-1">Link de pago (MercadoPago)</span>
+                <div className="flex gap-2 flex-wrap">
+                  <input
+                    readOnly
+                    value={linkPagoMercadoPago}
+                    className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50 truncate"
+                    title={linkPagoMercadoPago}
+                  />
+                  <button
+                    type="button"
+                    onClick={copiarLinkPago}
+                    className="px-3 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded hover:bg-blue-50 shrink-0"
+                  >
+                    {copiedLinkPago ? "Copiado" : "Copiar link"}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Enviá este link al cliente por WhatsApp para que pueda pagar.</p>
+              </div>
+            )}
             <div>
               <span className="text-gray-500">Creado</span>
               <p className="font-medium text-gray-900">{formatDate(tramite.createdAt)}</p>
@@ -556,20 +593,26 @@ export default function AdminTramiteDetalle() {
         <div className="bg-white border border-gray-200 rounded p-4">
           <h3 className="text-base font-semibold text-gray-900 mb-3">Estado del trámite</h3>
           <div className="flex flex-wrap gap-2">
-            {estadoOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => handleEstadoChange(opt.value)}
-                disabled={updating || tramite.estado === opt.value}
-                className={`px-3 py-1.5 rounded text-xs font-medium ${
-                  tramite.estado === opt.value
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                } disabled:cursor-not-allowed`}
-              >
-                {opt.label}
-              </button>
-            ))}
+            {estadoOptions.map((opt) => {
+              const isSelected = opt.value === "completado"
+                ? (tramite.estado === "completado" || tramite.estado === "listo")
+                : tramite.estado === opt.value
+              const isDisabled = updating || isSelected
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => handleEstadoChange(opt.value)}
+                  disabled={isDisabled}
+                  className={`px-3 py-1.5 rounded text-xs font-medium ${
+                    isSelected
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  } disabled:cursor-not-allowed`}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -815,99 +858,99 @@ export default function AdminTramiteDetalle() {
 
         {/* Sección de Contacto */}
         <div className="bg-white border border-gray-200 rounded p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Contacto</h3>
-
-          {/* Datos de contacto */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <span className="text-gray-500 text-sm">Email</span>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="font-medium text-gray-900 text-sm">
-                  {tramite.user?.email || tramite.guestEmail || "No disponible"}
-                </p>
-                {(tramite.user?.email || tramite.guestEmail) && (
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(tramite.user?.email || tramite.guestEmail || "")
-                      setCopiedEmail(true)
-                      setTimeout(() => setCopiedEmail(false), 2000)
-                    }}
-                    className="text-blue-600 hover:text-blue-800"
-                    title="Copiar email"
-                  >
-                    {copiedEmail ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                      </svg>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
-            <div>
-              <span className="text-gray-500 text-sm">WhatsApp</span>
-              <p className="font-medium text-gray-900 text-sm mt-1">
-                {tramite.whatsapp || tramite.partida?.whatsapp || "No disponible"}
-              </p>
-            </div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-base font-semibold text-gray-900">Contacto</h3>
+            {!editContacto && (
+              <button
+                onClick={startContactoEdit}
+                className="text-blue-600 hover:text-blue-800"
+                title="Editar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+            )}
           </div>
 
-          {/* Selector de plantilla y envío */}
-          {(tramite.whatsapp || tramite.partida?.whatsapp) && plantillas.length > 0 && (
-            <div className="border-t border-gray-200 pt-4">
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-gray-500 text-sm">Plantilla de mensaje</label>
-                  <Link
-                    href="/admin/plantillas"
-                    className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-                    title="Editar plantillas"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                  </Link>
+          {editContacto ? (
+            <div className="space-y-3 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-500 text-sm block mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={contactoForm.email}
+                    onChange={(e) => setContactoForm({ ...contactoForm, email: e.target.value })}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  />
                 </div>
-                <select
-                  value={selectedTemplate}
-                  onChange={(e) => setSelectedTemplate(e.target.value)}
-                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded text-sm"
+                <div>
+                  <label className="text-gray-500 text-sm block mb-1">WhatsApp</label>
+                  <input
+                    type="text"
+                    value={contactoForm.whatsapp}
+                    onChange={(e) => setContactoForm({ ...contactoForm, whatsapp: e.target.value })}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={handleContactoSave}
+                  disabled={updating}
+                  className="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
                 >
-                  {plantillas.map((p) => (
-                    <option key={p.clave} value={p.clave}>{p.nombre}</option>
-                  ))}
-                </select>
+                  {updating ? "Guardando..." : "Guardar"}
+                </button>
+                <button
+                  onClick={() => setEditContacto(false)}
+                  disabled={updating}
+                  className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
               </div>
-
-              {/* Preview del mensaje */}
-              <div className="mb-4">
-                <label className="text-gray-500 text-sm block mb-1">Vista previa</label>
-                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-sm text-gray-700">
-                  {generarMensaje(selectedTemplate)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <span className="text-gray-500 text-sm">Email</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="font-medium text-gray-900 text-sm">
+                    {tramite.user?.email || tramite.guestEmail || "No disponible"}
+                  </p>
+                  {(tramite.user?.email || tramite.guestEmail) && (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(tramite.user?.email || tramite.guestEmail || "")
+                        setCopiedEmail(true)
+                        setTimeout(() => setCopiedEmail(false), 2000)
+                      }}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Copiar email"
+                    >
+                      {copiedEmail ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {/* Botón de envío */}
-              <a
-                href={generateWhatsAppLink(
-                  (tramite.whatsapp || tramite.partida?.whatsapp)!,
-                  generarMensaje(selectedTemplate)
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-                Enviar por WhatsApp
-              </a>
+              <div>
+                <span className="text-gray-500 text-sm">WhatsApp</span>
+                <p className="font-medium text-gray-900 text-sm mt-1">
+                  {tramite.whatsapp || tramite.partida?.whatsapp || "No disponible"}
+                </p>
+              </div>
             </div>
           )}
 
@@ -935,7 +978,7 @@ export default function AdminTramiteDetalle() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

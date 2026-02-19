@@ -1,11 +1,10 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
 import { useToast } from "@/components/Toast"
+import { PageNavbar } from "@/components/PageNavbar"
 
 const LOCALIDADES_MISIONES = [
   "Alba Posse", "Almafuerte", "Apóstoles", "Aristóbulo del Valle", "Azara",
@@ -19,7 +18,7 @@ const LOCALIDADES_MISIONES = [
   "San Pedro", "San Vicente", "Santa Ana", "Santo Pipó", "Wanda"
 ].sort()
 
-const inputClass = "w-full min-w-0 px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+const inputClass = "w-full min-w-0 max-w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm box-border"
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
 function PersonaFields({ label, dniVal, setDniVal, sexoVal, setSexoVal, nombreCompletoVal, setNombreCompletoVal, fechaNacVal, setFechaNacVal }: {
@@ -67,7 +66,9 @@ const PARTIDAS = [
 export default function RegistroPersonas() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const toast = useToast()
+  const returnUrl = searchParams.get("returnUrl") ?? undefined
   const [selectedPartida, setSelectedPartida] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -77,6 +78,8 @@ export default function RegistroPersonas() {
   const [fechaNacimiento, setFechaNacimiento] = useState("")
   const [ciudadNacimiento, setCiudadNacimiento] = useState("")
   const [fechaDefuncion, setFechaDefuncion] = useState("")
+  const [codigoPais, setCodigoPais] = useState("+54")
+  const [customCodigoPais, setCustomCodigoPais] = useState("")
   const [whatsapp, setWhatsapp] = useState("")
   const [email, setEmail] = useState("")
 
@@ -96,7 +99,7 @@ export default function RegistroPersonas() {
     setFechaNacimiento(""); setCiudadNacimiento(""); setFechaDefuncion("")
     setDni2(""); setSexo2(""); setNombreCompleto2("")
     setFechaNacimiento2(""); setFechaMatrimonio(""); setCiudadMatrimonio("")
-    setDivorciados(false); setWhatsapp(""); setEmail("")
+    setDivorciados(false); setCodigoPais("+54"); setCustomCodigoPais(""); setWhatsapp(""); setEmail("")
   }
 
   // Función para separar apellido y nombre
@@ -111,16 +114,23 @@ export default function RegistroPersonas() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedPartida) return
+    if (codigoPais === "otro" && !customCodigoPais.trim()) {
+      toast.showError("Ingresá el código de país (ej. +49)")
+      return
+    }
 
     setLoading(true)
 
     try {
       const { apellido, nombres } = separarNombre(nombreCompleto)
 
+      const prefijo = codigoPais === "otro"
+        ? (customCodigoPais.trim().replace(/^(\d+)$/, "+$1") || "+")
+        : codigoPais
       const body: Record<string, unknown> = {
         tipoPartida: selectedPartida,
         dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
-        whatsapp: `+54${whatsapp.replace(/\D/g, "")}`,
+        whatsapp: `${prefijo}${whatsapp.replace(/\D/g, "")}`,
         email: isLoggedIn ? undefined : email,
       }
 
@@ -153,7 +163,11 @@ export default function RegistroPersonas() {
         return
       }
 
-      if (data.initPoint) {
+      if (returnUrl) {
+        const params = new URLSearchParams({ creado: "1", tramiteId: data.tramiteId })
+        if (data.initPoint) params.set("initPoint", data.initPoint)
+        router.push(returnUrl + (returnUrl.includes("?") ? "&" : "?") + params.toString())
+      } else if (data.initPoint) {
         window.location.href = data.initPoint
       } else {
         router.push(`/mis-tramites/${data.tramiteId}`)
@@ -167,28 +181,11 @@ export default function RegistroPersonas() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 min-h-[44px] text-gray-600 hover:text-gray-900 rounded-lg px-2 -ml-2 hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              Volver
-            </Link>
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">Trámites Misiones</span>
-            </Link>
-            <div className="w-16"></div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <PageNavbar backHref={returnUrl ? `/?returnUrl=${encodeURIComponent(returnUrl)}` : "/"} />
 
       {/* Main */}
-      <main className="max-w-2xl mx-auto px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] min-w-0">
+      <main className="w-full max-w-2xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] min-w-0 overflow-hidden">
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <h2 className="font-semibold text-gray-900">Solicitar Partida</h2>
@@ -230,7 +227,7 @@ export default function RegistroPersonas() {
                       nombreCompletoVal={nombreCompleto} setNombreCompletoVal={setNombreCompleto}
                       fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
                     />
-                    <div>
+                    <div className="min-w-0 overflow-hidden">
                       <label className={labelClass}>Ciudad de nacimiento</label>
                       <select value={ciudadNacimiento} onChange={(e) => setCiudadNacimiento(e.target.value)} className={inputClass} required>
                         <option value="">Seleccione localidad</option>
@@ -252,7 +249,7 @@ export default function RegistroPersonas() {
                       nombreCompletoVal={nombreCompleto} setNombreCompletoVal={setNombreCompleto}
                       fechaNacVal={fechaNacimiento} setFechaNacVal={setFechaNacimiento}
                     />
-                    <div>
+                    <div className="min-w-0 overflow-hidden">
                       <label className={labelClass}>Ciudad</label>
                       <select value={ciudadNacimiento} onChange={(e) => setCiudadNacimiento(e.target.value)} className={inputClass} required>
                         <option value="">Seleccione localidad</option>
@@ -295,7 +292,7 @@ export default function RegistroPersonas() {
                         <label className={labelClass}>Fecha de matrimonio</label>
                         <input type="date" value={fechaMatrimonio} onChange={(e) => setFechaMatrimonio(e.target.value)} className={inputClass} required />
                       </div>
-                      <div>
+                      <div className="min-w-0 overflow-hidden">
                         <label className={labelClass}>Ciudad</label>
                         <select value={ciudadMatrimonio} onChange={(e) => setCiudadMatrimonio(e.target.value)} className={inputClass} required>
                           <option value="">Seleccione localidad</option>
@@ -320,11 +317,41 @@ export default function RegistroPersonas() {
                   </>
                 )}
 
-                {/* WhatsApp: +54 fijo y número en un solo renglón */}
+                {/* WhatsApp: código de país seleccionable y número */}
                 <div className="w-full min-w-0">
                   <label className={labelClass}>WhatsApp de contacto</label>
                   <div className="flex items-stretch w-full min-w-0 rounded-lg border border-gray-300 overflow-hidden bg-white">
-                    <span className="inline-flex items-center px-3 py-2.5 bg-gray-100 text-gray-700 text-sm border-r border-gray-300 shrink-0">+54</span>
+                    <select
+                      value={codigoPais}
+                      onChange={(e) => setCodigoPais(e.target.value)}
+                      className="appearance-none bg-gray-100 text-gray-700 text-sm px-2 py-2.5 border-r border-gray-300 shrink-0 focus:outline-none cursor-pointer"
+                    >
+                      <option value="+54">🇦🇷 +54</option>
+                      <option value="+55">🇧🇷 +55</option>
+                      <option value="+56">🇨🇱 +56</option>
+                      <option value="+57">🇨🇴 +57</option>
+                      <option value="+58">🇻🇪 +58</option>
+                      <option value="+51">🇵🇪 +51</option>
+                      <option value="+595">🇵🇾 +595</option>
+                      <option value="+598">🇺🇾 +598</option>
+                      <option value="+591">🇧🇴 +591</option>
+                      <option value="+593">🇪🇨 +593</option>
+                      <option value="+52">🇲🇽 +52</option>
+                      <option value="+34">🇪🇸 +34</option>
+                      <option value="+39">🇮🇹 +39</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                    {codigoPais === "otro" && (
+                      <input
+                        type="text"
+                        value={customCodigoPais}
+                        onChange={(e) => setCustomCodigoPais(e.target.value)}
+                        placeholder="+XXX"
+                        className="w-20 min-w-0 px-2 py-2.5 border-r border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                        aria-label="Código de país"
+                      />
+                    )}
                     <input
                       type="tel"
                       value={whatsapp}
@@ -334,7 +361,7 @@ export default function RegistroPersonas() {
                       required
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">Ingresá código de área sin 0 + número sin 15. Ej: 11 1234 5678</p>
+                  <p className="text-sm text-gray-500 mt-1">Ingresá código de área sin 0 + número sin 15. Ej: 11 1234 5678. Si tu país no está en la lista, elegí &quot;Otro&quot; e ingresá el código (ej. +49).</p>
                 </div>
 
                 {/* Email - solo si no está logueado */}
@@ -376,7 +403,7 @@ export default function RegistroPersonas() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

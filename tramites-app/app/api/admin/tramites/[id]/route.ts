@@ -68,12 +68,14 @@ export async function PUT(
     }
 
     const body = await req.json()
-    const { estado, monto, pagoEstado, partida } = body
+    const { estado, monto, pagoEstado, partida, guestEmail, whatsapp } = body
 
     // Actualizar trámite
     const tramiteData: Record<string, unknown> = {}
     if (estado) tramiteData.estado = estado
     if (monto !== undefined) tramiteData.monto = parseFloat(monto)
+    if (guestEmail !== undefined) tramiteData.guestEmail = guestEmail
+    if (whatsapp !== undefined) tramiteData.whatsapp = whatsapp
 
     const tramite = await prisma.tramite.update({
       where: { id },

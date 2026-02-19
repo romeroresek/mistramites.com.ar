@@ -43,7 +43,7 @@ export async function POST(
       items: [
         {
           id: tramite.id,
-          title: `${tramite.tipoTramite} - ${tramite.oficina}`,
+          title: tramite.tipoTramite,
           quantity: 1,
           unit_price: tramite.monto,
           currency_id: "ARS",

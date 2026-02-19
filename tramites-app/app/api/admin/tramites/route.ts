@@ -33,6 +33,16 @@ export async function GET(_req: NextRequest) {
         },
         documentos: true,
         pago: true,
+        partida: {
+          select: {
+            tipoPartida: true,
+            nombres: true,
+            apellido: true,
+            dni: true,
+            ciudadNacimiento: true,
+            whatsapp: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     })

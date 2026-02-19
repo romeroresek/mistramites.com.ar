@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
+import { ArrowLeft } from "lucide-react"
 
 interface Plantilla {
   id: string
@@ -88,14 +89,21 @@ export default function PlantillasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4">
-          <div className="flex h-14 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
-              <span className="font-semibold text-gray-800">Trámites Misiones</span>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
+          <div className="flex h-14 items-center justify-between gap-2">
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 min-h-[44px] shrink-0 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-2 -ml-2"
+              aria-label="Volver"
+            >
+              <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
+            </Link>
+            <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
+              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" />
+              <span className="font-semibold text-gray-800 truncate">Trámites Misiones</span>
             </Link>
             <button
               onClick={() => setMenuOpen(true)}
@@ -160,7 +168,7 @@ export default function PlantillasPage() {
           </Link>
           <hr className="my-1" />
           <Link
-            href="/api/auth/signout?callbackUrl=/"
+            href="/cerrar-sesion?callbackUrl=/"
             onClick={() => setMenuOpen(false)}
             className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
           >
@@ -170,7 +178,7 @@ export default function PlantillasPage() {
       </div>
 
       {/* Main */}
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="w-full max-w-4xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <h1 className="text-lg sm:text-2xl font-semibold text-gray-900 mb-2">Plantillas de Mensajes</h1>
         <p className="text-gray-600 text-sm mb-6">
           Editá las plantillas de mensajes para WhatsApp. Usá {"{nombre}"}, {"{tipo}"} y {"{monto}"} como variables.
@@ -247,7 +255,7 @@ export default function PlantillasPage() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
             © 2024 Trámites Misiones - Todos los derechos reservados
           </p>

@@ -55,6 +55,11 @@ export async function POST(req: NextRequest) {
         pagoEstado = "rechazado"
         tramiteEstado = "pendiente"
         break
+      case "refunded":
+      case "charged_back":
+        pagoEstado = "devuelto"
+        tramiteEstado = "pendiente"
+        break
     }
 
     // Extraer datos del pagador

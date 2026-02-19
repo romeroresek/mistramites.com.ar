@@ -157,13 +157,29 @@ Así todos los builds y réplicas usan la misma clave y se evita el error.
 
 Para mantener el mismo aspecto en todo el sitio (/, /admin, /mis-tramites, etc.) usamos estas convenciones:
 
-### Layout general
-- **Página**: `min-h-screen bg-gray-50` o `bg-gray-100` según sección.
-- **Contenido principal**: `max-w-7xl mx-auto px-4 sm:px-4 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]`.
-- **Footer**: `bg-white border-t border-gray-200`, contenido `max-w-7xl mx-auto px-4 py-4`, texto `text-center text-gray-500 text-xs sm:text-sm`.
+### Layout general — márgenes de referencia (tomados de `app/page.tsx`)
+
+```
+<main className="max-w-7xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+<footer><div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
+<nav><div className="max-w-7xl mx-auto px-5 sm:px-6">
+```
+
+| Token | Mobile | Desktop (sm+) |
+|-------|--------|---------------|
+| padding-x | `px-5` (20 px) | `sm:px-6` (24 px) |
+| padding-y main | `py-5` (20 px) | `sm:py-8` (32 px) |
+| padding-y footer/nav | `py-4` (16 px) | `py-4` (16 px) |
+| max-width contenido | `max-w-7xl` | `max-w-7xl` |
+| max-width formularios | `max-w-2xl` | `max-w-2xl` |
+
+- **Página**: `min-h-screen bg-gray-100` (inicio y detalle de trámite) o `bg-gray-50` (mis-tramites y formularios de oficina).
+- **Contenido principal**: `max-w-7xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]`.
+- **Formularios**: mismos `px-5 sm:px-6` pero `max-w-2xl` para limitar el ancho.
+- **Footer**: `bg-white border-t border-gray-200`, contenido `max-w-7xl mx-auto px-5 sm:px-6 py-4`, texto `text-center text-gray-500 text-xs sm:text-sm`.
 
 ### Navegación
-- **Navbar**: `bg-white border-b border-gray-200 sticky top-0 z-40`, contenedor `max-w-7xl mx-auto px-4`, altura `h-14`.
+- **Navbar**: `bg-white border-b border-gray-200 sticky top-0 z-40`, contenedor `max-w-7xl mx-auto px-5 sm:px-6`, altura `h-14`.
 - **Botón menú (hamburguesa)**: área táctil mínimo 44px: `min-w-[44px] min-h-[44px] flex items-center justify-center ... rounded -m-1`.
 - **Menú lateral**: `fixed top-0 right-0 ... w-56 bg-white ... rounded-bl-lg`, ítems con `px-3 py-2 text-sm`, cierre con área táctil ≥44px.
 
