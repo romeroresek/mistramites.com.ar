@@ -779,7 +779,7 @@ export default function AdminPage() {
                     </select>
                   </td>
                   <td className="px-3 py-2">
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => openUploadModal(tramite)}
                         className={`p-1 rounded ${tramite.archivoUrl ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"}`}
