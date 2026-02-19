@@ -109,6 +109,7 @@ model Partida {
   divorciados      Boolean   @default(false)
   createdAt        DateTime  @default(now())
   whatsapp         String?
+  apostillado      Boolean   @default(false)
   tramite          Tramite   @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
 
   @@map("partidas")

@@ -43,6 +43,7 @@ interface Tramite {
     ciudadMatrimonio: string | null
     divorciados: boolean
     whatsapp: string | null
+    apostillado: boolean
   }
 }
 
@@ -95,7 +96,7 @@ export default function AdminTramiteDetalle() {
       .then((data: { initPoint?: string } | null) => {
         if (!cancelled && data?.initPoint) setLinkPagoReal(data.initPoint)
       })
-      .catch(() => {})
+      .catch(() => { })
     return () => { cancelled = true }
   }, [tieneLinkPago, params.id])
 
@@ -164,10 +165,10 @@ export default function AdminTramiteDetalle() {
         .then((data) => {
           if (data.pagoEstado === "confirmado") fetchTramite()
         })
-        .catch(() => {})
+        .catch(() => { })
     })
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch solo al montar o cambiar id/sesión
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch solo al montar o cambiar id/sesión
   }, [status, session, router, params.id])
 
   const handleEstadoChange = async (nuevoEstado: string) => {
@@ -441,9 +442,8 @@ export default function AdminTramiteDetalle() {
 
       {/* Sidebar Menu */}
       <div
-        className={`fixed top-0 right-0 h-auto max-h-[90vh] w-56 bg-white shadow-lg border border-gray-200 rounded-bl-lg z-50 transform transition-transform duration-200 ease-out ${
-          menuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-auto max-h-[90vh] w-56 bg-white shadow-lg border border-gray-200 rounded-bl-lg z-50 transform transition-transform duration-200 ease-out ${menuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
           <span className="text-sm font-medium text-gray-700">Menú Admin</span>
@@ -551,17 +551,16 @@ export default function AdminTramiteDetalle() {
                 <button
                   onClick={() => setShowPagoDropdown(!showPagoDropdown)}
                   disabled={updating}
-                  className={`px-3 py-1.5 rounded text-xs font-medium flex items-center gap-2 ${
-                    tramite.pago?.estado === "confirmado"
-                      ? "bg-green-500 text-white"
-                      : tramite.pago?.estado === "devuelto"
+                  className={`px-3 py-1.5 rounded text-xs font-medium flex items-center gap-2 ${tramite.pago?.estado === "confirmado"
+                    ? "bg-green-500 text-white"
+                    : tramite.pago?.estado === "devuelto"
                       ? "bg-gray-500 text-white"
                       : "bg-yellow-500 text-white"
-                  }`}
+                    }`}
                 >
                   {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="6 9 12 15 18 9"/>
+                    <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
                 {showPagoDropdown && (
@@ -628,6 +627,19 @@ export default function AdminTramiteDetalle() {
               <p className="text-gray-900 text-sm">{tramite.descripcion}</p>
             </div>
           )}
+
+          {/* Apostillado */}
+          {tramite.partida?.apostillado && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-indigo-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span className="text-sm font-medium text-indigo-700">Apostillado de La Haya solicitado</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Estado del trámite */}
@@ -644,11 +656,13 @@ export default function AdminTramiteDetalle() {
                   key={opt.value}
                   onClick={() => handleEstadoChange(opt.value)}
                   disabled={isDisabled}
-                  className={`px-3 py-1.5 rounded text-xs font-medium ${
-                    isSelected
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  } disabled:cursor-not-allowed`}
+                  className={`px-3 py-1.5 rounded text-xs font-medium ${isSelected
+                    ? opt.value === "completado" ? "bg-green-600 text-white"
+                      : opt.value === "rechazado" ? "bg-red-600 text-white"
+                        : opt.value === "en_proceso" ? "bg-blue-600 text-white"
+                          : "bg-yellow-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    } disabled:cursor-not-allowed`}
                 >
                   {opt.label}
                 </button>
@@ -665,7 +679,7 @@ export default function AdminTramiteDetalle() {
             <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
               <div className="flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z"/>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z" />
                 </svg>
                 <div>
                   <p className="text-sm font-medium text-gray-900">Archivo adjunto</p>
@@ -693,9 +707,9 @@ export default function AdminTramiteDetalle() {
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded p-6 text-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mx-auto text-gray-400 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
               <p className="text-sm text-gray-600 mb-3">
                 {uploading ? "Subiendo archivo..." : "Subir archivo PDF para el usuario"}
@@ -974,12 +988,12 @@ export default function AdminTramiteDetalle() {
                     >
                       {copiedEmail ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="20 6 9 17 4 12"/>
+                          <polyline points="20 6 9 17 4 12" />
                         </svg>
                       ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
                       )}
                     </button>

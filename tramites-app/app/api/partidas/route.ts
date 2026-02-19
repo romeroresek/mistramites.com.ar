@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 const MONTO_PARTIDA = 20000
+const MONTO_APOSTILLADO = 40000
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +13,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { tipoPartida, dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
       fechaDefuncion, dni2, sexo2, nombres2, apellido2, fechaNacimiento2,
-      fechaMatrimonio, ciudadMatrimonio, divorciados, whatsapp, email } = body
+      fechaMatrimonio, ciudadMatrimonio, divorciados, whatsapp, email, apostillado } = body
+
+    const montoTotal = MONTO_PARTIDA + (apostillado ? MONTO_APOSTILLADO : 0)
 
     if (!tipoPartida || !dni || !sexo || !nombres || !apellido || !fechaNacimiento) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
@@ -47,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     const tipoNombre = tipoPartida === "nacimiento" ? "Partida de Nacimiento"
       : tipoPartida === "matrimonio" ? "Partida de Matrimonio"
-      : "Partida de Defunción"
+        : "Partida de Defunción"
 
     // Crear tramite + partida + pago en una transacción
     const tramite = await prisma.$transaction(async (tx) => {
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
           oficina: "Registro de las Personas",
           tipoTramite: tipoNombre,
           descripcion: `Solicitud de ${tipoNombre}`,
-          monto: MONTO_PARTIDA,
+          monto: montoTotal,
           estado: "pendiente",
         },
       })
@@ -83,6 +86,7 @@ export async function POST(req: NextRequest) {
           fechaMatrimonio: fechaMatrimonio ? new Date(fechaMatrimonio) : null,
           ciudadMatrimonio: ciudadMatrimonio || null,
           divorciados: divorciados || false,
+          apostillado: apostillado || false,
         },
       })
 
@@ -90,7 +94,7 @@ export async function POST(req: NextRequest) {
         data: {
           tramiteId: tramite.id,
           userId,
-          monto: MONTO_PARTIDA,
+          monto: montoTotal,
           estado: "pendiente",
         },
       })
@@ -108,7 +112,7 @@ export async function POST(req: NextRequest) {
           id: tramite.id,
           title: `${tipoNombre} - Trámites Misiones`,
           quantity: 1,
-          unit_price: MONTO_PARTIDA,
+          unit_price: montoTotal,
           currency_id: "ARS",
         },
       ],

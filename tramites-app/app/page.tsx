@@ -59,6 +59,7 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
                       <li>✓ Formato pdf con legalización digital.</li>
                       <li>✓ Validez Nacional.</li>
                       <li>✓ Demora 24hs hábiles.</li>
+                      <li>✓ Opcional con Apostilla de la Haya.</li>
                     </ul>
                   </div>
                 </Link>
@@ -163,7 +164,7 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
                       </ul>
                     </div>
                   </Link>
-                  <Link href={`/oficinas/catastro${returnSuffix}`} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 active:bg-gray-100">
+                  <Link href={`/oficinas/catastro${returnSuffix}`} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800">
                     Solicitar Catastral
                   </Link>
                 </div>
