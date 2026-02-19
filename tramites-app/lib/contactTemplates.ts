@@ -4,6 +4,7 @@ export interface TemplateParams {
   nombre: string
   tipo: string
   monto?: number
+  linkPago?: string
 }
 
 export const templates = {
@@ -28,8 +29,8 @@ export const templates = {
   recordatorioPago: {
     id: "recordatorioPago",
     nombre: "Recordatorio de pago",
-    mensaje: ({ nombre, tipo, monto }: TemplateParams) =>
-      `Hola ${nombre}! Te recordamos que tu solicitud de ${tipo} tiene un pago pendiente de $${(monto || 0).toLocaleString("es-AR")}. Ingresá a mistramites.com.ar para completarlo.`,
+    mensaje: ({ nombre, tipo, monto, linkPago }: TemplateParams) =>
+      `Hola ${nombre}! Te recordamos que tu solicitud de ${tipo} tiene un pago pendiente de $${(monto || 0).toLocaleString("es-AR")}.${linkPago ? ` Podés pagarlo desde acá: ${linkPago}` : " Ingresá a mistramites.com.ar para completarlo."}`,
   },
   rechazo: {
     id: "rechazo",

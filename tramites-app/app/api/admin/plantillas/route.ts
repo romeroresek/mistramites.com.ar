@@ -23,7 +23,7 @@ const plantillasDefecto = [
   {
     clave: "recordatorioPago",
     nombre: "Recordatorio de pago",
-    mensaje: "Hola {nombre}! Te recordamos que tu solicitud de {tipo} tiene un pago pendiente de ${monto}. Ingresá a mistramites.com.ar para completarlo.",
+    mensaje: "Hola {nombre}! Te recordamos que tu solicitud de {tipo} tiene un pago pendiente de ${monto}. Podés pagarlo desde acá: {linkPago}",
   },
   {
     clave: "rechazo",

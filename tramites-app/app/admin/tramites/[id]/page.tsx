@@ -80,19 +80,60 @@ export default function AdminTramiteDetalle() {
   const [contactoForm, setContactoForm] = useState({ email: "", whatsapp: "" })
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [copiedLinkPago, setCopiedLinkPago] = useState(false)
+  const [linkPagoReal, setLinkPagoReal] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const linkPagoMercadoPago =
-    tramite?.pago?.estado === "pendiente" && tramite.pago?.mercadopagoId
-      ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago.mercadopagoId}`
-      : null
+  const tieneLinkPago =
+    tramite?.pago?.estado === "pendiente" && !!tramite.pago?.mercadopagoId
 
-  const copiarLinkPago = () => {
-    if (!linkPagoMercadoPago) return
-    navigator.clipboard.writeText(linkPagoMercadoPago).then(() => {
+  // Obtener el link real desde la API de MercadoPago
+  useEffect(() => {
+    if (!tieneLinkPago || !params.id) return
+    let cancelled = false
+    fetch(`/api/admin/tramites/${params.id}/link-pago`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { initPoint?: string } | null) => {
+        if (!cancelled && data?.initPoint) setLinkPagoReal(data.initPoint)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [tieneLinkPago, params.id])
+
+  const linkPagoMostrar = linkPagoReal || (tieneLinkPago && tramite?.pago?.mercadopagoId
+    ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago.mercadopagoId}`
+    : null)
+
+  const copiarLinkPago = async () => {
+    if (!tieneLinkPago) return
+    const fallback = tramite?.pago?.mercadopagoId
+      ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago!.mercadopagoId}`
+      : ""
+    try {
+      if (linkPagoReal) {
+        await navigator.clipboard.writeText(linkPagoReal)
+      } else {
+        const res = await fetch(`/api/admin/tramites/${params.id}/link-pago`)
+        if (res.ok) {
+          const { initPoint } = await res.json()
+          if (initPoint) {
+            await navigator.clipboard.writeText(initPoint)
+            setLinkPagoReal(initPoint)
+          } else if (fallback) {
+            await navigator.clipboard.writeText(fallback)
+          }
+        } else if (fallback) {
+          await navigator.clipboard.writeText(fallback)
+        }
+      }
       setCopiedLinkPago(true)
       setTimeout(() => setCopiedLinkPago(false), 2000)
-    })
+    } catch {
+      if (fallback) {
+        await navigator.clipboard.writeText(fallback)
+        setCopiedLinkPago(true)
+        setTimeout(() => setCopiedLinkPago(false), 2000)
+      }
+    }
   }
 
   const fetchTramite = async () => {
@@ -550,15 +591,15 @@ export default function AdminTramiteDetalle() {
                 )}
               </div>
             </div>
-            {linkPagoMercadoPago && (
+            {tieneLinkPago && linkPagoMostrar && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <span className="text-gray-500 text-sm block mb-1">Link de pago (MercadoPago)</span>
                 <div className="flex gap-2 flex-wrap">
                   <input
                     readOnly
-                    value={linkPagoMercadoPago}
+                    value={linkPagoMostrar}
                     className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50 truncate"
-                    title={linkPagoMercadoPago}
+                    title={linkPagoMostrar}
                   />
                   <button
                     type="button"

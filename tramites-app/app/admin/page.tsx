@@ -149,22 +149,44 @@ export default function AdminPage() {
     const nombre = tramite.partida?.nombres || tramite.user?.name || "Usuario"
     const tipo = tramite.tipoTramite
     const monto = tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })
+    const linkPago = getLinkPagoUrl(tramite)
     return plantilla.mensaje
       .replace(/\{nombre\}/g, nombre)
       .replace(/\{tipo\}/g, tipo)
       .replace(/\{monto\}/g, monto)
+      .replace(/\{linkPago\}/g, linkPago)
   }
 
   const getWhatsappNumber = (tramite: Tramite): string | null =>
     tramite.whatsapp || tramite.partida?.whatsapp || null
 
-  const getLinkPago = (tramite: Tramite): string | null =>
-    tramite.pago?.estado === "pendiente" && tramite.pago?.mercadopagoId
-      ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago.mercadopagoId}`
-      : null
+  const tieneLinkPago = (tramite: Tramite): boolean =>
+    !!(
+      tramite.pago?.estado === "pendiente" &&
+      tramite.pago?.mercadopagoId
+    )
 
-  const copiarLinkPagoLista = (url: string) => {
-    navigator.clipboard.writeText(url).then(() => toast.showSuccess("Link copiado al portapapeles"))
+  const getLinkPagoUrl = (tramite: Tramite): string =>
+    tieneLinkPago(tramite) && tramite.pago?.mercadopagoId
+      ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago.mercadopagoId}`
+      : ""
+
+  const copiarLinkPagoLista = async (tramiteId: string) => {
+    try {
+      const res = await fetch(`/api/admin/tramites/${tramiteId}/link-pago`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast.showError(data?.error || "No se pudo obtener el link de pago")
+        return
+      }
+      const { initPoint } = await res.json()
+      if (initPoint) {
+        await navigator.clipboard.writeText(initPoint)
+        toast.showSuccess("Link copiado al portapapeles")
+      }
+    } catch {
+      toast.showError("Error al obtener el link de pago")
+    }
   }
 
   const openWhatsappModal = (tramite: Tramite) => {
@@ -298,13 +320,23 @@ export default function AdminPage() {
     setCreadoContactoLoading(true)
     fetch(`/api/admin/tramites/${creadoContactoTramiteId}`)
       .then((res) => res.ok ? res.json() : null)
-      .then((t: Tramite | null) => {
+      .then(async (t: Tramite | null) => {
         if (t && !creadoContactoFormEditado.current) {
           setCreadoContactoForm({
             email: t.guestEmail || t.user?.email || "",
             whatsapp: t.whatsapp || t.partida?.whatsapp || "",
           })
-          setCreadoPaymentLink((prev) => prev || (t.pago?.mercadopagoId ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${t.pago.mercadopagoId}` : null))
+          if (t.pago?.mercadopagoId) {
+            try {
+              const linkRes = await fetch(`/api/admin/tramites/${creadoContactoTramiteId}/link-pago`)
+              if (linkRes.ok) {
+                const { initPoint } = await linkRes.json()
+                if (initPoint) setCreadoPaymentLink((prev) => prev || initPoint)
+              }
+            } catch {
+              setCreadoPaymentLink((prev) => prev || `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${t.pago!.mercadopagoId}`)
+            }
+          }
         }
       })
       .catch(() => {})
@@ -562,11 +594,11 @@ export default function AdminPage() {
                   {tramite.pago.payerDni && <div className="text-blue-400">DNI: {tramite.pago.payerDni}</div>}
                   {tramite.pago.paymentId && <div className="text-blue-400">ID: {tramite.pago.paymentId}</div>}
                 </div>
-              ) : getLinkPago(tramite) && (
+              ) : tieneLinkPago(tramite) && (
                 <div className="text-sm bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
                   <button
                     type="button"
-                    onClick={() => copiarLinkPagoLista(getLinkPago(tramite)!)}
+                    onClick={() => copiarLinkPagoLista(tramite.id)}
                     className="inline-flex items-center gap-2 text-amber-800 hover:text-amber-900 font-medium"
                     title="Copiar link de pago"
                     aria-label="Copiar link de pago"
@@ -687,10 +719,10 @@ export default function AdminPage() {
                           <div className="text-xs text-blue-500">ID: {tramite.pago.paymentId}</div>
                         )}
                       </div>
-                    ) : getLinkPago(tramite) ? (
+                    ) : tieneLinkPago(tramite) ? (
                       <button
                         type="button"
-                        onClick={() => copiarLinkPagoLista(getLinkPago(tramite)!)}
+                        onClick={() => copiarLinkPagoLista(tramite.id)}
                         className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800"
                         title="Copiar link de pago"
                         aria-label="Copiar link de pago"

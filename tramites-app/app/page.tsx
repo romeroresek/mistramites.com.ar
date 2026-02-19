@@ -30,32 +30,29 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
 
         <section id="partidas" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="p-5 sm:p-6 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitar Actas y Partidas</h2>
-              <p className="text-sm text-gray-600">Trámites ante el Registro Civil de Misiones</p>
+            <div className="p-5 sm:p-6 border-b border-gray-200 flex items-center gap-3">
+              <Image
+                src="/images-1.png"
+                alt="Actas y Partidas"
+                width={48}
+                height={48}
+                sizes="48px"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded flex-shrink-0"
+              />
+              <div>
+                <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitar Actas y Partidas</h2>
+                <p className="text-sm text-gray-600">Trámites ante el Registro Civil de Misiones</p>
+              </div>
             </div>
             <div className="p-5 sm:p-6">
               <p className="text-sm sm:text-sm text-gray-600 mb-4">
-                Nuestros profesionales tramitan la obtencion de actas de nacimiento, matrimonio y defuncion ante el Registro Civil. El servicio incluye honorarios de gestion.
+                Nuestros profesionales tramitan la obtencion de actas de nacimiento, matrimonio y defuncion ante el Registro Civil. El servicio incluye honorarios de gestion. Realizamos la busqueda, obtencion y legalizacion de actas de Nacimiento, Matrimonio y Defuncion.
               </p>
               <div className="grid grid-cols-1 gap-3 mb-4">
                 <Link href={`/oficinas/registro-personas${returnSuffix}`} className="block min-h-[44px]">
                   <div className="border border-gray-200 rounded-lg p-5 hover:shadow-md active:bg-gray-50 transition-shadow">
-                    <div className="flex gap-3">
-                      <Image
-                        src="/images-1.png"
-                        alt="Actas del Registro Civil"
-                        width={80}
-                        height={80}
-                        sizes="80px"
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded flex-shrink-0 bg-gray-50"
-                      />
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Actas del Registro Civil</h3>
-                        <p className="text-sm text-gray-600 mb-2">Realizamos la busqueda, obtencion y legalizacion de actas de Nacimiento, Matrimonio y Defuncion.</p>
-                      </div>
-                    </div>
-                    <ul className="text-sm text-green-600 space-y-0.5 mt-2">
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Actas del Registro Civil</h3>
+                    <ul className="text-sm text-green-600 space-y-0.5">
                       <li>✓ Búsqueda del acta de Nacimiento, Matrimonio, Defunción.</li>
                       <li>✓ Legalización digital.</li>
                       <li>✓ Con QR para verificación de trámite.</li>
@@ -75,32 +72,29 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
 
         <section id="apostillas" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="p-5 sm:p-6 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitud de Apostilla</h2>
-              <p className="text-sm text-gray-600">Servicio de gestion de legalizacion para uso en el exterior</p>
+            <div className="p-5 sm:p-6 border-b border-gray-200 flex items-center gap-3">
+              <Image
+                src="/escudo1.png"
+                alt="Apostilla de la Haya"
+                width={48}
+                height={48}
+                sizes="48px"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded flex-shrink-0"
+              />
+              <div>
+                <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitud de Apostilla</h2>
+                <p className="text-sm text-gray-600">Servicio de gestion de legalizacion para uso en el exterior</p>
+              </div>
             </div>
             <div className="p-5 sm:p-6">
               <p className="text-sm text-gray-600 mb-4">
-                Este trámite permite solicitar a distancia la Apostilla o Legalización de documentos públicos que sean de naturaleza electrónica como así también con firma ológrafa para ser presentados en el exterior, sin la necesidad de gestionar turnos. Este trámite se encuentra alcanzado por las consideraciones establecidas en el inciso b) del Art. 10 de la Ley N° 19.549, respecto del silencio con sentido positivo. El plazo estipulado es de 20 días hábiles administrativos. Nuestros profesionales tramitan la Apostilla de la Haya para documentos que requieran validez internacional. Servicio profesional de intermediacion.
+                Este trámite permite solicitar a distancia la Apostilla o Legalización de documentos públicos que sean de naturaleza electrónica como así también con firma ológrafa para ser presentados en el exterior, sin la necesidad de gestionar turnos. Este trámite se encuentra alcanzado por las consideraciones establecidas en el inciso b) del Art. 10 de la Ley N° 19.549, respecto del silencio con sentido positivo. El plazo estipulado es de 20 días hábiles administrativos. Nuestros profesionales tramitan la Apostilla de la Haya para documentos que requieran validez internacional. Servicio profesional de intermediacion. Gestion de apostillas para documentos públicos ante Cancillería.
               </p>
               <div className="grid grid-cols-1 gap-3 mb-4">
                 <Link href={`/oficinas/apostillas${returnSuffix}`} className="block min-h-[44px]">
                   <div className="border border-gray-200 rounded-lg p-5 hover:shadow-md active:bg-gray-50 transition-shadow">
-                    <div className="flex gap-3">
-                      <Image
-                        src="/escudo1.png"
-                        alt="Apostilla de la Haya"
-                        width={80}
-                        height={80}
-                        sizes="80px"
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded flex-shrink-0 bg-gray-50"
-                      />
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostilla de la Haya con validez Internacional</h3>
-                        <p className="text-sm text-gray-600 mb-2">Gestion de apostillas para documentos públicos ante Cancillería.</p>
-                      </div>
-                    </div>
-                    <ul className="text-sm text-green-600 space-y-0.5 mt-2">
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Apostilla de la Haya con validez Internacional</h3>
+                    <ul className="text-sm text-green-600 space-y-0.5">
                       <li>✓ Apostilla de la Haya acta de Nacimiento, Matrimonio, Defunción.</li>
                       <li>✓ Antecedentes Penales, Títulos y Otros Documentos.</li>
                       <li>✓ Apostilla con validez Internacional.</li>
@@ -120,61 +114,59 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
 
         <section id="inmuebles" className="mb-6 sm:mb-10">
           <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="p-5 sm:p-6 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Informes de Inmuebles</h2>
-              <p className="text-sm text-gray-600">Servicio de trámites ante Catastro y Registro de la Propiedad</p>
+            <div className="p-5 sm:p-6 border-b border-gray-200 flex items-center gap-3">
+              <Image
+                src="/inmueble.png"
+                alt="Informes de Inmuebles"
+                width={48}
+                height={48}
+                sizes="48px"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded flex-shrink-0"
+              />
+              <div>
+                <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Informes de Inmuebles</h2>
+                <p className="text-sm text-gray-600">Servicio de trámites ante Catastro y Registro de la Propiedad</p>
+              </div>
             </div>
             <div className="p-5 sm:p-6">
               <p className="text-sm text-gray-600 mb-4">
-                Tramitamos la obtencion de informes catastrales e informes del Registro de la Propiedad Inmueble de Misiones. Servicio profesional incluye tasas por trámite urgente y honorarios incluidos.
+                Tramitamos la obtencion de informes catastrales e informes del Registro de la Propiedad Inmueble de Misiones. Servicio profesional incluye tasas por trámite urgente y honorarios incluidos. Gestion de informes de dominio e inhibicion ante el Registro de la Propiedad. Gestion de informes ante la Direccion de Catastro provincial.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <Link href={`/oficinas/registro-propiedad${returnSuffix}`} className="block min-h-[44px]">
-                  <div className="border border-gray-200 rounded-lg p-5 hover:shadow-md active:bg-gray-50 transition-shadow">
-                    <div className="flex gap-3">
-                      <Image
-                        src="/inmueble.png"
-                        alt="Informes de Dominio"
-                        width={80}
-                        height={80}
-                        sizes="80px"
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded flex-shrink-0 bg-gray-50"
-                      />
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes de Dominio</h3>
-                        <p className="text-sm text-gray-600 mb-2">Gestion de informes de dominio e inhibicion ante el Registro de la Propiedad.</p>
-                      </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Link href={`/oficinas/registro-propiedad${returnSuffix}`} className="block min-h-[44px] mb-3">
+                    <div className="border border-gray-200 rounded-lg p-5 hover:shadow-md active:bg-gray-50 transition-shadow">
+                      <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes de Dominio</h3>
+                      <ul className="text-sm text-green-600 space-y-0.5">
+                        <li>✓ F3 - Informe de Búsqueda de Titularidad</li>
+                        <li>✓ F4 - Informe de Condiciones de Dominio</li>
+                        <li>✓ F5 - Informe de inhibiciones</li>
+                        <li>✓ Con firma digital</li>
+                        <li>✓ Envío en formato .pdf</li>
+                        <li>✓ Demora 15 días hábiles</li>
+                      </ul>
                     </div>
-                    <ul className="text-sm text-green-600 space-y-0.5 mt-2">
-                      <li>✓ F3 - Informe de Búsqueda de Titularidad</li>
-                      <li>✓ F4 - Informe de Condiciones de Dominio</li>
-                      <li>✓ F5 - Informe de inhibiciones</li>
-                      <li>✓ Con firma digital</li>
-                      <li>✓ Envío en formato .pdf</li>
-                      <li>✓ Demora 15 días hábiles</li>
-                    </ul>
-                  </div>
-                </Link>
-                <Link href={`/oficinas/catastro${returnSuffix}`} className="block min-h-[44px]">
-                  <div className="border border-gray-200 rounded-lg p-5 hover:shadow-md active:bg-gray-50 transition-shadow">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes Catastrales</h3>
-                    <p className="text-sm text-gray-600 mb-2">Gestion de informes ante la Direccion de Catastro provincial.</p>
-                    <ul className="text-sm text-green-600 space-y-0.5">
-                      <li>✓ Apto para valuaciones</li>
-                      <li>✓ Formato .pdf</li>
-                      <li>✓ Validez Nacional</li>
-                      <li>✓ Demora 7 días</li>
-                    </ul>
-                  </div>
-                </Link>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link href={`/oficinas/registro-propiedad${returnSuffix}`} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800">
-                  Informes RPI
-                </Link>
-                <Link href={`/oficinas/catastro${returnSuffix}`} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 active:bg-gray-100">
-                  Solicitar Catastral
-                </Link>
+                  </Link>
+                  <Link href={`/oficinas/registro-propiedad${returnSuffix}`} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800">
+                    Informes RPI
+                  </Link>
+                </div>
+                <div>
+                  <Link href={`/oficinas/catastro${returnSuffix}`} className="block min-h-[44px] mb-3">
+                    <div className="border border-gray-200 rounded-lg p-5 hover:shadow-md active:bg-gray-50 transition-shadow">
+                      <h3 className="font-semibold text-gray-900 text-sm mb-1">Informes Catastrales</h3>
+                      <ul className="text-sm text-green-600 space-y-0.5">
+                        <li>✓ Apto para valuaciones</li>
+                        <li>✓ Formato .pdf</li>
+                        <li>✓ Validez Nacional</li>
+                        <li>✓ Demora 7 días</li>
+                      </ul>
+                    </div>
+                  </Link>
+                  <Link href={`/oficinas/catastro${returnSuffix}`} className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 active:bg-gray-100">
+                    Solicitar Catastral
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
