@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useToast } from "@/components/Toast"
 import { PageNavbar } from "@/components/PageNavbar"
 
@@ -64,6 +64,14 @@ const PARTIDAS = [
 ]
 
 export default function RegistroPersonas() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-100 flex items-center justify-center"><p className="text-gray-600">Cargando...</p></div>}>
+      <RegistroPersonasContent />
+    </Suspense>
+  )
+}
+
+function RegistroPersonasContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
