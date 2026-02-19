@@ -8,29 +8,10 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tramitesmisiones.co
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Trámites Misiones | Servicios Profesionales de Gestión de Trámites en Misiones",
+    default: "Trámites Misiones",
     template: "%s | Trámites Misiones",
   },
   description: "Somos un estudio jurídico contable todos matriculados con sede en Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos de la Provincia y Nación. No somos un organismo del Estado. Los honorarios que cobramos corresponden al servicio profesional de gestion administrativa.",
-  keywords: [
-    "trámites Misiones",
-    "gestión trámites",
-    "partida de nacimiento Misiones",
-    "partida de matrimonio",
-    "partida de defunción",
-    "apostilla de la Haya",
-    "apostilla documento público",
-    "legalización documentos",
-    "Registro Civil Misiones",
-    "informe de dominio",
-    "informe catastral",
-    "Registro de la Propiedad Misiones",
-    "trámites online Argentina",
-    "gestión documental Misiones",
-  ],
-  authors: [{ name: "Trámites Misiones" }],
-  creator: "Trámites Misiones",
-  publisher: "Trámites Misiones",
   formatDetection: {
     telephone: false,
   },
@@ -44,27 +25,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_AR",
     siteName: "Trámites Misiones",
-    title: "Trámites Misiones | Gestión de Trámites en Misiones",
-    description: "Servicios profesionales de trámites ante organismos oficiales. Partidas, apostillas, informes de dominio y catastrales en Misiones.",
+    title: "Trámites Misiones",
+    description: "Somos un estudio jurídico contable todos matriculados con sede en Misiones. Ofrecemos servicios de intermediacion para la gestion de documentos ante organismos publicos de la Provincia y Nación.",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Trámites Misiones | Gestión de Trámites en Misiones",
-    description: "Servicios profesionales de trámites ante organismos oficiales. Partidas, apostillas, informes en Misiones.",
+    title: "Trámites Misiones",
+    description: "Somos un estudio jurídico contable todos matriculados con sede en Misiones.",
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-    },
-  },
-  alternates: {
-    canonical: "/",
-  },
-  category: "legal",
 }
 
 export const viewport: Viewport = {
@@ -78,32 +47,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LegalService",
-    name: "Trámites Misiones",
-    description: "Servicios profesionales de gestión de trámites ante organismos oficiales en Misiones: partidas de nacimiento, matrimonio y defunción, apostilla de la Haya, informes de dominio y catastrales.",
-    url: siteUrl,
-    areaServed: { "@type": "State", name: "Misiones", containedInPlace: { "@type": "Country", name: "Argentina" } },
-    serviceType: [
-      "Partida de nacimiento",
-      "Partida de matrimonio",
-      "Partida de defunción",
-      "Apostilla de documento público",
-      "Informe de dominio",
-      "Informe catastral",
-    ],
-  }
-
   return (
     <html lang="es">
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
       </head>
       <body className="bg-gray-50">
         <Providers>
