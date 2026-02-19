@@ -766,11 +766,14 @@ export default function AdminPage() {
                           ? "bg-red-100 text-red-700 focus:ring-red-300"
                           : tramite.estado === "en_proceso"
                             ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
-                            : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                            : tramite.estado === "iniciado"
+                              ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
+                              : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
                         }`}
                     >
                       <option value="pendiente">Pendiente</option>
                       <option value="en_proceso">En proceso</option>
+                      <option value="iniciado">Iniciado</option>
                       <option value="completado">Completado</option>
                       <option value="rechazado">Rechazado</option>
                     </select>

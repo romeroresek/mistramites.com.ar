@@ -50,6 +50,7 @@ interface Tramite {
 const estadoOptions = [
   { value: "pendiente", label: "Pendiente" },
   { value: "en_proceso", label: "En proceso" },
+  { value: "iniciado", label: "Iniciado" },
   { value: "completado", label: "Completado" },
   { value: "rechazado", label: "Rechazado" },
 ]
@@ -660,7 +661,8 @@ export default function AdminTramiteDetalle() {
                     ? opt.value === "completado" ? "bg-green-600 text-white"
                       : opt.value === "rechazado" ? "bg-red-600 text-white"
                         : opt.value === "en_proceso" ? "bg-blue-600 text-white"
-                          : "bg-yellow-500 text-white"
+                          : opt.value === "iniciado" ? "bg-orange-500 text-white"
+                            : "bg-yellow-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     } disabled:cursor-not-allowed`}
                 >
