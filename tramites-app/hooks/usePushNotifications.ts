@@ -140,11 +140,14 @@ export function usePushNotifications() {
       }
 
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      // Debug: mostrar en consola si la variable existe
+      console.log("[Push Debug] VAPID Key:", vapidKey ? `${vapidKey.substring(0, 10)}...` : "NO DEFINIDA")
+
       if (!vapidKey) {
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: "Notificaciones no configuradas",
+          error: "Notificaciones no configuradas. Reiniciá el servidor (npm run dev).",
         }))
         return false
       }
