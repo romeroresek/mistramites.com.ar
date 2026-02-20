@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    let { paymentId, tramiteId } = body
+    let { paymentId } = body
+    const { tramiteId } = body
 
     let paymentData: MpPaymentData | null = null
 
