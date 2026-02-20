@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { MercadoPagoConfig, Payment } from "mercadopago"
+import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago"
 import { prisma } from "@/lib/prisma"
 
 const client = new MercadoPagoConfig({
@@ -36,30 +36,60 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true }, { status: 200 })
     }
 
+    // Detectar reembolsos (devolución desde la app de MP puede no actualizar status en la notificación)
+    const raw = paymentData as { refunds?: { id?: number }[]; status_detail?: string; statusDetail?: string; transaction_amount?: number; transaction_amount_refunded?: number }
+    const hasRefundsArray = Array.isArray(raw.refunds) && raw.refunds.length > 0
+    const statusDetail = raw.status_detail ?? raw.statusDetail
+    const isRefundedByDetail = statusDetail === "refunded" || statusDetail === "partially_refunded"
+    const amount = Number(raw.transaction_amount ?? 0)
+    const amountRefunded = Number(raw.transaction_amount_refunded ?? 0)
+    const isRefundedByAmount = amount > 0 && amountRefunded >= amount
+
+    let hasRefundsFromApi = hasRefundsArray
+    if (!hasRefundsFromApi && !isRefundedByDetail && !isRefundedByAmount && paymentData.status === "approved" && paymentId) {
+      try {
+        const refundClient = new PaymentRefund(client)
+        const refundList = await refundClient.list({ payment_id: paymentId })
+        hasRefundsFromApi = Array.isArray(refundList) && refundList.length > 0
+        if (!hasRefundsFromApi) {
+          const rawResp = await fetch(
+            `https://api.mercadopago.com/v1/payments/${paymentId}/refunds`,
+            { headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` } }
+          )
+          if (rawResp.ok) {
+            const rawRefunds = await rawResp.json()
+            hasRefundsFromApi = Array.isArray(rawRefunds) && rawRefunds.length > 0
+          }
+        }
+      } catch {
+        // ignorar
+      }
+    }
+
     // Mapear estados de Mercado Pago a nuestros estados
     let pagoEstado = "pendiente"
     let tramiteEstado = "pendiente"
 
-    switch (paymentData.status) {
-      case "approved":
-        pagoEstado = "confirmado"
-        tramiteEstado = "en_proceso"
-        break
-      case "pending":
-      case "in_process":
-        pagoEstado = "pendiente"
-        tramiteEstado = "pendiente"
-        break
-      case "rejected":
-      case "cancelled":
-        pagoEstado = "rechazado"
-        tramiteEstado = "pendiente"
-        break
-      case "refunded":
-      case "charged_back":
-        pagoEstado = "devuelto"
-        tramiteEstado = "pendiente"
-        break
+    if (hasRefundsArray || hasRefundsFromApi || isRefundedByDetail || isRefundedByAmount || paymentData.status === "refunded" || paymentData.status === "charged_back") {
+      pagoEstado = "devuelto"
+      tramiteEstado = "cancelado"
+    } else {
+      switch (paymentData.status) {
+        case "approved":
+          pagoEstado = "confirmado"
+          tramiteEstado = "en_proceso"
+          break
+        case "pending":
+        case "in_process":
+          pagoEstado = "pendiente"
+          tramiteEstado = "pendiente"
+          break
+        case "rejected":
+        case "cancelled":
+          pagoEstado = "rechazado"
+          tramiteEstado = "pendiente"
+          break
+      }
     }
 
     // Extraer datos del pagador
@@ -74,10 +104,28 @@ export async function POST(req: NextRequest) {
       ? new Date(paymentData.date_approved)
       : null
 
-    // Actualizar el estado del pago con datos del pagador
-    await prisma.pago.update({
+    // Obtener monto del trámite para el caso de crear Pago si no existe
+    const tramite = await prisma.tramite.findUnique({
+      where: { id: externalReference },
+      select: { monto: true, userId: true },
+    })
+
+    // Actualizar o crear registro de pago con datos del pagador
+    await prisma.pago.upsert({
       where: { tramiteId: externalReference },
-      data: {
+      update: {
+        estado: pagoEstado,
+        paymentId: String(paymentId),
+        payerEmail,
+        payerName,
+        payerDni,
+        paymentMethod,
+        paymentDate,
+      },
+      create: {
+        tramiteId: externalReference,
+        userId: tramite?.userId || null,
+        monto: tramite?.monto || 0,
         estado: pagoEstado,
         paymentId: String(paymentId),
         payerEmail,
@@ -88,11 +136,16 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Actualizar el estado del trámite si el pago fue aprobado
-    if (paymentData.status === "approved") {
+    // Actualizar estado del trámite: al aprobar → en_proceso; al devolver → pendiente (no dejar cancelado)
+    if (pagoEstado === "confirmado") {
       await prisma.tramite.update({
         where: { id: externalReference },
         data: { estado: tramiteEstado },
+      })
+    } else if (pagoEstado === "devuelto") {
+      await prisma.tramite.update({
+        where: { id: externalReference },
+        data: { estado: "cancelado" },
       })
     }
 

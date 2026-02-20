@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Undo2 } from "lucide-react"
 
 interface Tramite {
   id: string
@@ -24,6 +24,12 @@ interface Tramite {
     id: string
     estado: string
     mercadopagoId: string | null
+    paymentId: string | null
+    payerEmail: string | null
+    payerName: string | null
+    payerDni: string | null
+    paymentMethod: string | null
+    paymentDate: string | null
   }
   partida?: {
     tipoPartida: string
@@ -53,6 +59,7 @@ const estadoOptions = [
   { value: "iniciado", label: "Iniciado" },
   { value: "completado", label: "Completado" },
   { value: "rechazado", label: "Rechazado" },
+  { value: "cancelado", label: "Cancelado" },
 ]
 
 export default function AdminTramiteDetalle() {
@@ -66,6 +73,9 @@ export default function AdminTramiteDetalle() {
   const [editMonto, setEditMonto] = useState("")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showRefundModal, setShowRefundModal] = useState(false)
+  const [refunding, setRefunding] = useState(false)
+  const [refundError, setRefundError] = useState("")
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState("")
   const [showPagoDropdown, setShowPagoDropdown] = useState(false)
@@ -138,14 +148,16 @@ export default function AdminTramiteDetalle() {
     }
   }
 
-  const fetchTramite = async () => {
+  const fetchTramite = async (): Promise<Tramite | null> => {
     try {
       const res = await fetch(`/api/admin/tramites/${params.id}`)
       if (!res.ok) throw new Error("No encontrado")
       const data = await res.json()
       setTramite(data)
+      return data
     } catch (error) {
       console.error(error)
+      return null
     } finally {
       setLoading(false)
     }
@@ -156,15 +168,18 @@ export default function AdminTramiteDetalle() {
     if (status === "unauthenticated") { router.push("/login"); return }
     if (session?.user?.role !== "admin") { router.push("/"); return }
 
-    fetchTramite().then(() => {
+    fetchTramite().then((t) => {
       fetch("/api/mercadopago/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tramiteId: params.id }),
+        body: JSON.stringify({
+          tramiteId: params.id,
+          paymentId: t?.pago?.paymentId || undefined,
+        }),
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data.pagoEstado === "confirmado") fetchTramite()
+          if (data.updated) fetchTramite()
         })
         .catch(() => { })
     })
@@ -209,6 +224,28 @@ export default function AdminTramiteDetalle() {
       console.error(error)
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleRefund = async () => {
+    if (!tramite) return
+    setRefunding(true)
+    setRefundError("")
+    try {
+      const res = await fetch(`/api/admin/tramites/${tramite.id}/refund`, {
+        method: "POST",
+      })
+      const data = await res.json()
+      if (res.ok && data.tramite) {
+        setTramite(data.tramite)
+        setShowRefundModal(false)
+      } else {
+        setRefundError(data?.error || "Error al procesar la devolución")
+      }
+    } catch {
+      setRefundError("Error de conexión al procesar la devolución")
+    } finally {
+      setRefunding(false)
     }
   }
 
@@ -591,28 +628,7 @@ export default function AdminTramiteDetalle() {
                 )}
               </div>
             </div>
-            {tieneLinkPago && linkPagoMostrar && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <span className="text-gray-500 text-sm block mb-1">Link de pago (MercadoPago)</span>
-                <div className="flex gap-2 flex-wrap">
-                  <input
-                    readOnly
-                    value={linkPagoMostrar}
-                    className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50 truncate"
-                    title={linkPagoMostrar}
-                  />
-                  <button
-                    type="button"
-                    onClick={copiarLinkPago}
-                    className="px-3 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded hover:bg-blue-50 shrink-0"
-                  >
-                    {copiedLinkPago ? "Copiado" : "Copiar link"}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Enviá este link al cliente por WhatsApp para que pueda pagar.</p>
-              </div>
-            )}
-            <div>
+                        <div>
               <span className="text-gray-500">Creado</span>
               <p className="font-medium text-gray-900">{formatDate(tramite.createdAt)}</p>
             </div>
@@ -643,6 +659,103 @@ export default function AdminTramiteDetalle() {
           )}
         </div>
 
+        {/* Pago pendiente - Link de pago */}
+        {tieneLinkPago && linkPagoMostrar && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
+            <h3 className="text-base font-semibold text-yellow-900 mb-3 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              Pago Pendiente
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="sm:col-span-2">
+                <span className="text-yellow-700">Link de pago (MercadoPago)</span>
+                <div className="flex gap-2 flex-wrap mt-1">
+                  <input
+                    readOnly
+                    value={linkPagoMostrar}
+                    className="flex-1 min-w-0 px-3 py-2 border border-yellow-300 rounded text-sm bg-yellow-50 truncate text-yellow-900"
+                    title={linkPagoMostrar}
+                  />
+                  <button
+                    type="button"
+                    onClick={copiarLinkPago}
+                    className="px-3 py-2 text-sm font-medium text-yellow-700 border border-yellow-400 rounded hover:bg-yellow-100 shrink-0"
+                  >
+                    {copiedLinkPago ? "Copiado" : "Copiar link"}
+                  </button>
+                </div>
+                <p className="text-xs text-yellow-600 mt-1">Enviá este link al cliente por WhatsApp para que pueda pagar.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Detalles de MercadoPago */}
+        {tramite.pago?.paymentId && (
+          <div className={`rounded p-4 border ${tramite.pago?.estado === "devuelto" ? "bg-gray-100 border-gray-300" : "bg-blue-50 border-blue-200"}`}>
+            <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${tramite.pago?.estado === "devuelto" ? "text-gray-700" : "text-blue-900"}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+              Detalles de MercadoPago{tramite.pago?.estado === "devuelto" && <span className="text-gray-500 font-normal text-sm">(devuelto)</span>}
+              {tramite.pago?.estado === "confirmado" && (
+                <button
+                  type="button"
+                  onClick={() => { setRefundError(""); setShowRefundModal(true) }}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-600 transition-colors text-xs font-medium"
+                  title="Devolver pago"
+                >
+                  <Undo2 className="w-3.5 h-3.5" />
+                  Devolver pago
+                </button>
+              )}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className={tramite.pago?.estado === "devuelto" ? "text-gray-600" : "text-blue-600"}>Nº de Operación</span>
+                <p className={`font-semibold ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>#{tramite.pago.paymentId}</p>
+              </div>
+              {tramite.pago.payerName && (
+                <div>
+                  <span className={tramite.pago?.estado === "devuelto" ? "text-gray-600" : "text-blue-600"}>Nombre del pagador</span>
+                  <p className={`font-medium ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>{tramite.pago.payerName}</p>
+                </div>
+              )}
+              {tramite.pago.payerEmail && (
+                <div>
+                  <span className={tramite.pago?.estado === "devuelto" ? "text-gray-600" : "text-blue-600"}>Email del pagador</span>
+                  <p className={`font-medium ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>{tramite.pago.payerEmail}</p>
+                </div>
+              )}
+              {tramite.pago.payerDni && (
+                <div>
+                  <span className={tramite.pago?.estado === "devuelto" ? "text-gray-600" : "text-blue-600"}>DNI del pagador</span>
+                  <p className={`font-medium ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>{tramite.pago.payerDni}</p>
+                </div>
+              )}
+              {tramite.pago.paymentMethod && (
+                <div>
+                  <span className={tramite.pago?.estado === "devuelto" ? "text-gray-600" : "text-blue-600"}>Método de pago</span>
+                  <p className={`font-medium capitalize ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>{tramite.pago.paymentMethod}</p>
+                </div>
+              )}
+              {tramite.pago.paymentDate && (
+                <div>
+                  <span className={tramite.pago?.estado === "devuelto" ? "text-gray-600" : "text-blue-600"}>Fecha y hora del pago</span>
+                  <p className={`font-medium ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>
+                    {new Date(tramite.pago.paymentDate).toLocaleDateString("es-AR")} {new Date(tramite.pago.paymentDate).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Estado del trámite */}
         <div className="bg-white border border-gray-200 rounded p-4">
           <h3 className="text-base font-semibold text-gray-900 mb-3">Estado del trámite</h3>
@@ -660,9 +773,10 @@ export default function AdminTramiteDetalle() {
                   className={`px-3 py-1.5 rounded text-xs font-medium ${isSelected
                     ? opt.value === "completado" ? "bg-green-600 text-white"
                       : opt.value === "rechazado" ? "bg-red-600 text-white"
-                        : opt.value === "en_proceso" ? "bg-blue-600 text-white"
-                          : opt.value === "iniciado" ? "bg-orange-500 text-white"
-                            : "bg-yellow-500 text-white"
+                        : opt.value === "cancelado" ? "bg-gray-600 text-white"
+                          : opt.value === "en_proceso" ? "bg-blue-600 text-white"
+                            : opt.value === "iniciado" ? "bg-orange-500 text-white"
+                              : "bg-yellow-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     } disabled:cursor-not-allowed`}
                 >
@@ -1064,6 +1178,48 @@ export default function AdminTramiteDetalle() {
                 className="px-4 py-2 text-sm text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
               >
                 {deleting ? "Eliminando..." : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRefundModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-base font-semibold text-gray-900 mb-1">Confirmar devolución</h3>
+            <p className="text-sm text-gray-600 mb-2">
+              Se procesará la <strong>devolución total</strong> del pago{" "}
+              <span className="font-mono text-gray-800">#{tramite?.pago?.paymentId}</span> a través de Mercado Pago.
+            </p>
+            <p className="text-xs text-gray-500 mb-5">
+              El dinero será reintegrado al método de pago original. Esta acción no se puede deshacer.
+            </p>
+            {refundError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 mb-4">{refundError}</p>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowRefundModal(false)}
+                disabled={refunding}
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleRefund}
+                disabled={refunding}
+                className="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {refunding ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    Procesando...
+                  </>
+                ) : "Devolver pago"}
               </button>
             </div>
           </div>

@@ -81,10 +81,16 @@ export async function POST(
       return NextResponse.json({ error: "Error al crear preferencia de pago" }, { status: 500 })
     }
 
-    // Actualizar el mercadopagoId en el pago
-    await prisma.pago.update({
+    // Actualizar o crear el registro de pago con mercadopagoId
+    await prisma.pago.upsert({
       where: { tramiteId: tramite.id },
-      data: { mercadopagoId: result.id },
+      update: { mercadopagoId: result.id },
+      create: {
+        tramiteId: tramite.id,
+        userId: tramite.userId,
+        monto: tramite.monto,
+        mercadopagoId: result.id,
+      },
     })
 
     return NextResponse.json({

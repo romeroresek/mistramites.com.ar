@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff } from "lucide-react"
+import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff, Search, X } from "lucide-react"
 import { useToast } from "@/components/Toast"
 import { generateWhatsAppLink } from "@/lib/contactTemplates"
 import { usePushNotifications } from "@/hooks/usePushNotifications"
@@ -87,6 +87,7 @@ export default function AdminPage() {
   const [uploadError, setUploadError] = useState("")
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushLoading, setPushLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
   const pushNotifications = usePushNotifications()
 
   const fetchTramites = async () => {
@@ -112,11 +113,18 @@ export default function AdminPage() {
     }
   }
 
-  // Sincroniza estado de pago con MercadoPago (pendientes → aprobado, confirmados → devuelto si hubo reembolso)
+  // Sincroniza estado de pago con MercadoPago
+  // - pendientes con mercadopagoId o paymentId → verifica si ya pagaron
+  // - confirmados → verifica reembolsos o carga datos faltantes
   const verifyPaymentsWithMp = async (tramitesList: Tramite[]) => {
     if (!Array.isArray(tramitesList)) return
     const conPago = tramitesList.filter(
-      (t) => (t.pago?.estado === "pendiente" || t.pago?.estado === "confirmado") && (t.pago?.mercadopagoId || t.pago?.paymentId)
+      (t) => t.pago && (
+        // Pendientes con link de MP o paymentId conocido
+        (t.pago.estado === "pendiente" && (t.pago.mercadopagoId || t.pago.paymentId)) ||
+        // Confirmados (verificar reembolsos o cargar datos faltantes)
+        t.pago.estado === "confirmado"
+      )
     )
     if (conPago.length === 0) return
 
@@ -126,18 +134,51 @@ export default function AdminPage() {
         const res = await fetch("/api/mercadopago/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tramiteId: tramite.id }),
+          body: JSON.stringify({
+            tramiteId: tramite.id,
+            paymentId: tramite.pago?.paymentId || undefined,
+          }),
         })
+        if (!res.ok) {
+          console.warn(`Verify failed for tramite ${tramite.id}:`, res.status)
+          continue
+        }
         const data = await res.json()
-        if (data.pagoEstado && data.pagoEstado !== tramite.pago?.estado) {
+        // Si hubo actualización (estado cambió, datos nuevos, etc.)
+        if (data.updated ||
+            (data.pagoEstado && data.pagoEstado !== tramite.pago?.estado) ||
+            (data.paymentId && !tramite.pago?.paymentId)) {
           updated = true
         }
       } catch (err) {
-        console.error("Error verificando pago:", err)
+        console.warn("Error verificando pago para tramite", tramite.id, err)
+        // Continuar con el siguiente trámite
       }
     }
+    // Corregir tramites que ya están devueltos en DB pero cuyo estado no es cancelado
+    // (ocurre cuando el pago se marcó devuelto manualmente o antes de este fix)
+    const devueltosIncorrectos = tramitesList.filter(
+      (t) => t.pago?.estado === "devuelto" && t.estado !== "cancelado"
+    )
+    for (const tramite of devueltosIncorrectos) {
+      try {
+        await fetch(`/api/admin/tramites/${tramite.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estado: "cancelado" }),
+        })
+        updated = true
+      } catch (err) {
+        console.warn("Error corrigiendo estado de tramite devuelto", tramite.id, err)
+      }
+    }
+
     if (updated) {
-      await fetchTramites()
+      try {
+        await fetchTramites()
+      } catch {
+        // Ignorar error de fetch final
+      }
     }
   }
 
@@ -169,6 +210,25 @@ export default function AdminPage() {
 
   const getWhatsappNumber = (tramite: Tramite): string | null =>
     tramite.whatsapp || tramite.partida?.whatsapp || null
+
+  // Filtrar trámites por búsqueda
+  const filteredTramites = tramites.filter((tramite) => {
+    if (!searchTerm.trim()) return true
+    const term = searchTerm.toLowerCase().trim()
+    const searchFields = [
+      tramite.user?.name,
+      tramite.user?.email,
+      tramite.guestEmail,
+      tramite.whatsapp,
+      tramite.partida?.whatsapp,
+      tramite.partida?.nombres,
+      tramite.partida?.apellido,
+      tramite.partida?.dni,
+      tramite.partida?.ciudadNacimiento,
+      tramite.tipoTramite,
+    ]
+    return searchFields.some((field) => field?.toLowerCase().includes(term))
+  })
 
   const tieneLinkPago = (tramite: Tramite): boolean =>
     !!(
@@ -594,18 +654,44 @@ export default function AdminPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
           <div className="flex flex-wrap gap-2">
+            {/* Buscador */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="min-h-[44px] pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  aria-label="Limpiar búsqueda"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             <button
               type="button"
               onClick={async () => {
                 setRefreshing(true)
-                const list = await fetchTramites()
-                await verifyPaymentsWithMp(Array.isArray(list) ? list : tramites)
-                setRefreshing(false)
-                toast.showSuccess("Lista actualizada con MercadoPago")
+                try {
+                  const list = await fetchTramites()
+                  await verifyPaymentsWithMp(Array.isArray(list) ? list : tramites)
+                  toast.showSuccess("Lista actualizada")
+                } catch (err) {
+                  console.error("Error al refrescar:", err)
+                  toast.showError("Error al sincronizar con MercadoPago")
+                } finally {
+                  setRefreshing(false)
+                }
               }}
               disabled={refreshing}
               className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-60"
-              title="Actualizar lista (p. ej. tras devoluciones en MercadoPago)"
+              title="Actualizar lista y sincronizar pagos con MercadoPago"
               aria-label="Refrescar lista"
             >
               <RefreshCw className={`w-5 h-5 shrink-0 ${refreshing ? "animate-spin" : ""}`} />
@@ -639,15 +725,17 @@ export default function AdminPage() {
         </div>
 
         {/* Empty State */}
-        {tramites.length === 0 && (
+        {filteredTramites.length === 0 && (
           <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <p className="text-sm text-gray-500">No hay trámites registrados.</p>
+            <p className="text-sm text-gray-500">
+              {searchTerm ? "No se encontraron resultados." : "No hay trámites registrados."}
+            </p>
           </div>
         )}
 
         {/* Mobile Cards */}
         <div className="md:hidden space-y-3">
-          {tramites.map((tramite) => (
+          {filteredTramites.map((tramite) => (
             <div key={tramite.id} className="bg-white border border-gray-200 rounded-lg p-4">
               {/* Usuario */}
               <div className="flex items-start justify-between gap-2 mb-3">
@@ -668,7 +756,9 @@ export default function AdminPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-gray-900 text-sm">{tramite.tipoTramite}</p>
-                  <p className="text-gray-400 text-xs">{new Date(tramite.createdAt).toLocaleDateString("es-AR")}</p>
+                  <p className="text-gray-400 text-xs">
+                    {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
                 </div>
               </div>
 
@@ -715,11 +805,13 @@ export default function AdminPage() {
                       ? "bg-green-100 text-green-700 focus:ring-green-300"
                       : tramite.estado === "rechazado"
                         ? "bg-red-100 text-red-700 focus:ring-red-300"
-                        : tramite.estado === "en_proceso"
-                          ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
-                          : tramite.estado === "iniciado"
-                            ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
-                            : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                        : tramite.estado === "cancelado"
+                          ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
+                          : tramite.estado === "en_proceso"
+                            ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
+                            : tramite.estado === "iniciado"
+                              ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
+                              : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
                       }`}
                   >
                     <option value="pendiente">Pendiente</option>
@@ -727,6 +819,7 @@ export default function AdminPage() {
                     <option value="iniciado">Iniciado</option>
                     <option value="completado">Completado</option>
                     <option value="rechazado">Rechazado</option>
+                    <option value="cancelado">Cancelado</option>
                   </select>
                 </div>
               </div>
@@ -740,6 +833,24 @@ export default function AdminPage() {
                   <LinkIcon className="w-3 h-3" />
                   Copiar link de pago
                 </button>
+              )}
+
+              {/* Detalles MercadoPago */}
+              {tramite.pago?.paymentId && (
+                <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                  <p className="text-blue-800 text-xs font-medium mb-1">MercadoPago #{tramite.pago.paymentId}</p>
+                  <div className="text-xs space-y-0.5">
+                    {tramite.pago.payerName && <p className="text-blue-700">{tramite.pago.payerName}</p>}
+                    {tramite.pago.payerEmail && <p className="text-blue-600">{tramite.pago.payerEmail}</p>}
+                    {tramite.pago.payerDni && <p className="text-blue-500">DNI: {tramite.pago.payerDni}</p>}
+                    {tramite.pago.paymentMethod && <p className="text-blue-500 capitalize">{tramite.pago.paymentMethod}</p>}
+                    {tramite.pago.paymentDate && (
+                      <p className="text-blue-400">
+                        {new Date(tramite.pago.paymentDate).toLocaleDateString("es-AR")} {new Date(tramite.pago.paymentDate).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* Acciones */}
@@ -778,12 +889,13 @@ export default function AdminPage() {
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trámite</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Detalle</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">Detalle MP</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {tramites.map((tramite) => (
+              {filteredTramites.map((tramite) => (
                 <tr key={tramite.id} className="hover:bg-gray-50/60 transition-colors">
                   <td className="px-3 py-2">
                     <div className="font-medium text-gray-900 text-sm leading-tight">{tramite.user?.name ?? "Invitado"}</div>
@@ -802,7 +914,9 @@ export default function AdminPage() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="text-gray-900 text-sm leading-tight">{tramite.tipoTramite}</div>
-                    <div className="text-gray-400 text-xs">{new Date(tramite.createdAt).toLocaleDateString("es-AR")}</div>
+                    <div className="text-gray-400 text-xs">
+                      {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                    </div>
                   </td>
                   <td className="px-3 py-2">
                     {tramite.partida ? (
@@ -819,20 +933,22 @@ export default function AdminPage() {
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <select
-                      value={tramite.pago?.estado || "pendiente"}
-                      onChange={(e) => updateTramiteStatus(tramite.id, "pagoEstado", e.target.value)}
-                      className={`px-2 py-0.5 rounded text-xs border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 ${tramite.pago?.estado === "confirmado"
-                        ? "bg-green-100 text-green-700 focus:ring-green-300"
-                        : tramite.pago?.estado === "devuelto"
-                          ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
-                          : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
-                        }`}
-                    >
-                      <option value="pendiente">Pendiente</option>
-                      <option value="confirmado">Pagado</option>
-                      <option value="devuelto">Devuelto</option>
-                    </select>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <select
+                        value={tramite.pago?.estado || "pendiente"}
+                        onChange={(e) => updateTramiteStatus(tramite.id, "pagoEstado", e.target.value)}
+                        className={`px-2 py-0.5 rounded text-xs border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 ${tramite.pago?.estado === "confirmado"
+                          ? "bg-green-100 text-green-700 focus:ring-green-300"
+                          : tramite.pago?.estado === "devuelto"
+                            ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
+                            : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                          }`}
+                      >
+                        <option value="pendiente">Pendiente</option>
+                        <option value="confirmado">Pagado</option>
+                        <option value="devuelto">Devuelto</option>
+                      </select>
+                    </div>
                     {tieneLinkPago(tramite) && !tramite.pago?.paymentId && (
                       <button
                         onClick={() => copiarLinkPagoLista(tramite.id)}
@@ -843,6 +959,24 @@ export default function AdminPage() {
                     )}
                   </td>
                   <td className="px-3 py-2">
+                    {tramite.pago?.paymentId ? (
+                      <div className="text-xs space-y-0.5">
+                        <div className="text-gray-900 font-medium">#{tramite.pago.paymentId}</div>
+                        {tramite.pago.payerName && <div className="text-gray-600">{tramite.pago.payerName}</div>}
+                        {tramite.pago.payerEmail && <div className="text-gray-500 truncate max-w-[160px]">{tramite.pago.payerEmail}</div>}
+                        {tramite.pago.payerDni && <div className="text-gray-400">DNI: {tramite.pago.payerDni}</div>}
+                        {tramite.pago.paymentMethod && <div className="text-gray-400 capitalize">{tramite.pago.paymentMethod}</div>}
+                        {tramite.pago.paymentDate && (
+                          <div className="text-gray-400">
+                            {new Date(tramite.pago.paymentDate).toLocaleDateString("es-AR")} {new Date(tramite.pago.paymentDate).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
                     <select
                       value={tramite.estado === "listo" ? "completado" : tramite.estado}
                       onChange={(e) => updateTramiteStatus(tramite.id, "estado", e.target.value)}
@@ -850,11 +984,13 @@ export default function AdminPage() {
                         ? "bg-green-100 text-green-700 focus:ring-green-300"
                         : tramite.estado === "rechazado"
                           ? "bg-red-100 text-red-700 focus:ring-red-300"
-                          : tramite.estado === "en_proceso"
-                            ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
-                            : tramite.estado === "iniciado"
-                              ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
-                              : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                          : tramite.estado === "cancelado"
+                            ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
+                            : tramite.estado === "en_proceso"
+                              ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
+                              : tramite.estado === "iniciado"
+                                ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
+                                : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
                         }`}
                     >
                       <option value="pendiente">Pendiente</option>
@@ -862,6 +998,7 @@ export default function AdminPage() {
                       <option value="iniciado">Iniciado</option>
                       <option value="completado">Completado</option>
                       <option value="rechazado">Rechazado</option>
+                      <option value="cancelado">Cancelado</option>
                     </select>
                   </td>
                   <td className="px-3 py-2">
@@ -909,7 +1046,24 @@ export default function AdminPage() {
       <Drawer open={!!whatsappTramite} onOpenChange={(open) => { if (!open) { setWhatsappTramite(null); setEditandoPlantillaId(null) } }}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Enviar WhatsApp</DrawerTitle>
+            <div className="flex items-center justify-between gap-2">
+              <DrawerTitle>Enviar WhatsApp</DrawerTitle>
+              {whatsappTramite && getWhatsappNumber(whatsappTramite) && (
+                <a
+                  href={generateWhatsAppLink(getWhatsappNumber(whatsappTramite)!, "")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setWhatsappTramite(null)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-full hover:bg-green-700"
+                  title="Abrir chat vacío"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                  Abrir
+                </a>
+              )}
+            </div>
             {whatsappTramite && (
               <DrawerDescription>
                 Para: {whatsappTramite.partida?.nombres || whatsappTramite.user?.name || "Usuario"} - {getWhatsappNumber(whatsappTramite)}
@@ -951,33 +1105,38 @@ export default function AdminPage() {
                   <div className="mb-3">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <label className="text-gray-500 text-sm">Plantilla</label>
-                      <button
-                        type="button"
-                        onClick={iniciarEdicionPlantilla}
-                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
-                        title="Editar plantilla"
-                        aria-label="Editar plantilla"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                      {selectedTemplate !== "_blank" && (
+                        <button
+                          type="button"
+                          onClick={iniciarEdicionPlantilla}
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                          title="Editar plantilla"
+                          aria-label="Editar plantilla"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                     <select
                       value={selectedTemplate}
                       onChange={(e) => setSelectedTemplate(e.target.value)}
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
                     >
+                      <option value="_blank">Sin mensaje (abrir chat vacío)</option>
                       {plantillas.map((p) => (
                         <option key={p.clave} value={p.clave}>{p.nombre}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div>
-                    <label className="text-gray-500 text-sm block mb-1">Vista previa</label>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700">
-                      {generarMensaje(selectedTemplate, whatsappTramite)}
+                  {selectedTemplate !== "_blank" && (
+                    <div>
+                      <label className="text-gray-500 text-sm block mb-1">Vista previa</label>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700">
+                        {generarMensaje(selectedTemplate, whatsappTramite)}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </>
               )}
             </div>
@@ -992,7 +1151,7 @@ export default function AdminPage() {
               <a
                 href={generateWhatsAppLink(
                   getWhatsappNumber(whatsappTramite)!,
-                  generarMensaje(selectedTemplate, whatsappTramite)
+                  selectedTemplate === "_blank" ? "" : generarMensaje(selectedTemplate, whatsappTramite)
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -1002,7 +1161,7 @@ export default function AdminPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                 </svg>
-                Enviar por WhatsApp
+                {selectedTemplate === "_blank" ? "Abrir WhatsApp" : "Enviar por WhatsApp"}
               </a>
             )}
             <button

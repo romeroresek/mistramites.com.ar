@@ -48,7 +48,7 @@ export const templates = {
 
 export type TemplateKey = keyof typeof templates
 
-// Generar link de WhatsApp
+// Generar link de WhatsApp — usa protocolo nativo para abrir la app de escritorio
 export const generateWhatsAppLink = (phone: string, message: string): string => {
   // Limpiar número (solo dígitos)
   const cleanPhone = phone.replace(/\D/g, "")
@@ -56,7 +56,8 @@ export const generateWhatsAppLink = (phone: string, message: string): string => 
   const phoneWithCode = cleanPhone.startsWith("54")
     ? cleanPhone
     : `54${cleanPhone}`
-  return `https://wa.me/${phoneWithCode}?text=${encodeURIComponent(message)}`
+  // whatsapp:// abre la app instalada (desktop/mobile); wa.me abre WhatsApp Web
+  return `whatsapp://send?phone=${phoneWithCode}&text=${encodeURIComponent(message)}`
 }
 
 // Lista de plantillas para dropdown
