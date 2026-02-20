@@ -40,16 +40,12 @@ export async function sendPushNotification(
       })
     )
     return true
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error("[Push Error] Reason:", error.message)
-      // Si el error es 410 (Gone) o 404 (Not Found), la suscripción ya no es válida
-      const statusCode = (error as any).statusCode
-      if (statusCode === 410 || statusCode === 404) {
-        console.warn("[Push Warning] Subscription is expired or no longer valid.")
-      }
-    } else {
-      console.error("[Push Error] Unknown error:", error)
+  } catch (error: unknown) {
+    const err = error as Error & { statusCode?: number }
+    console.error("[Push Error] Reason:", err.message)
+    // Si el error es 410 (Gone) o 404 (Not Found), la suscripción ya no es válida
+    if (err.statusCode === 410 || err.statusCode === 404) {
+      console.warn("[Push Warning] Subscription is expired or no longer valid.")
     }
     return false
   }
