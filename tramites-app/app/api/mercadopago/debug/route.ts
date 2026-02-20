@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   try {
     const payment = new Payment(client)
     const raw = await payment.get({ id: Number(paymentId) })
-    sdkData = raw as Record<string, unknown>
+    sdkData = raw as unknown as Record<string, unknown>
   } catch (e) {
     sdkError = String(e)
   }
