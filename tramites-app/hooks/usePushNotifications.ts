@@ -20,11 +20,16 @@ export function usePushNotifications() {
   })
 
   useEffect(() => {
-    const isSupported =
-      typeof window !== "undefined" &&
-      "serviceWorker" in navigator &&
-      "PushManager" in window &&
-      "Notification" in window
+    const checkSupport = () => {
+      return (
+        typeof window !== "undefined" &&
+        "serviceWorker" in navigator &&
+        "PushManager" in window &&
+        "Notification" in window
+      )
+    }
+
+    const isSupported = checkSupport()
 
     if (!isSupported) {
       setState((prev) => ({
@@ -39,9 +44,9 @@ export function usePushNotifications() {
       try {
         const permission = Notification.permission
 
-        // Timeout para evitar bloqueo si el service worker no está disponible
-        const timeoutPromise = new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error("timeout")), 3000)
+        // Intentar obtener el service worker con timeout más largo para móvil
+        const timeoutPromise = new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), 5000)
         )
 
         const registration = await Promise.race([
@@ -50,11 +55,15 @@ export function usePushNotifications() {
         ])
 
         if (!registration) {
-          setState((prev) => ({
-            ...prev,
-            isSupported: false,
+          // Si timeout, aún así marcamos como soportado (las APIs existen)
+          // El service worker podría estar cargando aún
+          setState({
+            isSupported: true,
+            isSubscribed: false,
+            permission,
             isLoading: false,
-          }))
+            error: null,
+          })
           return
         }
 
@@ -68,12 +77,14 @@ export function usePushNotifications() {
           error: null,
         })
       } catch {
-        setState((prev) => ({
-          ...prev,
-          isSupported: false,
+        // Si hay error, aún marcamos como soportado si las APIs existen
+        setState({
+          isSupported: checkSupport(),
+          isSubscribed: false,
+          permission: Notification.permission,
           isLoading: false,
           error: null,
-        }))
+        })
       }
     }
 
@@ -81,7 +92,20 @@ export function usePushNotifications() {
   }, [])
 
   const subscribe = useCallback(async () => {
-    if (!state.isSupported) return false
+    // Verificar soporte básico
+    const hasSupport =
+      typeof window !== "undefined" &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window &&
+      "Notification" in window
+
+    if (!hasSupport) {
+      setState((prev) => ({
+        ...prev,
+        error: "Tu navegador no soporta notificaciones push",
+      }))
+      return false
+    }
 
     setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
@@ -98,7 +122,22 @@ export function usePushNotifications() {
         return false
       }
 
-      const registration = await navigator.serviceWorker.ready
+      // Esperar al service worker con timeout más largo
+      const registrationPromise = navigator.serviceWorker.ready
+      const timeoutPromise = new Promise<null>((resolve) =>
+        setTimeout(() => resolve(null), 10000)
+      )
+
+      const registration = await Promise.race([registrationPromise, timeoutPromise])
+
+      if (!registration) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: "Service worker no disponible. Intentá recargar la página.",
+        }))
+        return false
+      }
 
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
       if (!vapidKey) {
@@ -127,6 +166,7 @@ export function usePushNotifications() {
 
       setState((prev) => ({
         ...prev,
+        isSupported: true,
         isSubscribed: true,
         permission: "granted",
         isLoading: false,
@@ -142,7 +182,7 @@ export function usePushNotifications() {
       }))
       return false
     }
-  }, [state.isSupported])
+  }, [])
 
   const unsubscribe = useCallback(async () => {
     if (!state.isSupported || !state.isSubscribed) return false

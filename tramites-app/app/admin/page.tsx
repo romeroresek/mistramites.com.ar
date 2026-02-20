@@ -342,13 +342,12 @@ export default function AdminPage() {
     try {
       // Si está desactivado y queremos activar, primero suscribir al browser
       if (!pushEnabled) {
-        if (!pushNotifications.isSubscribed) {
-          const success = await pushNotifications.subscribe()
-          if (!success) {
-            toast.showError("No se pudo activar las notificaciones. Verificá los permisos del navegador.")
-            setPushLoading(false)
-            return
-          }
+        const success = await pushNotifications.subscribe()
+        if (!success) {
+          const errorMsg = pushNotifications.error || "No se pudo activar las notificaciones. Verificá los permisos del navegador."
+          toast.showError(errorMsg)
+          setPushLoading(false)
+          return
         }
       }
 
@@ -570,13 +569,13 @@ export default function AdminPage() {
           <hr className="my-1" />
           <button
             onClick={togglePushNotifications}
-            disabled={pushLoading || !pushNotifications.isSupported}
+            disabled={pushLoading || pushNotifications.isLoading}
             className={`px-3 py-2.5 text-sm rounded-lg min-h-[44px] flex items-center gap-2 w-full text-left disabled:opacity-50 ${
               pushEnabled ? "text-green-600 hover:bg-green-50" : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             {pushEnabled ? <Bell className="w-4 h-4 shrink-0" /> : <BellOff className="w-4 h-4 shrink-0" />}
-            {pushLoading ? "Cargando..." : pushEnabled ? "Notificaciones ON" : "Notificaciones OFF"}
+            {pushLoading || pushNotifications.isLoading ? "Cargando..." : pushEnabled ? "Notificaciones ON" : "Notificaciones OFF"}
           </button>
           <hr className="my-1" />
           <Link
