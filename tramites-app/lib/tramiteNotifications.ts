@@ -64,21 +64,29 @@ export async function notifyAdminsNewTramite(tramite: TramiteInfo): Promise<void
 }
 
 const estadoMessages: Record<string, { title: string; body: string }> = {
+  pendiente: {
+    title: "Trámite registrado",
+    body: "Tu trámite ha sido registrado correctamente.",
+  },
+  iniciado: {
+    title: "Trámite iniciado",
+    body: "Hemos comenzado a gestionar tu trámite.",
+  },
   en_proceso: {
-    title: "Tramite en proceso",
-    body: "Tu tramite esta siendo procesado.",
+    title: "Trámite en proceso",
+    body: "Tu trámite está siendo procesado.",
   },
   completado: {
-    title: "Tramite completado",
-    body: "Tu tramite ha sido completado. Ya puedes descargar el documento.",
+    title: "Trámite completado",
+    body: "Tu trámite ha sido completado. Ya puedes descargar el documento.",
   },
   rechazado: {
-    title: "Tramite rechazado",
-    body: "Tu tramite ha sido rechazado. Consulta los detalles para mas informacion.",
+    title: "Trámite rechazado",
+    body: "Tu trámite ha sido rechazado. Consulta los detalles para más información.",
   },
   aprobado: {
-    title: "Tramite aprobado",
-    body: "Tu tramite ha sido aprobado.",
+    title: "Trámite aprobado",
+    body: "Tu trámite ha sido aprobado.",
   },
 }
 
