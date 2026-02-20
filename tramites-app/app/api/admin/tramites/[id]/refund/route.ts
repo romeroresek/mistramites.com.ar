@@ -8,14 +8,14 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
 })
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session || !session.user?.email) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const tramiteId = params.id
+    const { id: tramiteId } = await params
 
     const pago = await prisma.pago.findUnique({
       where: { tramiteId },
