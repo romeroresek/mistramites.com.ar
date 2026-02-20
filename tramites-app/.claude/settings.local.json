@@ -20,7 +20,8 @@
       "Bash(npx tsc:*)",
       "Bash(xxd:*)",
       "Bash(if not exist \"D:\\\\mistramites.com.ar\\\\tramites-app\\\\app\\\\api\\\\mercadopago\\\\debug\" mkdir \"D:\\\\mistramites.com.ar\\\\tramites-app\\\\app\\\\api\\\\mercadopago\\\\debug\")",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }

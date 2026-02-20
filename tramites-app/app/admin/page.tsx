@@ -652,7 +652,19 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="w-full max-w-7xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                En proceso: {tramites.filter(t => t.estado === "en_proceso").length}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                Iniciado: {tramites.filter(t => t.estado === "iniciado").length}
+              </span>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {/* Buscador */}
             <div className="relative">
