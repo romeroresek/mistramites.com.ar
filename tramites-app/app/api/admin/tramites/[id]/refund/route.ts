@@ -57,8 +57,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ ok: true, tramite: tramiteActualizado })
   } catch (error: unknown) {
-    console.error("Error al hacer devolución:", error instanceof Error ? error.message : error)
-    const msg = error instanceof Error ? error.message : "Error al procesar la devolución"
+    console.error("Error al hacer devolución:", error)
+
+    // Intentar extraer mensaje detallado de la API de Mercado Pago
+    let msg = "Error al procesar la devolución"
+    if (error && typeof error === "object") {
+      const err = error as Record<string, unknown>
+      if (err.message && typeof err.message === "string") {
+        msg = err.message
+      }
+      // El SDK de MercadoPago puede incluir detalles en cause o apiResponse
+      if (err.cause) {
+        console.error("Causa del error MP:", JSON.stringify(err.cause, null, 2))
+      }
+      if (err.status) {
+        console.error("Status MP:", err.status)
+      }
+    }
+
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
