@@ -658,27 +658,6 @@ export default function AdminPage() {
             {pushEnabled ? <Bell className="w-4 h-4 shrink-0" /> : <BellOff className="w-4 h-4 shrink-0" />}
             {pushLoading || pushNotifications.isLoading ? "Cargando..." : pushEnabled ? "Notificaciones ON" : "Notificaciones OFF"}
           </button>
-          {pushEnabled && (
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch("/api/push/test")
-                  const data = await res.json()
-                  if (data.success) {
-                    toast.showSuccess(`Notificación de prueba enviada (${data.sent} enviada${data.sent > 1 ? "s" : ""})`)
-                  } else {
-                    toast.showError(data.error || "Error al enviar prueba")
-                  }
-                } catch {
-                  toast.showError("Error al enviar notificación de prueba")
-                }
-              }}
-              className="px-3 py-2 text-xs text-blue-600 hover:bg-blue-50 rounded-lg flex items-center gap-2 w-full text-left"
-            >
-              <Bell className="w-3 h-3 shrink-0" />
-              Probar notificación
-            </button>
-          )}
           <hr className="my-1" />
           <Link
             href="/cerrar-sesion?callbackUrl=/"

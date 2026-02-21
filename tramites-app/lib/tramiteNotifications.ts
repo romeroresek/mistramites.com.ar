@@ -63,6 +63,75 @@ export async function notifyAdminsNewTramite(tramite: TramiteInfo): Promise<void
   }
 }
 
+export async function notifyAdminsNewPayment(tramiteId: string, payerName?: string | null): Promise<void> {
+  try {
+    // Buscar admins con notificaciones push habilitadas
+    const admins = await prisma.user.findMany({
+      where: {
+        role: "admin",
+        pushNotificationsEnabled: true,
+      },
+      include: {
+        pushSubscriptions: true,
+      },
+    })
+
+    if (admins.length === 0) return
+
+    // Buscar info del trámite para incluir en la notificación
+    const tramite = await prisma.tramite.findUnique({
+      where: { id: tramiteId },
+      select: {
+        tipoTramite: true,
+        monto: true,
+        partida: {
+          select: { nombres: true, apellido: true },
+        },
+      },
+    })
+
+    const nombre = tramite?.partida
+      ? `${tramite.partida.nombres} ${tramite.partida.apellido}`
+      : payerName || "Cliente"
+
+    const tipo = tramite?.tipoTramite || "Trámite"
+    const monto = tramite?.monto ? ` - $${tramite.monto.toLocaleString("es-AR")}` : ""
+
+    const payload: NotificationPayload = {
+      title: "💰 Pago confirmado",
+      body: `${nombre} - ${tipo}${monto}`,
+      url: "/admin",
+    }
+
+    const allSubscriptions = admins.flatMap((admin) => admin.pushSubscriptions)
+    if (allSubscriptions.length === 0) return
+
+    const results = await Promise.allSettled(
+      allSubscriptions.map((sub) =>
+        sendPushNotification(
+          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+          payload
+        )
+      )
+    )
+
+    const failedEndpoints: string[] = []
+    results.forEach((result, index) => {
+      if (result.status === "rejected" || (result.status === "fulfilled" && !result.value)) {
+        failedEndpoints.push(allSubscriptions[index].endpoint)
+      }
+    })
+
+    if (failedEndpoints.length > 0) {
+      await prisma.pushSubscription.deleteMany({
+        where: { endpoint: { in: failedEndpoints } },
+      })
+    }
+  } catch (error) {
+    console.error("Error notifying admins of new payment:", error)
+  }
+}
+
 const estadoMessages: Record<string, { title: string; body: string }> = {
   pendiente: {
     title: "Trámite registrado",

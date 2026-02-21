@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago"
 import { prisma } from "@/lib/prisma"
+import { notifyAdminsNewPayment } from "@/lib/tramiteNotifications"
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -159,6 +160,12 @@ export async function POST(req: NextRequest) {
           const paymentMethod = paymentData.payment_method_id || null
           const paymentDate = paymentData.date_approved ? new Date(paymentData.date_approved) : null
 
+          // Obtener estado anterior del pago para detectar cambios
+          const pagoAnterior = await prisma.pago.findUnique({
+            where: { tramiteId },
+            select: { estado: true },
+          })
+
           // Obtener monto del trámite para crear Pago si no existe
           const tramite = await prisma.tramite.findUnique({
             where: { id: tramiteId },
@@ -192,6 +199,14 @@ export async function POST(req: NextRequest) {
           })
 
           // El estado del trámite es 100% manual (lo maneja el admin)
+
+          // Notificar admins si el pago cambió a "confirmado"
+          const pagoChanged = !pagoAnterior || pagoAnterior.estado !== pagoEstado
+          if (pagoChanged && pagoEstado === "confirmado") {
+            notifyAdminsNewPayment(tramiteId, payerName).catch((err) =>
+              console.error("Error notifying admins of payment:", err)
+            )
+          }
 
           return { tramiteId, updated: true, pagoEstado }
         } catch {

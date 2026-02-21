@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago"
 import { prisma } from "@/lib/prisma"
+import { notifyAdminsNewPayment } from "@/lib/tramiteNotifications"
 
 interface MpPaymentData {
   id?: number
@@ -221,6 +222,13 @@ export async function POST(req: NextRequest) {
 
     const pagoChanged = !pagoAnterior || pagoAnterior.estado !== pagoEstado ||
       pagoAnterior.paymentId !== String(paymentData.id)
+
+    // Notificar admins si el pago cambió a "confirmado" (nuevo pago confirmado)
+    if (pagoChanged && pagoEstado === "confirmado") {
+      notifyAdminsNewPayment(targetTramiteId, payerName).catch((err) =>
+        console.error("Error notifying admins of payment:", err)
+      )
+    }
 
     return NextResponse.json({
       status: paymentData.status,
