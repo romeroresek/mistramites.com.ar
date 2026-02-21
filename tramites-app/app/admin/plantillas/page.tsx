@@ -180,9 +180,28 @@ export default function PlantillasPage() {
       {/* Main */}
       <main className="w-full max-w-4xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <h1 className="text-lg sm:text-2xl font-semibold text-gray-900 mb-2">Plantillas de Mensajes</h1>
-        <p className="text-gray-600 text-sm mb-6">
-          Editá las plantillas de mensajes para WhatsApp. Usá {"{nombre}"}, {"{tipo}"} y {"{monto}"} como variables.
+        <p className="text-gray-600 text-sm mb-4">
+          Editá las plantillas de mensajes para WhatsApp. Usá las variables entre llaves para personalizar cada mensaje.
         </p>
+
+        <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-6">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">Variables disponibles</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-blue-800">
+            <div><code className="bg-blue-100 px-1 rounded">{"{nombre}"}</code> — Nombre del titular</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{apellido}"}</code> — Apellido del titular</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{nombreCompleto}"}</code> — Nombre y apellido</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{dni}"}</code> — DNI del titular</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{sexo}"}</code> — Sexo</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{fechaNacimiento}"}</code> — Fecha de nacimiento</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{ciudadNacimiento}"}</code> — Ciudad de nacimiento</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{tipo}"}</code> — Tipo de trámite</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{monto}"}</code> — Monto formateado ($)</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{linkPago}"}</code> — Link de pago MercadoPago</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{email}"}</code> — Email del usuario</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{whatsapp}"}</code> — Número de WhatsApp</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{fecha}"}</code> — Fecha del pedido</div>
+          </div>
+        </div>
 
         <div className="space-y-4">
           {plantillas.map((plantilla) => (
@@ -207,7 +226,7 @@ export default function PlantillasPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Variables disponibles: {"{nombre}"} = nombre del usuario, {"{tipo}"} = tipo de trámite, {"{monto}"} = monto formateado
+                      Variables: {"{nombre}"}, {"{apellido}"}, {"{nombreCompleto}"}, {"{dni}"}, {"{sexo}"}, {"{fechaNacimiento}"}, {"{ciudadNacimiento}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{email}"}, {"{whatsapp}"}, {"{fecha}"}
                     </p>
                   </div>
                   <div className="flex justify-end gap-2 pt-2">

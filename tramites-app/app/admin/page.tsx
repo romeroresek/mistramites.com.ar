@@ -76,6 +76,7 @@ export default function AdminPage() {
   const [editandoPlantillaId, setEditandoPlantillaId] = useState<string | null>(null)
   const [editMensaje, setEditMensaje] = useState("")
   const [savingPlantilla, setSavingPlantilla] = useState(false)
+  const [whatsappLinkPago, setWhatsappLinkPago] = useState<string | null>(null)
   const [creadoContactoTramiteId, setCreadoContactoTramiteId] = useState<string | null>(null)
   const [creadoContactoForm, setCreadoContactoForm] = useState({ email: "", whatsapp: "" })
   const [creadoContactoLoading, setCreadoContactoLoading] = useState(false)
@@ -186,15 +187,38 @@ export default function AdminPage() {
   const generarMensaje = (plantillaClave: string, tramite: Tramite): string => {
     const plantilla = plantillas.find(p => p.clave === plantillaClave)
     if (!plantilla) return ""
-    const nombre = tramite.partida?.nombres || tramite.user?.name || "Usuario"
-    const tipo = tramite.tipoTramite
-    const monto = tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })
-    const linkPago = getLinkPagoUrl(tramite)
-    return plantilla.mensaje
-      .replace(/\{nombre\}/g, nombre)
-      .replace(/\{tipo\}/g, tipo)
-      .replace(/\{monto\}/g, monto)
-      .replace(/\{linkPago\}/g, linkPago)
+
+    const formatFecha = (fecha: string | null | undefined): string => {
+      if (!fecha) return ""
+      try {
+        return new Date(fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" })
+      } catch { return "" }
+    }
+
+    // Variables disponibles para las plantillas
+    const variables: Record<string, string> = {
+      nombre: tramite.partida?.nombres || tramite.user?.name || "Usuario",
+      apellido: tramite.partida?.apellido || "",
+      nombreCompleto: tramite.partida
+        ? `${tramite.partida.nombres} ${tramite.partida.apellido}`.trim()
+        : tramite.user?.name || "Usuario",
+      dni: tramite.partida?.dni || "",
+      sexo: tramite.partida?.sexo || "",
+      fechaNacimiento: formatFecha(tramite.partida?.fechaNacimiento),
+      ciudadNacimiento: tramite.partida?.ciudadNacimiento || "",
+      tipo: tramite.tipoTramite,
+      monto: tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 }),
+      linkPago: whatsappLinkPago || getLinkPagoUrl(tramite),
+      email: tramite.guestEmail || tramite.user?.email || "",
+      whatsapp: tramite.whatsapp || tramite.partida?.whatsapp || "",
+      fecha: formatFecha(tramite.createdAt),
+    }
+
+    let mensaje = plantilla.mensaje
+    for (const [key, value] of Object.entries(variables)) {
+      mensaje = mensaje.replace(new RegExp(`\\{${key}\\}`, "g"), value)
+    }
+    return mensaje
   }
 
   const getWhatsappNumber = (tramite: Tramite): string | null =>
@@ -251,7 +275,17 @@ export default function AdminPage() {
   const openWhatsappModal = (tramite: Tramite) => {
     setWhatsappTramite(tramite)
     setEditandoPlantillaId(null)
+    setWhatsappLinkPago(null)
     if (plantillas.length > 0) setSelectedTemplate(plantillas.find(p => p.clave === "recordatorioPago")?.clave || plantillas[0].clave)
+    // Obtener link de pago real si tiene pago pendiente
+    if (tieneLinkPago(tramite)) {
+      fetch(`/api/admin/tramites/${tramite.id}/link-pago`)
+        .then((res) => res.ok ? res.json() : null)
+        .then((data: { initPoint?: string } | null) => {
+          if (data?.initPoint) setWhatsappLinkPago(data.initPoint)
+        })
+        .catch(() => { })
+    }
   }
 
   const openUploadModal = (tramite: Tramite) => {
@@ -460,6 +494,30 @@ export default function AdminPage() {
     fetchPushSettings()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch/verify solo al montar o cambiar sesión
   }, [status, session, router])
+
+  // Polling automático: verificar pagos pendientes cada 30 segundos
+  useEffect(() => {
+    if (status !== "authenticated" || session?.user?.role !== "admin") return
+
+    const interval = setInterval(async () => {
+      try {
+        const freshList = await fetchTramites()
+        if (Array.isArray(freshList)) {
+          const pendientes = freshList.filter(
+            (t: Tramite) => t.pago?.estado === "pendiente" && (t.pago?.mercadopagoId || t.pago?.paymentId)
+          )
+          if (pendientes.length > 0) {
+            await verifyPaymentsWithMp(freshList)
+          }
+        }
+      } catch {
+        // Silenciar errores de polling
+      }
+    }, 30000) // cada 30 segundos
+
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session])
 
   // Toast, drawer de contacto y limpieza de URL cuando vuelve de crear un trámite
   const creadoToastShown = useRef(false)
@@ -1190,7 +1248,7 @@ export default function AdminPage() {
       </footer>
 
       {/* Drawer de WhatsApp */}
-      <Drawer open={!!whatsappTramite} onOpenChange={(open) => { if (!open) { setWhatsappTramite(null); setEditandoPlantillaId(null) } }}>
+      <Drawer open={!!whatsappTramite} onOpenChange={(open) => { if (!open) { setWhatsappTramite(null); setEditandoPlantillaId(null); setWhatsappLinkPago(null) } }}>
         <DrawerContent>
           <DrawerHeader>
             <div className="flex items-center justify-between gap-2">
@@ -1223,7 +1281,7 @@ export default function AdminPage() {
               {editandoPlantillaId ? (
                 <div className="mb-3">
                   <label className="text-gray-500 text-sm block mb-1">Editar mensaje de la plantilla &quot;{plantillaSeleccionada?.nombre}&quot;</label>
-                  <p className="text-xs text-gray-400 mb-1">Variables: {"{nombre}"}, {"{tipo}"}, {"{monto}"}</p>
+                  <p className="text-xs text-gray-400 mb-1">Variables: {"{nombre}"}, {"{apellido}"}, {"{nombreCompleto}"}, {"{dni}"}, {"{fechaNacimiento}"}, {"{ciudadNacimiento}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{fecha}"}</p>
                   <textarea
                     value={editMensaje}
                     onChange={(e) => setEditMensaje(e.target.value)}

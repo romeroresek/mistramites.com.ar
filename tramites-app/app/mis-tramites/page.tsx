@@ -132,6 +132,24 @@ function MisTramitesContent() {
     }
   }, [status, router, searchParams, fetchTramites, verifyPendingPayments])
 
+  // Polling automático: verificar pagos pendientes cada 30 segundos
+  useEffect(() => {
+    if (status !== "authenticated") return
+
+    const interval = setInterval(async () => {
+      try {
+        const freshList = await fetchTramites()
+        if (Array.isArray(freshList)) {
+          await verifyPendingPayments(freshList)
+        }
+      } catch {
+        // Silenciar errores de polling
+      }
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [status, fetchTramites, verifyPendingPayments])
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
