@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       items: [
         {
           id: tramiteId,
-          title: tramite.tipoTramite,
+          title: "Tramite",
           quantity: 1,
           unit_price: tramite.monto,
           currency_id: "ARS",
