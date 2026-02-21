@@ -68,10 +68,6 @@ const estadoMessages: Record<string, { title: string; body: string }> = {
     title: "Trámite registrado",
     body: "Tu trámite ha sido registrado correctamente.",
   },
-  iniciado: {
-    title: "Trámite iniciado",
-    body: "Hemos comenzado a gestionar tu trámite.",
-  },
   en_proceso: {
     title: "Trámite en proceso",
     body: "Tu trámite está siendo procesado.",

@@ -124,7 +124,8 @@ export function usePushNotifications() {
     checkStatus()
   }, [])
 
-  const subscribe = useCallback(async () => {
+  // subscribe retorna { success: boolean, error?: string } para que el caller tenga el error inmediatamente
+  const subscribe = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     // Verificar HTTPS
     const isSecure =
       window.location.protocol === "https:" ||
@@ -134,11 +135,10 @@ export function usePushNotifications() {
     if (!isSecure) {
       const msg =
         "Las notificaciones push requieren HTTPS. Estás accediendo por HTTP desde " +
-        window.location.hostname +
-        ". Usá HTTPS o localhost."
+        window.location.hostname
       console.error("[Push]", msg)
       setState((prev) => ({ ...prev, error: msg }))
-      return false
+      return { success: false, error: msg }
     }
 
     // Verificar soporte básico
@@ -149,11 +149,9 @@ export function usePushNotifications() {
       "Notification" in window
 
     if (!hasSupport) {
-      setState((prev) => ({
-        ...prev,
-        error: "Tu navegador no soporta notificaciones push",
-      }))
-      return false
+      const msg = "Tu navegador no soporta notificaciones push"
+      setState((prev) => ({ ...prev, error: msg }))
+      return { success: false, error: msg }
     }
 
     setState((prev) => ({ ...prev, isLoading: true, error: null }))
@@ -164,16 +162,17 @@ export function usePushNotifications() {
       console.log("[Push] Resultado del permiso:", permission)
 
       if (permission !== "granted") {
+        const msg =
+          permission === "denied"
+            ? "Notificaciones bloqueadas. Andá a Configuración del navegador > Sitios > Notificaciones y permití este sitio."
+            : "Permiso de notificaciones denegado"
         setState((prev) => ({
           ...prev,
           permission,
           isLoading: false,
-          error:
-            permission === "denied"
-              ? "Notificaciones bloqueadas. Habilitá las notificaciones desde la configuración del navegador."
-              : "Permiso de notificaciones denegado",
+          error: msg,
         }))
-        return false
+        return { success: false, error: msg }
       }
 
       // Esperar al service worker con timeout
@@ -189,14 +188,10 @@ export function usePushNotifications() {
       ])
 
       if (!registration) {
-        console.error("[Push] Service worker no disponible después de 10s")
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error:
-            "Service worker no disponible. Recargá la página e intentá de nuevo.",
-        }))
-        return false
+        const msg = "Service worker no disponible. Recargá la página e intentá de nuevo."
+        console.error("[Push]", msg)
+        setState((prev) => ({ ...prev, isLoading: false, error: msg }))
+        return { success: false, error: msg }
       }
 
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
@@ -206,13 +201,9 @@ export function usePushNotifications() {
       )
 
       if (!vapidKey) {
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error:
-            "Notificaciones no configuradas en el servidor. Reiniciá el servidor (npm run dev).",
-        }))
-        return false
+        const msg = "Notificaciones no configuradas en el servidor."
+        setState((prev) => ({ ...prev, isLoading: false, error: msg }))
+        return { success: false, error: msg }
       }
 
       console.log("[Push] Creando suscripción push...")
@@ -235,11 +226,7 @@ export function usePushNotifications() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error(
-          "[Push] Error del servidor al guardar:",
-          response.status,
-          errorData
-        )
+        console.error("[Push] Error del servidor:", response.status, errorData)
         throw new Error(
           errorData.error || "Error al guardar suscripción en el servidor"
         )
@@ -257,7 +244,7 @@ export function usePushNotifications() {
         error: null,
       }))
 
-      return true
+      return { success: true }
     } catch (error) {
       console.error("[Push] Error al suscribirse:", error)
       const errorMessage =
@@ -269,7 +256,7 @@ export function usePushNotifications() {
         isLoading: false,
         error: errorMessage,
       }))
-      return false
+      return { success: false, error: errorMessage }
     }
   }, [])
 

@@ -23,8 +23,8 @@ export function NotificationPrompt() {
   }, [dismissed, isSupported, isSubscribed, permission])
 
   const handleEnable = async () => {
-    const success = await subscribe()
-    if (success) {
+    const result = await subscribe()
+    if (result.success) {
       setShowPrompt(false)
     }
   }

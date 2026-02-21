@@ -145,29 +145,23 @@ export async function POST(req: NextRequest) {
 
     console.log(`[verify] Payment ${paymentData.id}: status=${paymentData.status}, status_detail=${statusDetail}, transaction_amount_refunded=${amountRefunded}, refunds=${JSON.stringify(paymentData.refunds ?? [])}, hasRefundsFromApi=${hasRefundsFromApi}`)
 
-    // Mapear estados
+    // Mapear estado de pago (solo pago, NO afecta al trámite)
     let pagoEstado = "pendiente"
-    let tramiteEstado = "pendiente"
 
     if (hasRefundsArray || hasRefundsFromApi || isRefundedByDetail || isRefundedByAmount || paymentData.status === "refunded" || paymentData.status === "charged_back") {
-      // Pago devuelto (por status, status_detail, o presencia de refunds)
       pagoEstado = "devuelto"
-      tramiteEstado = "cancelado"
     } else {
       switch (paymentData.status) {
         case "approved":
           pagoEstado = "confirmado"
-          tramiteEstado = "en_proceso"
           break
         case "pending":
         case "in_process":
           pagoEstado = "pendiente"
-          tramiteEstado = "pendiente"
           break
         case "rejected":
         case "cancelled":
           pagoEstado = "rechazado"
-          tramiteEstado = "pendiente"
           break
       }
     }
@@ -184,13 +178,19 @@ export async function POST(req: NextRequest) {
       ? new Date(paymentData.date_approved)
       : null
 
+    // Obtener estado anterior del pago para detectar si realmente cambió algo
+    const pagoAnterior = await prisma.pago.findUnique({
+      where: { tramiteId: targetTramiteId },
+      select: { estado: true, paymentId: true },
+    })
+
     // Obtener monto del trámite para el caso de crear Pago si no existe
     const tramite = await prisma.tramite.findUnique({
       where: { id: targetTramiteId },
       select: { monto: true, userId: true },
     })
 
-    // Actualizar o crear registro de pago con datos del pagador
+    // Actualizar o crear SOLO el registro de pago (nunca tocar el estado del trámite)
     await prisma.pago.upsert({
       where: { tramiteId: targetTramiteId },
       update: {
@@ -216,25 +216,17 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Actualizar estado del trámite solo si está en "pendiente" (respetar cambios manuales del admin)
-    if (pagoEstado === "confirmado") {
-      await prisma.tramite.updateMany({
-        where: { id: targetTramiteId, estado: "pendiente" },
-        data: { estado: tramiteEstado },
-      })
-    } else if (pagoEstado === "devuelto") {
-      await prisma.tramite.update({
-        where: { id: targetTramiteId },
-        data: { estado: "cancelado" },
-      })
-    }
+    // El estado del trámite es 100% manual (lo maneja el admin)
+    // No se modifica automáticamente por cambios en el pago
+
+    const pagoChanged = !pagoAnterior || pagoAnterior.estado !== pagoEstado ||
+      pagoAnterior.paymentId !== String(paymentData.id)
 
     return NextResponse.json({
       status: paymentData.status,
       pagoEstado,
-      tramiteEstado,
       paymentId: paymentData.id ? String(paymentData.id) : null,
-      updated: true,
+      updated: pagoChanged,
     })
   } catch (error: unknown) {
     console.error("Error verificando pago:", error instanceof Error ? error.message : error)

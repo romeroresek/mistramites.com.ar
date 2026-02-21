@@ -91,7 +91,7 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [actionMenuId, setActionMenuId] = useState<string | null>(null)
   const actionMenuRef = useRef<HTMLDivElement>(null)
-  const skipVerifyRefetch = useRef(false)
+
   const [editingObsId, setEditingObsId] = useState<string | null>(null)
   const [editingObsValue, setEditingObsValue] = useState("")
   const [savingObs, setSavingObs] = useState(false)
@@ -123,7 +123,7 @@ export default function AdminPage() {
   // Sincroniza estado de pago con MercadoPago
   // - pendientes con mercadopagoId o paymentId → verifica si ya pagaron
   // - confirmados → verifica reembolsos o carga datos faltantes
-  // NOTA: No sobreescribe el estado del trámite para respetar cambios manuales del admin
+  // IMPORTANTE: Nunca sobreescribe cambios manuales del admin en el estado del trámite
   const verifyPaymentsWithMp = async (tramitesList: Tramite[]) => {
     if (!Array.isArray(tramitesList)) return
     const conPago = tramitesList.filter(
@@ -136,7 +136,7 @@ export default function AdminPage() {
     )
     if (conPago.length === 0) return
 
-    let updated = false
+    let anyRealUpdate = false
     for (const tramite of conPago) {
       try {
         const res = await fetch("/api/mercadopago/verify", {
@@ -152,19 +152,17 @@ export default function AdminPage() {
           continue
         }
         const data = await res.json()
-        // Si hubo actualización (estado de pago cambió o datos nuevos)
-        if (data.updated ||
-            (data.pagoEstado && data.pagoEstado !== tramite.pago?.estado) ||
-            (data.paymentId && !tramite.pago?.paymentId)) {
-          updated = true
+        // Solo contar como actualización si el estado de pago realmente cambió
+        if (data.updated && data.pagoEstado && data.pagoEstado !== tramite.pago?.estado) {
+          anyRealUpdate = true
         }
       } catch (err) {
         console.warn("Error verificando pago para tramite", tramite.id, err)
       }
     }
 
-    // Solo recargar si hubo cambios reales en datos de pago Y el admin no hizo cambios manuales
-    if (updated && !skipVerifyRefetch.current) {
+    // Solo recargar si realmente cambió un estado de pago (ej. de pendiente a confirmado)
+    if (anyRealUpdate) {
       try {
         await fetchTramites()
       } catch {
@@ -337,8 +335,6 @@ export default function AdminPage() {
   }
 
   const updateTramiteStatus = async (tramiteId: string, field: "estado" | "pagoEstado", value: string) => {
-    // Bloquear refetch del verify para que no pise este cambio manual
-    skipVerifyRefetch.current = true
     try {
       const res = await fetch(`/api/admin/tramites/${tramiteId}`, {
         method: "PUT",
@@ -416,23 +412,9 @@ export default function AdminPage() {
     try {
       // Si está desactivado y queremos activar, primero suscribir al browser
       if (!pushEnabled) {
-        // Verificar soporte antes de intentar
-        if (!pushNotifications.isSupported) {
-          const isHttp = window.location.protocol !== "https:" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
-          const msg = isHttp
-            ? "Las notificaciones push requieren HTTPS. Estás accediendo por HTTP."
-            : "Tu navegador no soporta notificaciones push."
-          toast.showError(msg)
-          setPushLoading(false)
-          return
-        }
-
-        const success = await pushNotifications.subscribe()
-        if (!success) {
-          // Esperar un tick para que el state del hook se actualice
-          await new Promise(resolve => setTimeout(resolve, 100))
-          const errorMsg = pushNotifications.error || "No se pudo activar las notificaciones. Verificá los permisos del navegador."
-          toast.showError(errorMsg)
+        const result = await pushNotifications.subscribe()
+        if (!result.success) {
+          toast.showError(result.error || "No se pudo activar las notificaciones.")
           setPushLoading(false)
           return
         }
@@ -719,10 +701,8 @@ export default function AdminPage() {
                 <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                 En proceso: {tramites.filter(t => t.estado === "en_proceso").length}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
-                <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                Iniciado: {tramites.filter(t => t.estado === "iniciado").length}
-              </span>
+
+
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -881,14 +861,11 @@ export default function AdminPage() {
                           ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
                           : tramite.estado === "en_proceso"
                             ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
-                            : tramite.estado === "iniciado"
-                              ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
-                              : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                            : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
                       }`}
                   >
                     <option value="pendiente">Pendiente</option>
                     <option value="en_proceso">En proceso</option>
-                    <option value="iniciado">Iniciado</option>
                     <option value="completado">Completado</option>
                     <option value="rechazado">Rechazado</option>
                     <option value="cancelado">Cancelado</option>
@@ -1130,14 +1107,11 @@ export default function AdminPage() {
                             ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
                             : tramite.estado === "en_proceso"
                               ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
-                              : tramite.estado === "iniciado"
-                                ? "bg-orange-100 text-orange-700 focus:ring-orange-300"
-                                : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                              : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
                         }`}
                     >
                       <option value="pendiente">Pendiente</option>
                       <option value="en_proceso">En proceso</option>
-                      <option value="iniciado">Iniciado</option>
                       <option value="completado">Completado</option>
                       <option value="rechazado">Rechazado</option>
                       <option value="cancelado">Cancelado</option>

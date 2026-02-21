@@ -21,7 +21,11 @@
       "Bash(xxd:*)",
       "Bash(if not exist \"D:\\\\mistramites.com.ar\\\\tramites-app\\\\app\\\\api\\\\mercadopago\\\\debug\" mkdir \"D:\\\\mistramites.com.ar\\\\tramites-app\\\\app\\\\api\\\\mercadopago\\\\debug\")",
       "Bash(node -e:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(node check-estados.js:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }

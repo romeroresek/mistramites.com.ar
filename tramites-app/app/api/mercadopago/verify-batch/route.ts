@@ -129,17 +129,15 @@ export async function POST(req: NextRequest) {
             }
           }
 
+          // Mapear estado de pago (solo pago, NO afecta al trámite)
           let pagoEstado = "pendiente"
-          let tramiteEstado = "pendiente"
 
           if (isRefunded) {
             pagoEstado = "devuelto"
-            tramiteEstado = "pendiente"
           } else {
             switch (paymentData.status) {
               case "approved":
                 pagoEstado = "confirmado"
-                tramiteEstado = "en_proceso"
                 break
               case "rejected":
               case "cancelled":
@@ -167,6 +165,7 @@ export async function POST(req: NextRequest) {
             select: { monto: true, userId: true },
           })
 
+          // Actualizar SOLO el registro de pago (nunca tocar el estado del trámite)
           await prisma.pago.upsert({
             where: { tramiteId },
             update: {
@@ -192,18 +191,7 @@ export async function POST(req: NextRequest) {
             },
           })
 
-          // Solo actualizar estado si está en "pendiente" (respetar cambios manuales del admin)
-          if (pagoEstado === "confirmado") {
-            await prisma.tramite.updateMany({
-              where: { id: tramiteId, estado: "pendiente" },
-              data: { estado: tramiteEstado },
-            })
-          } else if (pagoEstado === "devuelto") {
-            await prisma.tramite.update({
-              where: { id: tramiteId },
-              data: { estado: "pendiente" },
-            })
-          }
+          // El estado del trámite es 100% manual (lo maneja el admin)
 
           return { tramiteId, updated: true, pagoEstado }
         } catch {

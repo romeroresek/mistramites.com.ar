@@ -66,28 +66,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Mapear estados de Mercado Pago a nuestros estados
+    // Mapear estado de pago (solo pago, NO afecta al trámite)
     let pagoEstado = "pendiente"
-    let tramiteEstado = "pendiente"
 
     if (hasRefundsArray || hasRefundsFromApi || isRefundedByDetail || isRefundedByAmount || paymentData.status === "refunded" || paymentData.status === "charged_back") {
       pagoEstado = "devuelto"
-      tramiteEstado = "cancelado"
     } else {
       switch (paymentData.status) {
         case "approved":
           pagoEstado = "confirmado"
-          tramiteEstado = "en_proceso"
           break
         case "pending":
         case "in_process":
           pagoEstado = "pendiente"
-          tramiteEstado = "pendiente"
           break
         case "rejected":
         case "cancelled":
           pagoEstado = "rechazado"
-          tramiteEstado = "pendiente"
           break
       }
     }
@@ -110,7 +105,7 @@ export async function POST(req: NextRequest) {
       select: { monto: true, userId: true },
     })
 
-    // Actualizar o crear registro de pago con datos del pagador
+    // Actualizar o crear SOLO el registro de pago (nunca tocar el estado del trámite)
     await prisma.pago.upsert({
       where: { tramiteId: externalReference },
       update: {
@@ -136,18 +131,8 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Actualizar estado del trámite solo si está en "pendiente" (respetar cambios manuales del admin)
-    if (pagoEstado === "confirmado") {
-      await prisma.tramite.updateMany({
-        where: { id: externalReference, estado: "pendiente" },
-        data: { estado: tramiteEstado },
-      })
-    } else if (pagoEstado === "devuelto") {
-      await prisma.tramite.update({
-        where: { id: externalReference },
-        data: { estado: "cancelado" },
-      })
-    }
+    // El estado del trámite es 100% manual (lo maneja el admin)
+    // No se modifica automáticamente por cambios en el pago
 
     return NextResponse.json({ ok: true }, { status: 200 })
   } catch (error) {
