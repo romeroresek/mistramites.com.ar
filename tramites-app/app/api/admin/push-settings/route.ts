@@ -12,11 +12,11 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { pushNotificationsEnabled: true },
+      select: { pushNotificationsEnabled: true, role: true },
     })
 
-    if (!user) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
     return NextResponse.json({ enabled: user.pushNotificationsEnabled })

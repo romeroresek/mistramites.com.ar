@@ -31,7 +31,6 @@ export async function GET(_req: NextRequest) {
             email: true,
           },
         },
-        documentos: true,
         pago: true,
         partida: {
           select: {

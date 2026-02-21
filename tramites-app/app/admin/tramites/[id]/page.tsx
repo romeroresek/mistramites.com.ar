@@ -168,19 +168,22 @@ export default function AdminTramiteDetalle() {
     if (session?.user?.role !== "admin") { router.push("/"); return }
 
     fetchTramite().then((t) => {
-      fetch("/api/mercadopago/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tramiteId: params.id,
-          paymentId: t?.pago?.paymentId || undefined,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.updated) fetchTramite()
+      // Solo verificar con MP si el trámite tiene pago con mercadopagoId o paymentId
+      if (t?.pago && (t.pago.mercadopagoId || t.pago.paymentId) && t.pago.estado !== "devuelto") {
+        fetch("/api/mercadopago/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tramiteId: params.id,
+            paymentId: t.pago.paymentId || undefined,
+          }),
         })
-        .catch(() => { })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.updated) fetchTramite()
+          })
+          .catch(() => { })
+      }
     })
 
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch solo al montar o cambiar id/sesión
@@ -1149,7 +1152,7 @@ export default function AdminTramiteDetalle() {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
-            © 2024 Trámites Misiones - Todos los derechos reservados
+            © {new Date().getFullYear()} Trámites Misiones - Todos los derechos reservados
           </p>
         </div>
       </footer>

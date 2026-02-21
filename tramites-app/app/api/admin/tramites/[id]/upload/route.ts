@@ -35,6 +35,11 @@ export async function POST(
       return NextResponse.json({ error: "Solo se permiten archivos PDF" }, { status: 400 })
     }
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "El archivo no puede superar los 10 MB" }, { status: 400 })
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer())
     const fileName = `tramites/${id}/${Date.now()}.pdf`
 

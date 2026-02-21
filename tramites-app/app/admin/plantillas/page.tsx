@@ -276,7 +276,7 @@ export default function PlantillasPage() {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
           <p className="text-center text-gray-500 text-xs sm:text-sm">
-            © 2024 Trámites Misiones - Todos los derechos reservados
+            © {new Date().getFullYear()} Trámites Misiones - Todos los derechos reservados
           </p>
         </div>
       </footer>

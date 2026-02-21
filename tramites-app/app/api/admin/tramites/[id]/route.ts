@@ -29,7 +29,6 @@ export async function GET(
       where: { id },
       include: {
         user: true,
-        documentos: true,
         pago: true,
         partida: true,
       },
@@ -70,57 +69,65 @@ export async function PUT(
     const body = await req.json()
     const { estado, monto, pagoEstado, partida, guestEmail, whatsapp, observaciones } = body
 
-    // Actualizar trámite
-    const tramiteData: Record<string, unknown> = {}
-    if (estado) tramiteData.estado = estado
-    if (monto !== undefined) tramiteData.monto = parseFloat(monto)
-    if (guestEmail !== undefined) tramiteData.guestEmail = guestEmail
-    if (whatsapp !== undefined) tramiteData.whatsapp = whatsapp
-    if (observaciones !== undefined) tramiteData.observaciones = observaciones
-
-    const tramite = await prisma.tramite.update({
-      where: { id },
-      data: tramiteData,
-      include: {
-        user: true,
-        documentos: true,
-        pago: true,
-        partida: true,
-      },
-    })
-
-    // Actualizar estado de pago si se proporciona
-    if (pagoEstado && tramite.pago) {
-      await prisma.pago.update({
-        where: { id: tramite.pago.id },
-        data: { estado: pagoEstado },
-      })
+    // Validar monto si se proporciona
+    if (monto !== undefined) {
+      const montoNum = parseFloat(monto)
+      if (isNaN(montoNum) || montoNum < 0) {
+        return NextResponse.json({ error: "Monto inválido" }, { status: 400 })
+      }
     }
 
-    // Actualizar partida si se proporciona
-    if (partida && tramite.partida) {
-      await prisma.partida.update({
-        where: { id: tramite.partida.id },
-        data: {
-          dni: partida.dni,
-          sexo: partida.sexo,
-          apellido: partida.apellido,
-          nombres: partida.nombres,
-          fechaNacimiento: new Date(partida.fechaNacimiento),
-          ciudadNacimiento: partida.ciudadNacimiento || null,
+    // Actualizar todo en una transacción para evitar datos inconsistentes
+    const tramiteActualizado = await prisma.$transaction(async (tx) => {
+      const tramiteData: Record<string, unknown> = {}
+      if (estado) tramiteData.estado = estado
+      if (monto !== undefined) tramiteData.monto = parseFloat(monto)
+      if (guestEmail !== undefined) tramiteData.guestEmail = guestEmail
+      if (whatsapp !== undefined) tramiteData.whatsapp = whatsapp
+      if (observaciones !== undefined) tramiteData.observaciones = observaciones
+
+      await tx.tramite.update({
+        where: { id },
+        data: tramiteData,
+      })
+
+      // Actualizar estado de pago si se proporciona
+      if (pagoEstado) {
+        const pago = await tx.pago.findUnique({ where: { tramiteId: id } })
+        if (pago) {
+          await tx.pago.update({
+            where: { id: pago.id },
+            data: { estado: pagoEstado },
+          })
+        }
+      }
+
+      // Actualizar partida si se proporciona
+      if (partida) {
+        const partidaExistente = await tx.partida.findUnique({ where: { tramiteId: id } })
+        if (partidaExistente) {
+          await tx.partida.update({
+            where: { id: partidaExistente.id },
+            data: {
+              dni: partida.dni,
+              sexo: partida.sexo,
+              apellido: partida.apellido,
+              nombres: partida.nombres,
+              fechaNacimiento: new Date(partida.fechaNacimiento),
+              ciudadNacimiento: partida.ciudadNacimiento || null,
+            },
+          })
+        }
+      }
+
+      return tx.tramite.findUnique({
+        where: { id },
+        include: {
+          user: true,
+          pago: true,
+          partida: true,
         },
       })
-    }
-
-    // Obtener trámite actualizado
-    const tramiteActualizado = await prisma.tramite.findUnique({
-      where: { id },
-      include: {
-        user: true,
-        documentos: true,
-        pago: true,
-        partida: true,
-      },
     })
 
     // Enviar notificacion push si cambio el estado (solo si hay usuario registrado)

@@ -149,9 +149,9 @@ const estadoMessages: Record<string, { title: string; body: string }> = {
     title: "Trámite rechazado",
     body: "Tu trámite ha sido rechazado. Consulta los detalles para más información.",
   },
-  aprobado: {
-    title: "Trámite aprobado",
-    body: "Tu trámite ha sido aprobado.",
+  cancelado: {
+    title: "Trámite cancelado",
+    body: "Tu trámite ha sido cancelado. Contactanos si tenés alguna consulta.",
   },
 }
 
