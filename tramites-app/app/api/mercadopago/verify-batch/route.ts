@@ -192,9 +192,10 @@ export async function POST(req: NextRequest) {
             },
           })
 
+          // Solo actualizar estado si está en "pendiente" (respetar cambios manuales del admin)
           if (pagoEstado === "confirmado") {
-            await prisma.tramite.update({
-              where: { id: tramiteId },
+            await prisma.tramite.updateMany({
+              where: { id: tramiteId, estado: "pendiente" },
               data: { estado: tramiteEstado },
             })
           } else if (pagoEstado === "devuelto") {

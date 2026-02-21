@@ -90,8 +90,9 @@ model Tramite {
   updatedAt   DateTime    @updatedAt
   archivoUrl  String?
   guestEmail  String?
-  whatsapp    String?
-  documentos  Documento[]
+  whatsapp      String?
+  observaciones String?
+  documentos    Documento[]
   pago        Pago?
   partida     Partida?
   user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)

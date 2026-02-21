@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff, Search, X } from "lucide-react"
+import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff, Search, X, MoreVertical, StickyNote } from "lucide-react"
 import { useToast } from "@/components/Toast"
 import { generateWhatsAppLink } from "@/lib/contactTemplates"
 import { usePushNotifications } from "@/hooks/usePushNotifications"
@@ -31,6 +31,7 @@ interface Tramite {
   oficina: string
   tipoTramite: string
   estado: string
+  observaciones: string | null
   user: { name: string; email: string } | null
   guestEmail: string | null
   whatsapp: string | null
@@ -88,6 +89,12 @@ export default function AdminPage() {
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushLoading, setPushLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null)
+  const actionMenuRef = useRef<HTMLDivElement>(null)
+  const skipVerifyRefetch = useRef(false)
+  const [editingObsId, setEditingObsId] = useState<string | null>(null)
+  const [editingObsValue, setEditingObsValue] = useState("")
+  const [savingObs, setSavingObs] = useState(false)
   const pushNotifications = usePushNotifications()
 
   const fetchTramites = async () => {
@@ -116,6 +123,7 @@ export default function AdminPage() {
   // Sincroniza estado de pago con MercadoPago
   // - pendientes con mercadopagoId o paymentId → verifica si ya pagaron
   // - confirmados → verifica reembolsos o carga datos faltantes
+  // NOTA: No sobreescribe el estado del trámite para respetar cambios manuales del admin
   const verifyPaymentsWithMp = async (tramitesList: Tramite[]) => {
     if (!Array.isArray(tramitesList)) return
     const conPago = tramitesList.filter(
@@ -144,7 +152,7 @@ export default function AdminPage() {
           continue
         }
         const data = await res.json()
-        // Si hubo actualización (estado cambió, datos nuevos, etc.)
+        // Si hubo actualización (estado de pago cambió o datos nuevos)
         if (data.updated ||
             (data.pagoEstado && data.pagoEstado !== tramite.pago?.estado) ||
             (data.paymentId && !tramite.pago?.paymentId)) {
@@ -152,28 +160,11 @@ export default function AdminPage() {
         }
       } catch (err) {
         console.warn("Error verificando pago para tramite", tramite.id, err)
-        // Continuar con el siguiente trámite
-      }
-    }
-    // Corregir tramites que ya están devueltos en DB pero cuyo estado no es cancelado
-    // (ocurre cuando el pago se marcó devuelto manualmente o antes de este fix)
-    const devueltosIncorrectos = tramitesList.filter(
-      (t) => t.pago?.estado === "devuelto" && t.estado !== "cancelado"
-    )
-    for (const tramite of devueltosIncorrectos) {
-      try {
-        await fetch(`/api/admin/tramites/${tramite.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estado: "cancelado" }),
-        })
-        updated = true
-      } catch (err) {
-        console.warn("Error corrigiendo estado de tramite devuelto", tramite.id, err)
       }
     }
 
-    if (updated) {
+    // Solo recargar si hubo cambios reales en datos de pago Y el admin no hizo cambios manuales
+    if (updated && !skipVerifyRefetch.current) {
       try {
         await fetchTramites()
       } catch {
@@ -346,6 +337,8 @@ export default function AdminPage() {
   }
 
   const updateTramiteStatus = async (tramiteId: string, field: "estado" | "pagoEstado", value: string) => {
+    // Bloquear refetch del verify para que no pise este cambio manual
+    skipVerifyRefetch.current = true
     try {
       const res = await fetch(`/api/admin/tramites/${tramiteId}`, {
         method: "PUT",
@@ -362,6 +355,27 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error(error)
+    }
+  }
+
+  const saveObservaciones = async (tramiteId: string) => {
+    setSavingObs(true)
+    try {
+      const res = await fetch(`/api/admin/tramites/${tramiteId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ observaciones: editingObsValue || null }),
+      })
+      if (res.ok) {
+        setTramites(prev => prev.map(t =>
+          t.id === tramiteId ? { ...t, observaciones: editingObsValue || null } : t
+        ))
+        setEditingObsId(null)
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setSavingObs(false)
     }
   }
 
@@ -402,8 +416,21 @@ export default function AdminPage() {
     try {
       // Si está desactivado y queremos activar, primero suscribir al browser
       if (!pushEnabled) {
+        // Verificar soporte antes de intentar
+        if (!pushNotifications.isSupported) {
+          const isHttp = window.location.protocol !== "https:" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+          const msg = isHttp
+            ? "Las notificaciones push requieren HTTPS. Estás accediendo por HTTP."
+            : "Tu navegador no soporta notificaciones push."
+          toast.showError(msg)
+          setPushLoading(false)
+          return
+        }
+
         const success = await pushNotifications.subscribe()
         if (!success) {
+          // Esperar un tick para que el state del hook se actualice
+          await new Promise(resolve => setTimeout(resolve, 100))
           const errorMsg = pushNotifications.error || "No se pudo activar las notificaciones. Verificá los permisos del navegador."
           toast.showError(errorMsg)
           setPushLoading(false)
@@ -546,6 +573,18 @@ export default function AdminPage() {
     })
   }
 
+  // Cerrar menú de acciones al hacer click fuera
+  useEffect(() => {
+    if (!actionMenuId) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
+        setActionMenuId(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [actionMenuId])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -637,6 +676,27 @@ export default function AdminPage() {
             {pushEnabled ? <Bell className="w-4 h-4 shrink-0" /> : <BellOff className="w-4 h-4 shrink-0" />}
             {pushLoading || pushNotifications.isLoading ? "Cargando..." : pushEnabled ? "Notificaciones ON" : "Notificaciones OFF"}
           </button>
+          {pushEnabled && (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/push/test")
+                  const data = await res.json()
+                  if (data.success) {
+                    toast.showSuccess(`Notificación de prueba enviada (${data.sent} enviada${data.sent > 1 ? "s" : ""})`)
+                  } else {
+                    toast.showError(data.error || "Error al enviar prueba")
+                  }
+                } catch {
+                  toast.showError("Error al enviar notificación de prueba")
+                }
+              }}
+              className="px-3 py-2 text-xs text-blue-600 hover:bg-blue-50 rounded-lg flex items-center gap-2 w-full text-left"
+            >
+              <Bell className="w-3 h-3 shrink-0" />
+              Probar notificación
+            </button>
+          )}
           <hr className="my-1" />
           <Link
             href="/cerrar-sesion?callbackUrl=/"
@@ -836,6 +896,50 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Observaciones */}
+              {(editingObsId === tramite.id || tramite.observaciones) && (
+                <div className="mb-3">
+                  {editingObsId === tramite.id ? (
+                    <div className="flex flex-col gap-1">
+                      <textarea
+                        value={editingObsValue}
+                        onChange={(e) => setEditingObsValue(e.target.value)}
+                        rows={2}
+                        placeholder="Observaciones..."
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs resize-y focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveObservaciones(tramite.id)}
+                          disabled={savingObs}
+                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {savingObs ? "..." : "Guardar"}
+                        </button>
+                        <button
+                          onClick={() => setEditingObsId(null)}
+                          disabled={savingObs}
+                          className="px-3 py-1 text-gray-600 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingObsId(tramite.id)
+                        setEditingObsValue(tramite.observaciones || "")
+                      }}
+                      className="text-left text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 w-full"
+                    >
+                      {tramite.observaciones}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Link de pago */}
               {tieneLinkPago(tramite) && !tramite.pago?.paymentId && (
                 <button
@@ -866,28 +970,53 @@ export default function AdminPage() {
               )}
 
               {/* Acciones */}
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                <button
-                  onClick={() => openUploadModal(tramite)}
-                  className={`p-1.5 rounded ${tramite.archivoUrl ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"}`}
-                  title={tramite.archivoUrl ? "Documento cargado" : "Subir documento"}
-                >
-                  <Upload className="w-4 h-4" />
-                </button>
-                <Link
-                  href={`/admin/tramites/${tramite.id}`}
-                  className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                  title="Ver detalle"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Link>
-                <button
-                  onClick={() => setDeleteId(tramite.id)}
-                  className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                  title="Eliminar"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              <div className="flex items-center justify-end pt-2 border-t border-gray-100">
+                <div className="relative">
+                  <button
+                    onClick={() => setActionMenuId(actionMenuId === tramite.id ? null : tramite.id)}
+                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    title="Acciones"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                  {actionMenuId === tramite.id && (
+                    <div ref={actionMenuRef} className="absolute right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1 min-w-[160px]">
+                      <button
+                        onClick={() => { openUploadModal(tramite); setActionMenuId(null) }}
+                        className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-gray-50 ${tramite.archivoUrl ? "text-green-600" : "text-gray-700"}`}
+                      >
+                        <Upload className="w-4 h-4" />
+                        {tramite.archivoUrl ? "Documento cargado" : "Subir documento"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingObsId(tramite.id)
+                          setEditingObsValue(tramite.observaciones || "")
+                          setActionMenuId(null)
+                        }}
+                        className="w-full px-3 py-2.5 text-left text-sm text-gray-700 flex items-center gap-2 hover:bg-gray-50"
+                      >
+                        <StickyNote className="w-4 h-4" />
+                        Observaciones
+                      </button>
+                      <Link
+                        href={`/admin/tramites/${tramite.id}`}
+                        onClick={() => setActionMenuId(null)}
+                        className="w-full px-3 py-2.5 text-left text-sm text-gray-700 flex items-center gap-2 hover:bg-gray-50"
+                      >
+                        <Pencil className="w-4 h-4" />
+                        Ver detalle
+                      </Link>
+                      <button
+                        onClick={() => { setDeleteId(tramite.id); setActionMenuId(null) }}
+                        className="w-full px-3 py-2.5 text-left text-sm text-red-600 flex items-center gap-2 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -903,6 +1032,7 @@ export default function AdminPage() {
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">Detalle MP</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">Observaciones</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24"></th>
               </tr>
             </thead>
@@ -1014,28 +1144,80 @@ export default function AdminPage() {
                     </select>
                   </td>
                   <td className="px-3 py-2">
-                    <div className="flex items-center justify-center gap-2">
+                    {editingObsId === tramite.id ? (
+                      <div className="flex flex-col gap-1">
+                        <textarea
+                          value={editingObsValue}
+                          onChange={(e) => setEditingObsValue(e.target.value)}
+                          rows={2}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs resize-y focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          autoFocus
+                        />
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => saveObservaciones(tramite.id)}
+                            disabled={savingObs}
+                            className="px-2 py-0.5 bg-blue-600 text-white text-[10px] rounded hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {savingObs ? "..." : "Guardar"}
+                          </button>
+                          <button
+                            onClick={() => setEditingObsId(null)}
+                            disabled={savingObs}
+                            className="px-2 py-0.5 text-gray-600 text-[10px] border border-gray-300 rounded hover:bg-gray-50"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
                       <button
-                        onClick={() => openUploadModal(tramite)}
-                        className={`p-1 rounded ${tramite.archivoUrl ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"}`}
-                        title={tramite.archivoUrl ? "Documento cargado" : "Subir documento"}
+                        onClick={() => {
+                          setEditingObsId(tramite.id)
+                          setEditingObsValue(tramite.observaciones || "")
+                        }}
+                        className="text-left text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 rounded px-2 py-1 w-full min-h-[24px]"
+                        title="Click para editar observaciones"
                       >
-                        <Upload className="w-4 h-4" />
+                        {tramite.observaciones || "\u00A0"}
                       </button>
-                      <Link
-                        href={`/admin/tramites/${tramite.id}`}
-                        className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                        title="Ver detalle"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Link>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="relative flex justify-center">
                       <button
-                        onClick={() => setDeleteId(tramite.id)}
-                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                        title="Eliminar"
+                        onClick={() => setActionMenuId(actionMenuId === tramite.id ? null : tramite.id)}
+                        className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                        title="Acciones"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <MoreVertical className="w-4 h-4" />
                       </button>
+                      {actionMenuId === tramite.id && (
+                        <div ref={actionMenuRef} className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1 min-w-[160px]">
+                          <button
+                            onClick={() => { openUploadModal(tramite); setActionMenuId(null) }}
+                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 ${tramite.archivoUrl ? "text-green-600" : "text-gray-700"}`}
+                          >
+                            <Upload className="w-4 h-4" />
+                            {tramite.archivoUrl ? "Documento cargado" : "Subir documento"}
+                          </button>
+                          <Link
+                            href={`/admin/tramites/${tramite.id}`}
+                            onClick={() => setActionMenuId(null)}
+                            className="w-full px-3 py-2 text-left text-sm text-gray-700 flex items-center gap-2 hover:bg-gray-50"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Ver detalle
+                          </Link>
+                          <button
+                            onClick={() => { setDeleteId(tramite.id); setActionMenuId(null) }}
+                            className="w-full px-3 py-2 text-left text-sm text-red-600 flex items-center gap-2 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>

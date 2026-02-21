@@ -216,10 +216,10 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Actualizar estado del trámite: al aprobar → en_proceso; al devolver → pendiente (no dejar cancelado)
+    // Actualizar estado del trámite solo si está en "pendiente" (respetar cambios manuales del admin)
     if (pagoEstado === "confirmado") {
-      await prisma.tramite.update({
-        where: { id: targetTramiteId },
+      await prisma.tramite.updateMany({
+        where: { id: targetTramiteId, estado: "pendiente" },
         data: { estado: tramiteEstado },
       })
     } else if (pagoEstado === "devuelto") {
