@@ -90,6 +90,7 @@ export default function AdminPage() {
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushLoading, setPushLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [searchFocused, setSearchFocused] = useState(false)
   const [actionMenuId, setActionMenuId] = useState<string | null>(null)
   const actionMenuRef = useRef<HTMLDivElement>(null)
 
@@ -734,11 +735,14 @@ export default function AdminPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
             <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                Pendientes: {tramites.filter(t => t.estado === "pendiente" && t.pago?.estado === "confirmado").length}
+              </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                 En proceso: {tramites.filter(t => t.estado === "en_proceso").length}
               </span>
-
 
             </div>
           </div>
@@ -748,10 +752,12 @@ export default function AdminPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar..."
+                placeholder=""
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="min-h-[44px] pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                className={`min-h-[44px] py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${searchTerm || searchFocused ? "w-40 pl-9 pr-8" : "w-[44px] pl-9 pr-2"}`}
               />
               {searchTerm && (
                 <button
