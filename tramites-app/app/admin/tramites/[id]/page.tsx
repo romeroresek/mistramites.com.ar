@@ -545,7 +545,7 @@ export default function AdminTramiteDetalle() {
             <div>
               <span className="text-gray-500">Usuario</span>
               <p className="font-medium text-gray-900">{tramite.user?.name || "Invitado"}</p>
-              <p className="text-gray-500 text-xs">{tramite.guestEmail || tramite.user?.email}</p>
+              <p className="text-gray-500 text-xs break-all">{tramite.guestEmail || tramite.user?.email}</p>
             </div>
             <div>
               <span className="text-gray-500">Monto</span>
@@ -731,7 +731,7 @@ export default function AdminTramiteDetalle() {
               {tramite.pago.payerEmail && (
                 <div>
                   <span className={tramite.pago?.estado === "devuelto" ? "text-gray-600" : "text-blue-600"}>Email del pagador</span>
-                  <p className={`font-medium ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>{tramite.pago.payerEmail}</p>
+                  <p className={`font-medium break-all ${tramite.pago?.estado === "devuelto" ? "text-gray-800" : "text-blue-900"}`}>{tramite.pago.payerEmail}</p>
                 </div>
               )}
               {tramite.pago.payerDni && (
@@ -1090,7 +1090,7 @@ export default function AdminTramiteDetalle() {
               <div>
                 <span className="text-gray-500 text-sm">Email</span>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="font-medium text-gray-900 text-sm">
+                  <p className="font-medium text-gray-900 text-sm break-all">
                     {tramite.guestEmail || tramite.user?.email || "No disponible"}
                   </p>
                   {(tramite.guestEmail || tramite.user?.email) && (
