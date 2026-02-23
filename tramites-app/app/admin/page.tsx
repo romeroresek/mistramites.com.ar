@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff, Search, X, MoreVertical, StickyNote, Activity, MessageSquare } from "lucide-react"
+import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff, Search, X, MoreVertical, StickyNote, Activity } from "lucide-react"
 import { useToast } from "@/components/Toast"
 import { generateWhatsAppLink } from "@/lib/contactTemplates"
 import { usePushNotifications } from "@/hooks/usePushNotifications"
@@ -728,23 +728,6 @@ export default function AdminPage() {
             Mis Trámites
           </Link>
           <hr className="my-1" />
-          <Link
-            href="/admin/plantillas"
-            onClick={() => setMenuOpen(false)}
-            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center gap-2"
-          >
-            <MessageSquare className="w-4 h-4 shrink-0" />
-            Plantillas WhatsApp
-          </Link>
-          <Link
-            href="/admin/logs"
-            onClick={() => setMenuOpen(false)}
-            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center gap-2"
-          >
-            <Activity className="w-4 h-4 shrink-0" />
-            Registro de Actividad
-          </Link>
-          <hr className="my-1" />
           <button
             onClick={togglePushNotifications}
             disabled={pushLoading || pushNotifications.isLoading}
@@ -797,17 +780,17 @@ export default function AdminPage() {
               </button>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {/* Buscador */}
-            <div className="relative ml-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <div className="relative order-2 basis-full mt-1 sm:order-none sm:basis-auto sm:mt-0 sm:ml-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 pointer-events-none" />
               <input
                 ref={searchInputRef}
                 type="text"
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="min-h-[44px] w-48 py-2 pl-9 pr-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="min-h-[40px] sm:min-h-[44px] w-full sm:w-48 py-2 pl-9 pr-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {searchTerm && (
                 <button
@@ -835,35 +818,43 @@ export default function AdminPage() {
                 }
               }}
               disabled={refreshing}
-              className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-60"
+              className="inline-flex items-center justify-center min-h-[40px] sm:min-h-[44px] min-w-[40px] sm:min-w-[44px] px-2.5 sm:px-3 py-2.5 sm:py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-60"
               title="Actualizar lista y sincronizar pagos con MercadoPago"
               aria-label="Refrescar lista"
             >
-              <RefreshCw className={`w-5 h-5 shrink-0 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 ${refreshing ? "animate-spin" : ""}`} />
             </button>
             <Link
               href="/?returnUrl=/admin"
-              className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100"
+              className="inline-flex items-center justify-center min-h-[40px] sm:min-h-[44px] min-w-[40px] sm:min-w-[44px] px-2.5 sm:px-3 py-2.5 sm:py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100"
               title="Crear trámite con datos del solicitante"
               aria-label="Nuevo trámite"
             >
-              <PlusCircle className="w-5 h-5" />
+              <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
             <Link
               href="/admin/plantillas"
-              className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100"
+              className="inline-flex items-center justify-center min-h-[40px] sm:min-h-[44px] min-w-[40px] sm:min-w-[44px] px-2.5 sm:px-3 py-2.5 sm:py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100"
               title="Plantillas"
               aria-label="Plantillas"
             >
-              <FileStack className="w-5 h-5" />
+              <FileStack className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
             <Link
               href="/admin/usuarios"
-              className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100"
+              className="inline-flex items-center justify-center min-h-[40px] sm:min-h-[44px] min-w-[40px] sm:min-w-[44px] px-2.5 sm:px-3 py-2.5 sm:py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100"
               title="Usuarios"
               aria-label="Usuarios"
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Link>
+            <Link
+              href="/admin/logs"
+              className="inline-flex items-center justify-center min-h-[40px] sm:min-h-[44px] min-w-[40px] sm:min-w-[44px] px-2.5 sm:px-3 py-2.5 sm:py-3 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100"
+              title="Registro de Actividad"
+              aria-label="Registro de Actividad"
+            >
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
           </div>
         </div>
