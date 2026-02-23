@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       items: [
         {
           id: tramite.id,
-          title: `${tipoNombre} - Trámites Misiones`,
+          title: "Trámites Misiones",
           quantity: 1,
           unit_price: montoTotal,
           currency_id: "ARS",
