@@ -132,7 +132,7 @@ function MisTramitesContent() {
     }
   }, [status, router, searchParams, fetchTramites, verifyPendingPayments])
 
-  // Polling automático: verificar pagos pendientes cada 30 segundos
+  // Polling automático: verificar pagos pendientes cada 5 minutos
   useEffect(() => {
     if (status !== "authenticated") return
 
@@ -145,7 +145,7 @@ function MisTramitesContent() {
       } catch {
         // Silenciar errores de polling
       }
-    }, 30000)
+    }, 300000)
 
     return () => clearInterval(interval)
   }, [status, fetchTramites, verifyPendingPayments])

@@ -516,7 +516,7 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch/verify solo al montar o cambiar sesión
   }, [status, session, router])
 
-  // Polling automático: verificar pagos pendientes cada 30 segundos
+  // Polling automático: verificar pagos pendientes cada 5 minutos
   useEffect(() => {
     if (status !== "authenticated" || session?.user?.role !== "admin") return
 
@@ -534,7 +534,7 @@ export default function AdminPage() {
       } catch {
         // Silenciar errores de polling
       }
-    }, 30000) // cada 30 segundos
+    }, 300000) // cada 5 minutos
 
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
