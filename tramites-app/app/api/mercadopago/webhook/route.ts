@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago"
 import { prisma } from "@/lib/prisma"
 import { notifyAdminsNewPayment } from "@/lib/tramiteNotifications"
+import { logPago } from "@/lib/activityLog"
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -147,6 +148,26 @@ export async function POST(req: NextRequest) {
       notifyAdminsNewPayment(externalReference, payerName).catch((err) =>
         console.error("Error notifying admins of payment:", err)
       )
+    }
+
+    // Registrar actividad de pago si cambió el estado
+    if (pagoChanged) {
+      const tipoLog = pagoEstado === "confirmado" ? "confirmado" :
+                      pagoEstado === "devuelto" ? "reembolsado" :
+                      pagoEstado === "rechazado" ? "fallido" : "iniciado"
+      await logPago({
+        tipo: tipoLog as "confirmado" | "fallido" | "reembolsado" | "iniciado",
+        tramiteId: externalReference,
+        monto: tramite?.monto || 0,
+        userId: tramite?.userId,
+        userEmail: payerEmail,
+        paymentId: String(paymentId),
+        metadata: {
+          payerName,
+          paymentMethod,
+          status: paymentData.status,
+        },
+      })
     }
 
     return NextResponse.json({ ok: true }, { status: 200 })

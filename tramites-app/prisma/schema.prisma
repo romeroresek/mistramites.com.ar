@@ -185,3 +185,23 @@ model PlantillaMensaje {
 
   @@map("plantillas_mensaje")
 }
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  tipo        String   // LOGIN, LOGOUT, REGISTRO, PAGO, ESTADO_CAMBIO, TRAMITE_CREADO, ARCHIVO_SUBIDO, ADMIN_ACTION, etc.
+  accion      String   // Descripción de la acción
+  userId      String?  // Usuario que realizó la acción (puede ser null para acciones de invitados)
+  userEmail   String?  // Email del usuario (para búsqueda rápida)
+  userName    String?  // Nombre del usuario
+  tramiteId   String?  // Trámite relacionado (si aplica)
+  ip          String?  // IP del cliente
+  userAgent   String?  // User agent del navegador
+  metadata    String?  // JSON con datos adicionales
+  createdAt   DateTime @default(now())
+
+  @@index([tipo])
+  @@index([userId])
+  @@index([tramiteId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}

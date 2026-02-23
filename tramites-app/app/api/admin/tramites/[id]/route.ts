@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { notifyTramiteStatusChange } from "@/lib/tramiteNotifications"
 import { prisma } from "@/lib/prisma"
+import { logEstadoCambio, logActivity, ActivityType } from "@/lib/activityLog"
 
 // GET: obtener detalles de un trámite
 export async function GET(
@@ -77,6 +78,12 @@ export async function PUT(
       }
     }
 
+    // Obtener estado actual para comparar
+    const tramiteAnterior = await prisma.tramite.findUnique({
+      where: { id },
+      select: { estado: true, tipoTramite: true },
+    })
+
     // Actualizar todo en una transacción para evitar datos inconsistentes
     const tramiteActualizado = await prisma.$transaction(async (tx) => {
       const tramiteData: Record<string, unknown> = {}
@@ -137,6 +144,40 @@ export async function PUT(
       )
     }
 
+    // Registrar cambio de estado si hubo
+    if (estado && tramiteAnterior && tramiteAnterior.estado !== estado) {
+      await logEstadoCambio({
+        tramiteId: id,
+        estadoAnterior: tramiteAnterior.estado,
+        estadoNuevo: estado,
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        isAdmin: true,
+      })
+    }
+
+    // Registrar otras ediciones del admin
+    const cambios: string[] = []
+    if (monto !== undefined) cambios.push("monto")
+    if (pagoEstado) cambios.push("estado de pago")
+    if (partida) cambios.push("datos de partida")
+    if (guestEmail !== undefined) cambios.push("email")
+    if (whatsapp !== undefined) cambios.push("whatsapp")
+    if (observaciones !== undefined) cambios.push("observaciones")
+
+    if (cambios.length > 0 && !estado) {
+      await logActivity({
+        tipo: ActivityType.ADMIN_TRAMITE_EDITADO,
+        accion: `Trámite editado: ${cambios.join(", ")}`,
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        tramiteId: id,
+        metadata: { cambios },
+      })
+    }
+
     return NextResponse.json(tramiteActualizado)
   } catch (error) {
     console.error(error)
@@ -165,9 +206,29 @@ export async function DELETE(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
+    // Obtener info del trámite antes de eliminar
+    const tramiteAEliminar = await prisma.tramite.findUnique({
+      where: { id },
+      select: { tipoTramite: true, guestEmail: true, user: { select: { email: true } } },
+    })
+
     // Eliminar trámite (cascade eliminará documentos, pago y partida)
     await prisma.tramite.delete({
       where: { id },
+    })
+
+    // Registrar eliminación
+    await logActivity({
+      tipo: "ADMIN_TRAMITE_ELIMINADO",
+      accion: `Trámite eliminado: ${tramiteAEliminar?.tipoTramite || "desconocido"}`,
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.name,
+      tramiteId: id,
+      metadata: {
+        tipoTramite: tramiteAEliminar?.tipoTramite,
+        clienteEmail: tramiteAEliminar?.guestEmail || tramiteAEliminar?.user?.email,
+      },
     })
 
     return NextResponse.json({ success: true, message: "Trámite eliminado" })

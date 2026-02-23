@@ -10,6 +10,11 @@ async function getPrisma() {
   return prisma
 }
 
+async function getActivityLog() {
+  const { logLogin, logLoginFailed, logRegistro, ActivityType, logActivity } = await import("./activityLog")
+  return { logLogin, logLoginFailed, logRegistro, ActivityType, logActivity }
+}
+
 export const authOptions: NextAuthOptions = {
   // NO usar PrismaAdapter con CredentialsProvider - causa conflictos
   providers: [
@@ -30,6 +35,7 @@ export const authOptions: NextAuthOptions = {
 
         const prisma = await getPrisma()
         const { default: bcrypt } = await import("bcryptjs")
+        const { logLogin, logLoginFailed } = await getActivityLog()
 
         // Solo traer los campos necesarios para autenticación
         const user = await prisma.user.findUnique({
@@ -45,6 +51,7 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user?.password) {
+          await logLoginFailed(credentials.email, "Usuario no encontrado o sin contraseña")
           return null
         }
 
@@ -54,8 +61,12 @@ export const authOptions: NextAuthOptions = {
         )
 
         if (!isValidPassword) {
+          await logLoginFailed(credentials.email, "Contraseña incorrecta")
           return null
         }
+
+        // Log exitoso
+        await logLogin({ id: user.id, email: user.email, name: user.name })
 
         return {
           id: user.id,
@@ -75,6 +86,15 @@ export const authOptions: NextAuthOptions = {
       // Para Google OAuth, crear/actualizar usuario en la DB
       if (account?.provider === "google" && user.email) {
         const prisma = await getPrisma()
+        const { logLogin, logRegistro } = await getActivityLog()
+
+        // Verificar si el usuario ya existe
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: { id: true },
+        })
+        const isNewUser = !existingUser
+
         // Usar upsert para una sola operación de DB
         const dbUser = await prisma.user.upsert({
           where: { email: user.email },
@@ -91,6 +111,13 @@ export const authOptions: NextAuthOptions = {
         })
         user.id = dbUser.id
         user.role = dbUser.role
+
+        // Log según si es nuevo o existente
+        if (isNewUser) {
+          await logRegistro({ id: dbUser.id, email: user.email, name: user.name })
+        } else {
+          await logLogin({ id: dbUser.id, email: user.email, name: user.name })
+        }
       }
       return true
     },

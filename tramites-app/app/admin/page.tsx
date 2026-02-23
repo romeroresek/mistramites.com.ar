@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff, Search, X, MoreVertical, StickyNote } from "lucide-react"
+import { ArrowLeft, Home, FileText, LogOut, Pencil, Trash2, Users, FileStack, PlusCircle, Link as LinkIcon, RefreshCw, Upload, Bell, BellOff, Search, X, MoreVertical, StickyNote, Activity, MessageSquare } from "lucide-react"
 import { useToast } from "@/components/Toast"
 import { generateWhatsAppLink } from "@/lib/contactTemplates"
 import { usePushNotifications } from "@/hooks/usePushNotifications"
@@ -726,6 +726,23 @@ export default function AdminPage() {
           >
             <FileText className="w-4 h-4 shrink-0" />
             Mis Trámites
+          </Link>
+          <hr className="my-1" />
+          <Link
+            href="/admin/plantillas"
+            onClick={() => setMenuOpen(false)}
+            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center gap-2"
+          >
+            <MessageSquare className="w-4 h-4 shrink-0" />
+            Plantillas WhatsApp
+          </Link>
+          <Link
+            href="/admin/logs"
+            onClick={() => setMenuOpen(false)}
+            className="px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] flex items-center gap-2"
+          >
+            <Activity className="w-4 h-4 shrink-0" />
+            Registro de Actividad
           </Link>
           <hr className="my-1" />
           <button

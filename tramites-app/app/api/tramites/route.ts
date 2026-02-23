@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notifyAdminsNewTramite } from "@/lib/tramiteNotifications"
+import { logTramiteCreado, logPago } from "@/lib/activityLog"
 
 // GET: obtener todos los trámites del usuario
 export async function GET(_req: NextRequest) {
@@ -158,6 +159,16 @@ export async function POST(req: NextRequest) {
     await prisma.pago.update({
       where: { tramiteId: tramite.id },
       data: { mercadopagoId: result.id },
+    })
+
+    // Registrar actividad
+    await logTramiteCreado({
+      tramiteId: tramite.id,
+      tipoTramite,
+      userId,
+      userEmail: payerEmail || guestEmail,
+      userName: payerName,
+      monto,
     })
 
     // Notificar a los admins del nuevo pedido

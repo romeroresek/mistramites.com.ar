@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { logRegistro } from "@/lib/activityLog"
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,6 +45,9 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
       },
     })
+
+    // Registrar actividad
+    await logRegistro({ id: user.id, email: user.email, name: user.name })
 
     // Vincular trámites existentes con este email
     const tramitesActualizados = await prisma.tramite.updateMany({

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { prisma } from "@/lib/prisma"
+import { logActivity, ActivityType } from "@/lib/activityLog"
 
 export async function POST(
   request: NextRequest,
@@ -62,6 +63,17 @@ export async function POST(
     const updatedTramite = await prisma.tramite.update({
       where: { id },
       data: { archivoUrl: urlData.publicUrl },
+    })
+
+    // Registrar actividad
+    await logActivity({
+      tipo: ActivityType.ADMIN_ARCHIVO_SUBIDO,
+      accion: `Archivo subido: ${file.name}`,
+      userId: (session.user as { id?: string }).id,
+      userEmail: session.user?.email,
+      userName: session.user?.name,
+      tramiteId: id,
+      metadata: { fileName: file.name, fileSize: file.size },
     })
 
     return NextResponse.json({
