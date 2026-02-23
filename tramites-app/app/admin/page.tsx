@@ -138,30 +138,33 @@ export default function AdminPage() {
     )
     if (conPago.length === 0) return
 
-    let anyRealUpdate = false
-    for (const tramite of conPago) {
-      try {
-        const res = await fetch("/api/mercadopago/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tramiteId: tramite.id,
-            paymentId: tramite.pago?.paymentId || undefined,
-          }),
-        })
-        if (!res.ok) {
-          console.warn(`Verify failed for tramite ${tramite.id}:`, res.status)
-          continue
+    // Verificar pagos en paralelo (mucho más rápido)
+    const results = await Promise.allSettled(
+      conPago.map(async (tramite) => {
+        try {
+          const res = await fetch("/api/mercadopago/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tramiteId: tramite.id,
+              paymentId: tramite.pago?.paymentId || undefined,
+            }),
+          })
+          if (!res.ok) return { updated: false }
+          const data = await res.json()
+          return {
+            updated: data.updated && data.pagoEstado && data.pagoEstado !== tramite.pago?.estado
+          }
+        } catch {
+          return { updated: false }
         }
-        const data = await res.json()
-        // Solo contar como actualización si el estado de pago realmente cambió
-        if (data.updated && data.pagoEstado && data.pagoEstado !== tramite.pago?.estado) {
-          anyRealUpdate = true
-        }
-      } catch (err) {
-        console.warn("Error verificando pago para tramite", tramite.id, err)
-      }
-    }
+      })
+    )
+
+    // Verificar si alguno realmente se actualizó
+    const anyRealUpdate = results.some(
+      (r) => r.status === "fulfilled" && r.value.updated
+    )
 
     // Solo recargar si realmente cambió un estado de pago (ej. de pendiente a confirmado)
     if (anyRealUpdate) {
