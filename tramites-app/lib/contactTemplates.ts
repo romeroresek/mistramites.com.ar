@@ -12,7 +12,7 @@ export const templates = {
     id: "tramiteListo",
     nombre: "Trámite listo",
     mensaje: ({ nombre, tipo }: TemplateParams) =>
-      `Hola ${nombre}! Tu ${tipo} ya está lista para descargar. Ingresá a tu cuenta en mistramites.com.ar para obtenerla.`,
+      `Hola ${nombre}! Tu ${tipo} ya está lista para descargar. Ingresá a tu cuenta en tramitesmisiones.com.ar para obtenerla.`,
   },
   enProceso: {
     id: "enProceso",
@@ -30,7 +30,7 @@ export const templates = {
     id: "recordatorioPago",
     nombre: "Recordatorio de pago",
     mensaje: ({ nombre, tipo, monto, linkPago }: TemplateParams) =>
-      `Hola ${nombre}! Te recordamos que tu solicitud de ${tipo} tiene un pago pendiente de $${(monto || 0).toLocaleString("es-AR")}.${linkPago ? ` Podés pagarlo desde acá: ${linkPago}` : " Ingresá a mistramites.com.ar para completarlo."}`,
+      `Hola ${nombre}! Te recordamos que tu solicitud de ${tipo} tiene un pago pendiente de $${(monto || 0).toLocaleString("es-AR")}.${linkPago ? ` Podés pagarlo desde acá: ${linkPago}` : " Ingresá a tramitesmisiones.com.ar para completarlo."}`,
   },
   rechazo: {
     id: "rechazo",

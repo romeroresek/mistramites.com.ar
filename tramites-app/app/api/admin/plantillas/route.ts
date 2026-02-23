@@ -8,7 +8,7 @@ const plantillasDefecto = [
   {
     clave: "tramiteListo",
     nombre: "Trámite listo",
-    mensaje: "Hola {nombre}! Tu {tipo} ya está lista para descargar. Ingresá a tu cuenta en mistramites.com.ar para obtenerla.",
+    mensaje: "Hola {nombre}! Tu {tipo} ya está lista para descargar. Ingresá a tu cuenta en {linkSitio} para obtenerla.",
   },
   {
     clave: "enProceso",
@@ -34,6 +34,11 @@ const plantillasDefecto = [
     clave: "confirmacionRecepcion",
     nombre: "Confirmación de recepción",
     mensaje: "Hola {nombre}! Confirmamos que recibimos tu solicitud de {tipo}. Te notificaremos cuando tengamos novedades.",
+  },
+  {
+    clave: "consultarEstado",
+    nombre: "Consultar estado",
+    mensaje: "Hola {nombre}! Podés consultar el estado de tu trámite en cualquier momento ingresando a {linkSitio} con tu cuenta y yendo a la sección Mis Trámites: {linkMisTramites}",
   },
 ]
 
@@ -67,6 +72,20 @@ export async function GET(_req: NextRequest) {
       plantillas = await prisma.plantillaMensaje.findMany({
         orderBy: { createdAt: "asc" },
       })
+    } else {
+      // Agregar plantillas por defecto que falten
+      const clavesExistentes = plantillas.map(p => p.clave)
+      const plantillasFaltantes = plantillasDefecto.filter(
+        p => !clavesExistentes.includes(p.clave)
+      )
+      if (plantillasFaltantes.length > 0) {
+        await prisma.plantillaMensaje.createMany({
+          data: plantillasFaltantes,
+        })
+        plantillas = await prisma.plantillaMensaje.findMany({
+          orderBy: { createdAt: "asc" },
+        })
+      }
     }
 
     return NextResponse.json(plantillas)

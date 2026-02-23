@@ -246,6 +246,14 @@ export default function PlantillasPage() {
             <div><code className="bg-blue-100 px-1 rounded">{"{whatsapp}"}</code> — Número de WhatsApp</div>
             <div><code className="bg-blue-100 px-1 rounded">{"{fecha}"}</code> — Fecha del pedido</div>
           </div>
+          <h4 className="text-sm font-semibold text-blue-900 mt-4 mb-2">Links del sitio</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-blue-800">
+            <div><code className="bg-blue-100 px-1 rounded">{"{linkSitio}"}</code> — Link al sitio principal</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{linkMisTramites}"}</code> — Link a Mis Trámites</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{linkActas}"}</code> — Link a Actas y Partidas</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{linkApostilla}"}</code> — Link a Apostilla</div>
+            <div><code className="bg-blue-100 px-1 rounded">{"{linkInmuebles}"}</code> — Link a Informes de Inmuebles</div>
+          </div>
         </div>
 
         {/* Formulario de creación */}
@@ -273,7 +281,7 @@ export default function PlantillasPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Variables: {"{nombre}"}, {"{apellido}"}, {"{nombreCompleto}"}, {"{dni}"}, {"{sexo}"}, {"{fechaNacimiento}"}, {"{ciudadNacimiento}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{email}"}, {"{whatsapp}"}, {"{fecha}"}
+                  Variables: {"{nombre}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{linkSitio}"}, {"{linkMisTramites}"}, {"{linkActas}"}, {"{linkApostilla}"}, {"{linkInmuebles}"}
                 </p>
               </div>
               <div className="flex justify-end gap-2 pt-2">
