@@ -92,6 +92,7 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
   const [actionMenuId, setActionMenuId] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<"pendiente" | "en_proceso" | null>(null)
 
   const [editingObsId, setEditingObsId] = useState<string | null>(null)
   const [editingObsValue, setEditingObsValue] = useState("")
@@ -224,8 +225,17 @@ export default function AdminPage() {
   const getWhatsappNumber = (tramite: Tramite): string | null =>
     tramite.whatsapp || tramite.partida?.whatsapp || null
 
-  // Filtrar trámites por búsqueda
+  // Filtrar trámites por búsqueda y estado
   const filteredTramites = tramites.filter((tramite) => {
+    // Filtro por estado
+    if (filterStatus === "pendiente") {
+      // Pendientes con pago confirmado (listos para procesar)
+      if (!(tramite.estado === "pendiente" && tramite.pago?.estado === "confirmado")) return false
+    } else if (filterStatus === "en_proceso") {
+      if (tramite.estado !== "en_proceso") return false
+    }
+
+    // Filtro por búsqueda
     if (!searchTerm.trim()) return true
     const term = searchTerm.toLowerCase().trim()
     const searchFields = [
@@ -648,7 +658,7 @@ export default function AdminPage() {
               <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
             </Link>
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" />
+              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" style={{ maxWidth: 32, maxHeight: 32 }} priority />
               <span className="font-semibold text-gray-800 truncate">Trámites Misiones</span>
             </Link>
             <button
@@ -735,15 +745,28 @@ export default function AdminPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
-                <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+              <button
+                onClick={() => setFilterStatus(filterStatus === "pendiente" ? null : "pendiente")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                  filterStatus === "pendiente"
+                    ? "bg-yellow-500 text-white ring-2 ring-yellow-300"
+                    : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${filterStatus === "pendiente" ? "bg-white" : "bg-yellow-500"}`}></span>
                 Pendientes: {tramites.filter(t => t.estado === "pendiente" && t.pago?.estado === "confirmado").length}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              </button>
+              <button
+                onClick={() => setFilterStatus(filterStatus === "en_proceso" ? null : "en_proceso")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                  filterStatus === "en_proceso"
+                    ? "bg-blue-500 text-white ring-2 ring-blue-300"
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${filterStatus === "en_proceso" ? "bg-white" : "bg-blue-500"}`}></span>
                 En proceso: {tramites.filter(t => t.estado === "en_proceso").length}
-              </span>
-
+              </button>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1316,17 +1339,27 @@ export default function AdminPage() {
                   <div className="mb-3">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <label className="text-gray-500 text-sm">Plantilla</label>
-                      {selectedTemplate !== "_blank" && (
-                        <button
-                          type="button"
-                          onClick={iniciarEdicionPlantilla}
-                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
-                          title="Editar plantilla"
-                          aria-label="Editar plantilla"
+                      <div className="flex items-center gap-1">
+                        <Link
+                          href="/admin/plantillas"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-blue-600 hover:text-blue-700 rounded-lg hover:bg-blue-50"
+                          title="Agregar plantilla"
+                          aria-label="Agregar plantilla"
                         >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                      )}
+                          <PlusCircle className="w-4 h-4" />
+                        </Link>
+                        {selectedTemplate !== "_blank" && (
+                          <button
+                            type="button"
+                            onClick={iniciarEdicionPlantilla}
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                            title="Editar plantilla"
+                            aria-label="Editar plantilla"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <select
                       value={selectedTemplate}

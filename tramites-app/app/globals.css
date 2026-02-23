@@ -8,6 +8,18 @@
   box-sizing: border-box;
 }
 
+/* Fallback para imágenes cuando JS no carga - previene expansión */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Restricción específica para iconos del navbar */
+nav img {
+  max-width: 48px;
+  max-height: 48px;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }

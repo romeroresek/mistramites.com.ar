@@ -62,7 +62,7 @@ function LoginContent() {
         {/* Logo */}
         <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Image src="/icon-192x192.png" alt="Trámites Misiones" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" />
+            <Image src="/icon-192x192.png" alt="Trámites Misiones" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" style={{ maxWidth: 40, maxHeight: 40 }} priority />
             <span className="text-xl sm:text-2xl font-semibold text-gray-800">Trámites Misiones</span>
           </Link>
         </div>

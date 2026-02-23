@@ -52,6 +52,12 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* CSS crítico inline - fallback cuando JS/CSS no cargan */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          img { max-width: 100%; height: auto; }
+          nav img { max-width: 48px; max-height: 48px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; }
+        ` }} />
       </head>
       <body className="bg-gray-50">
         <Providers>

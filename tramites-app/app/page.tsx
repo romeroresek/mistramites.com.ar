@@ -38,6 +38,7 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
                 height={48}
                 sizes="48px"
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded flex-shrink-0"
+                style={{ maxWidth: 48, maxHeight: 48 }}
               />
               <div>
                 <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitar Actas y Partidas</h2>
@@ -81,6 +82,7 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
                 height={48}
                 sizes="48px"
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded flex-shrink-0"
+                style={{ maxWidth: 48, maxHeight: 48 }}
               />
               <div>
                 <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Solicitud de Apostilla</h2>
@@ -123,6 +125,7 @@ export default async function LandingPage({ searchParams }: { searchParams?: Pro
                 height={48}
                 sizes="48px"
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded flex-shrink-0"
+                style={{ maxWidth: 48, maxHeight: 48 }}
               />
               <div>
                 <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Informes de Inmuebles</h2>

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Plus } from "lucide-react"
 
 interface Plantilla {
   id: string
@@ -26,6 +26,8 @@ export default function PlantillasPage() {
   const [editForm, setEditForm] = useState({ nombre: "", mensaje: "" })
   const [saving, setSaving] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [creando, setCreando] = useState(false)
+  const [newForm, setNewForm] = useState({ nombre: "", mensaje: "" })
 
   const fetchPlantillas = async () => {
     try {
@@ -80,6 +82,40 @@ export default function PlantillasPage() {
     }
   }
 
+  const handleCreate = async () => {
+    if (!newForm.nombre.trim() || !newForm.mensaje.trim()) {
+      toast.showError("Nombre y mensaje son requeridos")
+      return
+    }
+
+    setSaving(true)
+    try {
+      const res = await fetch("/api/admin/plantillas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newForm),
+      })
+
+      if (!res.ok) throw new Error("Error")
+
+      const nueva = await res.json()
+      setPlantillas([...plantillas, nueva])
+      setCreando(false)
+      setNewForm({ nombre: "", mensaje: "" })
+      toast.showSuccess("Plantilla creada")
+    } catch (error) {
+      console.error(error)
+      toast.showError("Error al crear plantilla")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancelCreate = () => {
+    setCreando(false)
+    setNewForm({ nombre: "", mensaje: "" })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -102,7 +138,7 @@ export default function PlantillasPage() {
               <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
             </Link>
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" />
+              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" style={{ maxWidth: 32, maxHeight: 32 }} priority />
               <span className="font-semibold text-gray-800 truncate">Trámites Misiones</span>
             </Link>
             <button
@@ -179,7 +215,16 @@ export default function PlantillasPage() {
 
       {/* Main */}
       <main className="w-full max-w-4xl mx-auto px-5 sm:px-6 py-5 sm:py-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <h1 className="text-lg sm:text-2xl font-semibold text-gray-900 mb-2">Plantillas de Mensajes</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Plantillas de Mensajes</h1>
+          <button
+            onClick={() => setCreando(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva
+          </button>
+        </div>
         <p className="text-gray-600 text-sm mb-4">
           Editá las plantillas de mensajes para WhatsApp. Usá las variables entre llaves para personalizar cada mensaje.
         </p>
@@ -202,6 +247,54 @@ export default function PlantillasPage() {
             <div><code className="bg-blue-100 px-1 rounded">{"{fecha}"}</code> — Fecha del pedido</div>
           </div>
         </div>
+
+        {/* Formulario de creación */}
+        {creando && (
+          <div className="bg-white border-2 border-blue-500 rounded p-4 mb-4">
+            <h3 className="font-medium text-gray-900 mb-3">Nueva Plantilla</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={newForm.nombre}
+                  onChange={(e) => setNewForm({ ...newForm, nombre: e.target.value })}
+                  placeholder="Ej: Confirmación de envío"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mensaje</label>
+                <textarea
+                  value={newForm.mensaje}
+                  onChange={(e) => setNewForm({ ...newForm, mensaje: e.target.value })}
+                  rows={4}
+                  placeholder="Hola {nombre}! Tu trámite..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Variables: {"{nombre}"}, {"{apellido}"}, {"{nombreCompleto}"}, {"{dni}"}, {"{sexo}"}, {"{fechaNacimiento}"}, {"{ciudadNacimiento}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{email}"}, {"{whatsapp}"}, {"{fecha}"}
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={handleCancelCreate}
+                  disabled={saving}
+                  className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCreate}
+                  disabled={saving}
+                  className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {saving ? "Creando..." : "Crear Plantilla"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           {plantillas.map((plantilla) => (

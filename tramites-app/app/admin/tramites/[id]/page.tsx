@@ -456,7 +456,7 @@ export default function AdminTramiteDetalle() {
               <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
             </Link>
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 justify-center">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" />
+              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8 shrink-0" style={{ maxWidth: 32, maxHeight: 32 }} priority />
               <span className="font-semibold text-gray-800 truncate">Trámites Misiones</span>
             </Link>
             <button

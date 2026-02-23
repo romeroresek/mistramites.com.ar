@@ -76,6 +76,49 @@ export async function GET(_req: NextRequest) {
   }
 }
 
+// POST: crear una nueva plantilla
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    })
+
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+    }
+
+    const body = await req.json()
+    const { nombre, mensaje, clave } = body
+
+    if (!nombre || !mensaje) {
+      return NextResponse.json({ error: "Nombre y mensaje son requeridos" }, { status: 400 })
+    }
+
+    // Generar clave única si no se proporciona
+    const claveNueva = clave || `custom_${Date.now()}`
+
+    const plantilla = await prisma.plantillaMensaje.create({
+      data: {
+        clave: claveNueva,
+        nombre,
+        mensaje,
+        activo: true,
+      },
+    })
+
+    return NextResponse.json(plantilla)
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: "Error al crear plantilla" }, { status: 500 })
+  }
+}
+
 // PUT: actualizar una plantilla
 export async function PUT(req: NextRequest) {
   try {

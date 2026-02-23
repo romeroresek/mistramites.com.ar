@@ -14,7 +14,7 @@ export default function LandingContent() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="flex h-14 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" />
+              <Image src="/icon-192x192.png" alt="Trámites Misiones" width={32} height={32} className="w-8 h-8" style={{ maxWidth: 32, maxHeight: 32 }} priority />
               <span className="font-semibold text-gray-800 hidden sm:inline">Trámites Misiones</span>
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">

@@ -26,7 +26,15 @@
       "Bash(node:*)",
       "Bash(npx:*)",
       "Bash(npm ls:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(ls -la \"d:\"\" 2>/dev/null || dir \"d:\"\")",
+      "Bash(dir:*)",
+      "Skill(commit-commands:commit-push-pr)",
+      "Skill(commit-commands:commit-push-pr:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rm:*)",
+      "Bash(cmd.exe /c:*)",
+      "Bash(powershell.exe -Command \"gh --version\")"
     ]
   }
 }

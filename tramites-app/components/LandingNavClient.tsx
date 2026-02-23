@@ -23,6 +23,8 @@ export function LandingNavClient() {
                 width={32}
                 height={32}
                 className="w-8 h-8"
+                style={{ maxWidth: 32, maxHeight: 32 }}
+                priority
               />
               <span className="font-semibold text-gray-800" suppressHydrationWarning>Trámites Misiones</span>
             </Link>
