@@ -759,25 +759,25 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setFilterStatus(filterStatus === "pendiente" ? null : "pendiente")}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 min-h-[36px] text-xs font-medium rounded-full transition-all select-none touch-manipulation active:scale-95 ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] text-sm font-medium rounded-full border transition-all select-none cursor-pointer touch-manipulation active:scale-95 ${
                   filterStatus === "pendiente"
-                    ? "bg-yellow-500 text-white ring-2 ring-yellow-300"
-                    : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 active:bg-yellow-300"
+                    ? "bg-yellow-500 text-white border-yellow-600 ring-2 ring-yellow-300 shadow-sm"
+                    : "bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200 active:bg-yellow-300 shadow-sm"
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${filterStatus === "pendiente" ? "bg-white" : "bg-yellow-500"}`}></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${filterStatus === "pendiente" ? "bg-white" : "bg-yellow-500"}`}></span>
                 Pendientes: {tramites.filter(t => t.estado === "pendiente" && t.pago?.estado === "confirmado").length}
               </button>
               <button
                 type="button"
                 onClick={() => setFilterStatus(filterStatus === "en_proceso" ? null : "en_proceso")}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 min-h-[36px] text-xs font-medium rounded-full transition-all select-none touch-manipulation active:scale-95 ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] text-sm font-medium rounded-full border transition-all select-none cursor-pointer touch-manipulation active:scale-95 ${
                   filterStatus === "en_proceso"
-                    ? "bg-blue-500 text-white ring-2 ring-blue-300"
-                    : "bg-blue-100 text-blue-700 hover:bg-blue-200 active:bg-blue-300"
+                    ? "bg-blue-500 text-white border-blue-600 ring-2 ring-blue-300 shadow-sm"
+                    : "bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200 active:bg-blue-300 shadow-sm"
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${filterStatus === "en_proceso" ? "bg-white" : "bg-blue-500"}`}></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${filterStatus === "en_proceso" ? "bg-white" : "bg-blue-500"}`}></span>
                 En proceso: {tramites.filter(t => t.estado === "en_proceso").length}
               </button>
             </div>
