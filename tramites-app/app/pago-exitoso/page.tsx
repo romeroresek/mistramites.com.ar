@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { PageNavbar } from "@/components/PageNavbar"
 import { Suspense } from "react"
+import { XCircle, AlertCircle, CheckCircle2 } from "lucide-react"
 
 function PagoExitosoContent() {
   const { data: session, status } = useSession()
@@ -26,11 +27,7 @@ function PagoExitosoContent() {
           {isFailure ? (
             <>
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="15" y1="9" x2="9" y2="15"/>
-                  <line x1="9" y1="9" x2="15" y2="15"/>
-                </svg>
+                <XCircle className="w-8 h-8 text-red-600" />
               </div>
               <h1 className="text-xl font-semibold text-gray-900 mb-2">Pago no completado</h1>
               <p className="text-gray-600 mb-6">
@@ -40,11 +37,7 @@ function PagoExitosoContent() {
           ) : isPending ? (
             <>
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
+                <AlertCircle className="w-8 h-8 text-yellow-600" />
               </div>
               <h1 className="text-xl font-semibold text-gray-900 mb-2">Pago pendiente</h1>
               <p className="text-gray-600 mb-6">
@@ -54,10 +47,7 @@ function PagoExitosoContent() {
           ) : (
             <>
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
+                <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
               <h1 className="text-xl font-semibold text-gray-900 mb-2">¡Trámite registrado!</h1>
               <p className="text-gray-600 mb-6">

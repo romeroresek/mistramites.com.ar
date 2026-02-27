@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Search, ChevronLeft, ChevronRight, Filter, X, RefreshCw, Calendar } from "lucide-react"
+import { ArrowLeft, Search, ChevronLeft, ChevronRight, Filter, X, RefreshCw, Calendar, Menu } from "lucide-react"
 
 interface Log {
   id: string
@@ -204,9 +204,7 @@ export default function LogsPage() {
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded -m-1"
               aria-label="Abrir menú"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Undo2 } from "lucide-react"
+import { ArrowLeft, Undo2, Menu, X, ChevronDown, CheckCircle2, AlertCircle, FileText, Upload, Pencil, Check, Copy, CreditCard, Loader2 } from "lucide-react"
 
 interface Tramite {
   id: string
@@ -464,9 +464,7 @@ export default function AdminTramiteDetalle() {
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded -m-1"
               aria-label="Abrir menú"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -492,9 +490,7 @@ export default function AdminTramiteDetalle() {
             className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
             aria-label="Cerrar menú"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
         <div className="p-2 flex flex-col gap-1">
@@ -599,9 +595,7 @@ export default function AdminTramiteDetalle() {
                     }`}
                 >
                   {tramite.pago?.estado === "confirmado" ? "Pagado" : tramite.pago?.estado === "devuelto" ? "Devuelto" : "Pendiente"}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
+                  <ChevronDown className="w-3 h-3" />
                 </button>
                 {showPagoDropdown && (
                   <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 min-w-[140px]">
@@ -651,10 +645,7 @@ export default function AdminTramiteDetalle() {
           {tramite.partida?.apostillado && (
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-indigo-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
+                <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
                 <span className="text-sm font-medium text-indigo-700">Apostillado de La Haya solicitado</span>
               </div>
             </div>
@@ -665,11 +656,7 @@ export default function AdminTramiteDetalle() {
         {tieneLinkPago && linkPagoMostrar && (
           <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
             <h3 className="text-base font-semibold text-yellow-900 mb-3 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+              <AlertCircle className="w-5 h-5" />
               Pago Pendiente
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -700,10 +687,7 @@ export default function AdminTramiteDetalle() {
         {tramite.pago?.paymentId && (
           <div className={`rounded p-4 border ${tramite.pago?.estado === "devuelto" ? "bg-gray-100 border-gray-300" : "bg-blue-50 border-blue-200"}`}>
             <h3 className={`text-base font-semibold mb-3 flex items-center gap-2 ${tramite.pago?.estado === "devuelto" ? "text-gray-700" : "text-blue-900"}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                <line x1="1" y1="10" x2="23" y2="10" />
-              </svg>
+              <CreditCard className="w-5 h-5" />
               Detalles de MercadoPago{tramite.pago?.estado === "devuelto" && <span className="text-gray-500 font-normal text-sm">(devuelto)</span>}
               {tramite.pago?.estado === "confirmado" && (
                 <button
@@ -795,9 +779,7 @@ export default function AdminTramiteDetalle() {
           {tramite.archivoUrl ? (
             <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
               <div className="flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z" />
-                </svg>
+                <FileText className="w-8 h-8 text-red-600" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Archivo adjunto</p>
                   <p className="text-xs text-gray-500">PDF disponible para descarga</p>
@@ -823,11 +805,7 @@ export default function AdminTramiteDetalle() {
             </div>
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded p-6 text-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mx-auto text-gray-400 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
+              <Upload className="w-10 h-10 mx-auto text-gray-400 mb-3" />
               <p className="text-sm text-gray-600 mb-3">
                 {uploading ? "Subiendo archivo..." : "Subir archivo PDF para el usuario"}
               </p>
@@ -859,10 +837,7 @@ export default function AdminTramiteDetalle() {
                   className="text-blue-600 hover:text-blue-800"
                   title="Editar"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
+                  <Pencil className="w-5 h-5" />
                 </button>
               )}
             </div>
@@ -1038,10 +1013,7 @@ export default function AdminTramiteDetalle() {
                 className="text-blue-600 hover:text-blue-800"
                 title="Editar"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
+                <Pencil className="w-5 h-5" />
               </button>
             )}
           </div>
@@ -1104,14 +1076,9 @@ export default function AdminTramiteDetalle() {
                       title="Copiar email"
                     >
                       {copiedEmail ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <Check className="w-4 h-4 text-green-600" />
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
+                        <Copy className="w-4 h-4" />
                       )}
                     </button>
                   )}
@@ -1214,10 +1181,7 @@ export default function AdminTramiteDetalle() {
               >
                 {refunding ? (
                   <>
-                    <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
+                    <Loader2 className="animate-spin w-4 h-4" />
                     Procesando...
                   </>
                 ) : "Devolver pago"}

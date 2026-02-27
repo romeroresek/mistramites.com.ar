@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
+import { X } from "lucide-react"
 
 function FailureContent() {
   const searchParams = useSearchParams()
@@ -14,10 +15,7 @@ function FailureContent() {
         <div className="bg-white border border-gray-200 rounded text-center">
           <div className="p-6 border-b border-gray-200 bg-red-50">
             <div className="mx-auto w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <X className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Pago Rechazado</h1>
             <p className="text-gray-600 text-sm">No pudimos procesar tu pago</p>

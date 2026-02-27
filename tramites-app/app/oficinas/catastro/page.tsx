@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { useToast } from "@/components/Toast"
 import { PageNavbar } from "@/components/PageNavbar"
+import { ChevronDown } from "lucide-react"
 
 const DEPARTAMENTOS = [
   "Posadas",
@@ -268,9 +269,7 @@ function CatastroContent() {
                     className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white text-left flex justify-between items-center"
                   >
                     <span>{lugar}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-gray-400 transition-transform ${showLugares ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="6 9 12 15 18 9"/>
-                    </svg>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showLugares ? "rotate-180" : ""}`} />
                   </button>
 
                   {showLugares && (

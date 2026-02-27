@@ -7,7 +7,7 @@ import { useEffect, useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Menu, X, CreditCard, Download } from "lucide-react"
 
 interface Tramite {
   id: string
@@ -190,9 +190,7 @@ function MisTramitesContent() {
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded -m-1"
               aria-label="Abrir menú"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -219,9 +217,7 @@ function MisTramitesContent() {
             className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded -m-1"
             aria-label="Cerrar menú"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
         <div className="p-2 flex flex-col gap-1">
@@ -313,10 +309,7 @@ function MisTramitesContent() {
                           "Procesando..."
                         ) : (
                           <>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                              <line x1="1" y1="10" x2="23" y2="10"/>
-                            </svg>
+                            <CreditCard className="w-4 h-4" />
                             Pagar ${tramite.monto.toLocaleString("es-AR")}
                           </>
                         )}
@@ -331,11 +324,7 @@ function MisTramitesContent() {
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 active:bg-green-800"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                          <polyline points="7 10 12 15 17 10"/>
-                          <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
+                        <Download className="w-4 h-4" />
                         Descargar PDF
                       </a>
                     </div>
@@ -401,11 +390,7 @@ function MisTramitesContent() {
                               rel="noopener noreferrer"
                               className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                              </svg>
+                              <Download className="w-3 h-3" />
                               PDF
                             </a>
                           )}

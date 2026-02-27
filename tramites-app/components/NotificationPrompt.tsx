@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Bell, X } from "lucide-react"
 import { usePushNotifications } from "@/hooks/usePushNotifications"
 
 function getDismissedInitial(): boolean {
@@ -43,17 +44,7 @@ export function NotificationPrompt() {
     <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-6 h-6 text-blue-600"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
+          <Bell className="w-6 h-6 text-blue-600" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-gray-900">
@@ -82,16 +73,7 @@ export function NotificationPrompt() {
           onClick={handleDismiss}
           className="flex-shrink-0 text-gray-400 hover:text-gray-600"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>

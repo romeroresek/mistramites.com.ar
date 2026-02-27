@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { PageNavbar } from "@/components/PageNavbar"
+import { X, CreditCard } from "lucide-react"
 
 export default function PagoPage() {
   const { status } = useSession()
@@ -60,10 +61,7 @@ export default function PagoPage() {
           <div className="bg-white border border-gray-200 rounded text-center">
             <div className="p-6 border-b border-gray-200 bg-red-50">
               <div className="mx-auto w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <X className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-xl font-semibold text-gray-900">Error</h1>
             </div>
@@ -92,10 +90,7 @@ export default function PagoPage() {
         <div className="bg-white border border-gray-200 rounded text-center">
           <div className="p-6 border-b border-gray-200 bg-blue-50">
             <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                <line x1="1" y1="10" x2="23" y2="10" />
-              </svg>
+              <CreditCard className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Completar Pago</h1>
           </div>

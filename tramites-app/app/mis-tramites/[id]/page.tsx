@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
+import { Menu, X, FileText, Download } from "lucide-react"
 
 interface Tramite {
   id: string
@@ -171,9 +172,7 @@ export default function TramiteDetalle() {
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
               aria-label="Abrir menú"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -200,9 +199,7 @@ export default function TramiteDetalle() {
             className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
             aria-label="Cerrar menú"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
         <div className="p-2 flex flex-col gap-1">
@@ -313,9 +310,7 @@ export default function TramiteDetalle() {
               <div className="pt-4 border-t border-gray-200 mt-4">
                 <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
                   <div className="flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1z"/>
-                    </svg>
+                    <FileText className="w-8 h-8 text-red-600" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Documento disponible</p>
                       <p className="text-xs text-gray-500">Tu trámite está listo para descargar</p>
@@ -328,11 +323,7 @@ export default function TramiteDetalle() {
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 flex items-center gap-2"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                      </svg>
+                      <Download className="w-4 h-4" />
                       Descargar
                     </a>
                   ) : (
@@ -340,11 +331,7 @@ export default function TramiteDetalle() {
                       className="px-4 py-2 bg-gray-300 text-gray-500 text-sm rounded cursor-not-allowed flex items-center gap-2"
                       title="Debés pagar el trámite para descargar el documento"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                      </svg>
+                      <Download className="w-4 h-4" />
                       Descargar
                     </span>
                   )}

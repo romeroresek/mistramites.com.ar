@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
+import { Check } from "lucide-react"
 
 function SuccessContent() {
   const searchParams = useSearchParams()
@@ -14,9 +15,7 @@ function SuccessContent() {
         <div className="bg-white border border-gray-200 rounded text-center">
           <div className="p-6 border-b border-gray-200 bg-green-50">
             <div className="mx-auto w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+              <Check className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Pago Exitoso</h1>
             <p className="text-gray-600 text-sm">Tu transacción se completó correctamente</p>

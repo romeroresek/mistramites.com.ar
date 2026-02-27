@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
+import { Clock } from "lucide-react"
 
 function PendingContent() {
   const searchParams = useSearchParams()
@@ -14,10 +15,7 @@ function PendingContent() {
         <div className="bg-white border border-gray-200 rounded text-center">
           <div className="p-6 border-b border-gray-200 bg-yellow-50">
             <div className="mx-auto w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
+              <Clock className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Pago Pendiente</h1>
             <p className="text-gray-600 text-sm">Tu pago está siendo procesado</p>
