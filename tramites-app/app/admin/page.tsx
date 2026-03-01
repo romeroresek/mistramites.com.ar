@@ -60,6 +60,17 @@ interface Tramite {
   }
 }
 
+const normalizeEstado = (estado: string | null | undefined): string =>
+  (estado ?? "").trim().toLowerCase().replace(/\s+/g, "_")
+
+const isPendienteParaProcesar = (tramite: Tramite): boolean =>
+  normalizeEstado(tramite.estado) === "pendiente" && tramite.pago?.estado === "confirmado"
+
+const isEnProceso = (tramite: Tramite): boolean => {
+  const normalizedEstado = normalizeEstado(tramite.estado)
+  return normalizedEstado === "en_proceso" || normalizedEstado === "en_curso"
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -241,9 +252,9 @@ export default function AdminPage() {
     // Filtro por estado
     if (filterStatus === "pendiente") {
       // Pendientes con pago confirmado (listos para procesar)
-      if (!(tramite.estado === "pendiente" && tramite.pago?.estado === "confirmado")) return false
+      if (!isPendienteParaProcesar(tramite)) return false
     } else if (filterStatus === "en_proceso") {
-      if (tramite.estado !== "en_proceso") return false
+      if (!isEnProceso(tramite)) return false
     }
 
     // Filtro por búsqueda
@@ -693,7 +704,7 @@ export default function AdminPage() {
 
       {/* Sidebar Menu */}
       <div
-        className={`fixed top-0 right-0 h-auto max-h-[90vh] w-56 bg-white shadow-lg border border-gray-200 rounded-bl-lg z-50 transform transition-transform duration-200 ease-out ${menuOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-auto max-h-[90vh] w-56 bg-white shadow-lg border border-gray-200 rounded-bl-lg z-50 transform transition-transform duration-200 ease-out ${menuOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
           }`}
       >
         <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
@@ -751,7 +762,7 @@ export default function AdminPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Panel de Administrador</h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative z-10">
               <button
                 type="button"
                 onClick={() => setFilterStatus(filterStatus === "pendiente" ? null : "pendiente")}
@@ -762,7 +773,7 @@ export default function AdminPage() {
                 }`}
               >
                 <span className={`w-2.5 h-2.5 rounded-full ${filterStatus === "pendiente" ? "bg-white" : "bg-yellow-500"}`}></span>
-                Pendientes: {tramites.filter(t => t.estado === "pendiente" && t.pago?.estado === "confirmado").length}
+                Pendientes: {tramites.filter((t) => isPendienteParaProcesar(t)).length}
               </button>
               <button
                 type="button"
@@ -774,7 +785,7 @@ export default function AdminPage() {
                 }`}
               >
                 <span className={`w-2.5 h-2.5 rounded-full ${filterStatus === "en_proceso" ? "bg-white" : "bg-blue-500"}`}></span>
-                En proceso: {tramites.filter(t => t.estado === "en_proceso").length}
+                En curso: {tramites.filter((t) => isEnProceso(t)).length}
               </button>
             </div>
           </div>
