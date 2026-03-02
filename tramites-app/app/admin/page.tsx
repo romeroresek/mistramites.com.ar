@@ -17,6 +17,15 @@ import {
   DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 interface Plantilla {
   id: string
@@ -88,6 +97,15 @@ export default function AdminPage() {
   const [editMensaje, setEditMensaje] = useState("")
   const [savingPlantilla, setSavingPlantilla] = useState(false)
   const [whatsappLinkPago, setWhatsappLinkPago] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(true)
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)")
+    setIsMobile(!mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(!e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [])
+
   const [creadoContactoTramiteId, setCreadoContactoTramiteId] = useState<string | null>(null)
   const [creadoContactoForm, setCreadoContactoForm] = useState({ email: "", whatsapp: "" })
   const [creadoContactoLoading, setCreadoContactoLoading] = useState(false)
@@ -1436,76 +1454,148 @@ export default function AdminPage() {
         </DrawerContent>
       </Drawer>
 
-      {/* Drawer: completar email del cliente al volver de crear trámite */}
-      <Drawer open={!!creadoContactoTramiteId} onOpenChange={(open) => { if (!open) cerrarCreadoContacto() }}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Datos del cliente</DrawerTitle>
-            <DrawerDescription>
-              Completá el email del cliente para que pueda iniciar sesión. El link de pago podés copiarlo abajo y enviarlo por el medio que prefieras.
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="px-4">
-            {creadoContactoLoading ? (
-              <p className="text-sm text-gray-500 py-4">Cargando...</p>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="creado-email" className="text-gray-700 text-sm block mb-1">Email del cliente</label>
-                  <input
-                    id="creado-email"
-                    type="email"
-                    value={creadoContactoForm.email}
-                    onChange={(e) => {
-                      creadoContactoFormEditado.current = true
-                      setCreadoContactoForm((f) => ({ ...f, email: e.target.value }))
-                    }}
-                    placeholder="cliente@ejemplo.com"
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
-                  />
-                </div>
-                {creadoPaymentLink && (
+      {/* Datos del cliente: Dialog en desktop, Drawer en mobile */}
+      {isMobile ? (
+        <Drawer open={!!creadoContactoTramiteId} onOpenChange={(open) => { if (!open) cerrarCreadoContacto() }}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Datos del cliente</DrawerTitle>
+              <DrawerDescription>
+                Completá el email del cliente para que pueda iniciar sesión. El link de pago podés copiarlo abajo y enviarlo por el medio que prefieras.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4">
+              {creadoContactoLoading ? (
+                <p className="text-sm text-gray-500 py-4">Cargando...</p>
+              ) : (
+                <div className="space-y-4">
                   <div>
-                    <label className="text-gray-700 text-sm block mb-1">Link de pago (MercadoPago)</label>
-                    <div className="flex gap-2">
-                      <input
-                        readOnly
-                        value={creadoPaymentLink}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 truncate"
-                        title={creadoPaymentLink}
-                      />
-                      <button
-                        type="button"
-                        onClick={copiarLinkPago}
-                        className="min-h-[44px] px-3 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 shrink-0"
-                      >
-                        {copiedLink ? "Copiado" : "Copiar"}
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Enviá este link al cliente por WhatsApp para que pueda pagar.</p>
+                    <label htmlFor="creado-email-m" className="text-gray-700 text-sm block mb-1">Email del cliente</label>
+                    <input
+                      id="creado-email-m"
+                      type="email"
+                      value={creadoContactoForm.email}
+                      onChange={(e) => {
+                        creadoContactoFormEditado.current = true
+                        setCreadoContactoForm((f) => ({ ...f, email: e.target.value }))
+                      }}
+                      placeholder="cliente@ejemplo.com"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
+                    />
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-          <DrawerFooter>
-            <button
-              onClick={guardarCreadoContacto}
-              disabled={creadoContactoLoading || creadoContactoSaving}
-              className="min-h-[44px] px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {creadoContactoSaving ? "Guardando..." : "Guardar y cerrar"}
-            </button>
-            <button
-              onClick={cerrarCreadoContacto}
-              disabled={creadoContactoSaving}
-              className="min-h-[44px] px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Cerrar
-            </button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+                  {creadoPaymentLink && (
+                    <div>
+                      <label className="text-gray-700 text-sm block mb-1">Link de pago (MercadoPago)</label>
+                      <div className="flex gap-2">
+                        <input
+                          readOnly
+                          value={creadoPaymentLink}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 truncate"
+                          title={creadoPaymentLink}
+                        />
+                        <button
+                          type="button"
+                          onClick={copiarLinkPago}
+                          className="min-h-[44px] px-3 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 shrink-0"
+                        >
+                          {copiedLink ? "Copiado" : "Copiar"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Enviá este link al cliente por WhatsApp para que pueda pagar.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <DrawerFooter>
+              <button
+                onClick={guardarCreadoContacto}
+                disabled={creadoContactoLoading || creadoContactoSaving}
+                className="min-h-[44px] px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {creadoContactoSaving ? "Guardando..." : "Guardar y cerrar"}
+              </button>
+              <button
+                onClick={cerrarCreadoContacto}
+                disabled={creadoContactoSaving}
+                className="min-h-[44px] px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cerrar
+              </button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={!!creadoContactoTramiteId} onOpenChange={(open) => { if (!open) cerrarCreadoContacto() }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Datos del cliente</DialogTitle>
+              <DialogDescription>
+                Completá el email del cliente para que pueda iniciar sesión. El link de pago podés copiarlo abajo y enviarlo por el medio que prefieras.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              {creadoContactoLoading ? (
+                <p className="text-sm text-gray-500 py-4">Cargando...</p>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="creado-email-d" className="text-gray-700 text-sm block mb-1">Email del cliente</label>
+                    <input
+                      id="creado-email-d"
+                      type="email"
+                      value={creadoContactoForm.email}
+                      onChange={(e) => {
+                        creadoContactoFormEditado.current = true
+                        setCreadoContactoForm((f) => ({ ...f, email: e.target.value }))
+                      }}
+                      placeholder="cliente@ejemplo.com"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  {creadoPaymentLink && (
+                    <div>
+                      <label className="text-gray-700 text-sm block mb-1">Link de pago (MercadoPago)</label>
+                      <div className="flex gap-2">
+                        <input
+                          readOnly
+                          value={creadoPaymentLink}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 truncate"
+                          title={creadoPaymentLink}
+                        />
+                        <button
+                          type="button"
+                          onClick={copiarLinkPago}
+                          className="min-h-[44px] px-3 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 shrink-0"
+                        >
+                          {copiedLink ? "Copiado" : "Copiar"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Enviá este link al cliente por WhatsApp para que pueda pagar.</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <button
+                onClick={cerrarCreadoContacto}
+                disabled={creadoContactoSaving}
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={guardarCreadoContacto}
+                disabled={creadoContactoLoading || creadoContactoSaving}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 order-1 sm:order-2"
+              >
+                {creadoContactoSaving ? "Guardando..." : "Guardar y cerrar"}
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Drawer de carga de documentos */}
       <Drawer open={!!uploadTramite} onOpenChange={(open) => { if (!open) setUploadTramite(null) }}>
@@ -1552,32 +1642,32 @@ export default function AdminPage() {
       </Drawer>
 
       {/* Modal de confirmación de eliminación */}
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Confirmar eliminación</h3>
-            <p className="text-sm text-gray-600 mb-6">
+      <Dialog open={!!deleteId} onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar eliminación</DialogTitle>
+            <DialogDescription>
               ¿Estás seguro de que deseas eliminar este trámite? Esta acción no se puede deshacer.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                disabled={deleting}
-                className="min-h-[44px] inline-flex items-center px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="min-h-[44px] inline-flex items-center px-4 py-3 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 active:bg-red-800 disabled:opacity-50"
-              >
-                {deleting ? "Eliminando..." : "Eliminar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteId(null)}
+              disabled={deleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

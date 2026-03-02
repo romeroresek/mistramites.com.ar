@@ -35,7 +35,10 @@
       "Bash(git rm:*)",
       "Bash(cmd.exe /c:*)",
       "Bash(powershell.exe -Command \"gh --version\")",
-      "Bash(git diff HEAD~5..HEAD -- \"*.css\" app/providers.* app/layout.*)"
+      "Bash(git diff HEAD~5..HEAD -- \"*.css\" app/providers.* app/layout.*)",
+      "Bash(xargs grep -l \"useIsMobile\\\\|useMediaQuery\")",
+      "Bash(xargs grep -l \"apostilla\\\\|Apostilla\")",
+      "Bash(xargs grep -l \"supabase\\\\|upload\\\\|storage\")"
     ]
   }
 }

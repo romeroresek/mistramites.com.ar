@@ -14,9 +14,6 @@ const ALLOWED_TYPES = [
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user?.email) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
 
     const formData = await request.formData()
     const file = formData.get("file") as File
@@ -30,12 +27,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "tramiteId requerido" }, { status: 400 })
     }
 
-    // Verificar que el trámite pertenece al usuario
+    // Verificar que el trámite existe y pertenece al usuario (logueado o invitado)
     const tramite = await prisma.tramite.findFirst({
-      where: {
-        id: tramiteId,
-        user: { email: session.user.email },
-      },
+      where: session?.user?.email
+        ? { id: tramiteId, user: { email: session.user.email } }
+        : { id: tramiteId, userId: null }, // invitado: tramite sin usuario registrado
     })
 
     if (!tramite) {
@@ -66,13 +62,9 @@ export async function POST(request: NextRequest) {
       .from("documentos")
       .getPublicUrl(fileName)
 
-    // Guardar URL del documento adjunto en la descripción del trámite
-    const descripcionActual = tramite.descripcion || ""
-    const nuevaDescripcion = `${descripcionActual}\nDocumento adjunto: ${urlData.publicUrl}`
-
     await prisma.tramite.update({
       where: { id: tramiteId },
-      data: { descripcion: nuevaDescripcion.trim() },
+      data: { archivoUrl: urlData.publicUrl },
     })
 
     return NextResponse.json({
