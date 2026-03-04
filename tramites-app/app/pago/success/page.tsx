@@ -30,7 +30,7 @@ function SuccessContent() {
             )}
 
             <p className="text-gray-600 text-sm mb-6">
-              Recibirás un correo de confirmación con los detalles de tu trámite.
+              Recibirás un correo de confirmación con los detalles de tu trámite cuando esté completado.
             </p>
 
             <div className="space-y-2">
