@@ -93,10 +93,12 @@ export async function PUT(
       if (whatsapp !== undefined) tramiteData.whatsapp = whatsapp
       if (observaciones !== undefined) tramiteData.observaciones = observaciones
 
-      await tx.tramite.update({
-        where: { id },
-        data: tramiteData,
-      })
+      if (Object.keys(tramiteData).length > 0) {
+        await tx.tramite.update({
+          where: { id },
+          data: tramiteData,
+        })
+      }
 
       // Actualizar estado de pago si se proporciona
       if (pagoEstado) {
