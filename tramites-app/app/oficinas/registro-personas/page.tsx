@@ -99,7 +99,6 @@ function RegistroPersonasContent() {
   const [fechaMatrimonio, setFechaMatrimonio] = useState("")
   const [ciudadMatrimonio, setCiudadMatrimonio] = useState("")
   const [divorciados, setDivorciados] = useState(false)
-  const [apostillado, setApostillado] = useState(false)
 
   const isLoggedIn = status === "authenticated" && session?.user?.email
 
@@ -108,7 +107,7 @@ function RegistroPersonasContent() {
     setFechaNacimiento(""); setCiudadNacimiento(""); setFechaDefuncion("")
     setDni2(""); setSexo2(""); setNombreCompleto2("")
     setFechaNacimiento2(""); setFechaMatrimonio(""); setCiudadMatrimonio("")
-    setDivorciados(false); setApostillado(false); setCodigoPais("+54"); setCustomCodigoPais(""); setWhatsapp(""); setEmail("")
+    setDivorciados(false); setCodigoPais("+54"); setCustomCodigoPais(""); setWhatsapp(""); setEmail("")
   }
 
   // Función para separar apellido y nombre
@@ -141,7 +140,6 @@ function RegistroPersonasContent() {
         dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
         whatsapp: `${prefijo}${whatsapp.replace(/\D/g, "")}`,
         email: isLoggedIn ? undefined : email,
-        apostillado,
       }
 
       if (selectedPartida === "defuncion") {
@@ -389,31 +387,17 @@ function RegistroPersonasContent() {
                   </div>
                 )}
 
-                {/* Apostillado */}
+                {/* Apostillado info */}
                 <div className="border-t pt-4">
-                  <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={apostillado}
-                      onChange={(e) => setApostillado(e.target.checked)}
-                      className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">Apostillado de La Haya</span>
-                      <p className="text-xs text-gray-500 mt-0.5">Legalización internacional del documento (+$40.000)</p>
-                    </div>
-                  </label>
+                  <div className="p-3 rounded-lg border border-gray-200 bg-gray-50/50">
+                    <span className="text-sm font-medium text-gray-900">Apostillado de La Haya</span>
+                    <span className="text-xs text-gray-500 ml-1">(opcional)</span>
+                    <p className="text-xs text-gray-500 mt-1">Es para darle validez internacional al documento y que pueda ser presentado en otros países con convenio de La Haya.</p>
+                  </div>
                 </div>
 
-                {/* Monto y submit */}
+                {/* Submit */}
                 <div className="border-t pt-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-gray-700">Monto a pagar:</span>
-                    <span className="text-xl font-semibold text-gray-900">
-                      ${(20000 + (apostillado ? 40000 : 0)).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-
                   <button
                     type="submit"
                     disabled={loading}

@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma"
 import { notifyAdminsNewTramite } from "@/lib/tramiteNotifications"
 
 const MONTO_PARTIDA = 20000
-const MONTO_APOSTILLADO = 40000
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,9 +13,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { tipoPartida, dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
       fechaDefuncion, dni2, sexo2, nombres2, apellido2, fechaNacimiento2,
-      fechaMatrimonio, ciudadMatrimonio, divorciados, whatsapp, email, apostillado } = body
+      fechaMatrimonio, ciudadMatrimonio, divorciados, whatsapp, email } = body
 
-    const montoTotal = MONTO_PARTIDA + (apostillado ? MONTO_APOSTILLADO : 0)
+    const montoTotal = MONTO_PARTIDA
 
     if (!tipoPartida || !dni || !sexo || !nombres || !apellido || !fechaNacimiento) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
@@ -87,7 +86,7 @@ export async function POST(req: NextRequest) {
           fechaMatrimonio: fechaMatrimonio ? new Date(fechaMatrimonio) : null,
           ciudadMatrimonio: ciudadMatrimonio || null,
           divorciados: divorciados || false,
-          apostillado: apostillado || false,
+          apostillado: false,
         },
       })
 
