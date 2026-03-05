@@ -547,29 +547,6 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch/verify solo al montar o cambiar sesión
   }, [status, session, router])
 
-  // Polling automático: verificar pagos pendientes cada 5 minutos
-  useEffect(() => {
-    if (status !== "authenticated" || session?.user?.role !== "admin") return
-
-    const interval = setInterval(async () => {
-      try {
-        const freshList = await fetchTramites()
-        if (Array.isArray(freshList)) {
-          const pendientes = freshList.filter(
-            (t: Tramite) => t.pago?.estado === "pendiente" && (t.pago?.mercadopagoId || t.pago?.paymentId)
-          )
-          if (pendientes.length > 0) {
-            await verifyPaymentsWithMp(freshList)
-          }
-        }
-      } catch {
-        // Silenciar errores de polling
-      }
-    }, 300000) // cada 5 minutos
-
-    return () => clearInterval(interval)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session])
 
   // Toast, drawer de contacto y limpieza de URL cuando vuelve de crear un trámite
   const creadoToastShown = useRef(false)
