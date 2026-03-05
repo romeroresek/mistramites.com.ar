@@ -387,21 +387,20 @@ function RegistroPersonasContent() {
                   </div>
                 )}
 
-                {/* Apostillado info */}
-                <div className="border-t pt-4">
-                  <div className="p-3 rounded-lg border border-gray-200 bg-gray-50/50">
-                    <span className="text-sm font-medium text-gray-900">Apostillado de La Haya</span>
-                    <span className="text-xs text-gray-500 ml-1">(opcional)</span>
-                    <p className="text-xs text-gray-500 mt-1">Es para darle validez internacional al documento y que pueda ser presentado en otros países con convenio de La Haya.</p>
+                {/* Monto y submit */}
+                <div className="pt-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Monto a pagar:</span>
+                      <span className="text-lg sm:text-xl font-semibold text-gray-900">
+                        ${(20000).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
                   </div>
-                </div>
-
-                {/* Submit */}
-                <div className="border-t pt-4">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Procesando..." : "Continuar al pago"}
                   </button>
