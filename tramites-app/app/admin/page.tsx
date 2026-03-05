@@ -1324,143 +1324,280 @@ export default function AdminPage() {
         </div>
       </footer>
 
-      {/* Drawer de WhatsApp */}
-      <Drawer open={!!whatsappTramite} onOpenChange={(open) => { if (!open) { setWhatsappTramite(null); setEditandoPlantillaId(null); setWhatsappLinkPago(null) } }}>
-        <DrawerContent>
-          <DrawerHeader>
-            <div className="flex items-center justify-between gap-2">
-              <DrawerTitle>Enviar WhatsApp</DrawerTitle>
+      {/* WhatsApp: Dialog en desktop, Drawer en mobile */}
+      {isMobile ? (
+        <Drawer open={!!whatsappTramite} onOpenChange={(open) => { if (!open) { setWhatsappTramite(null); setEditandoPlantillaId(null); setWhatsappLinkPago(null) } }}>
+          <DrawerContent>
+            <DrawerHeader>
+              <div className="flex items-center justify-between gap-2">
+                <DrawerTitle>Enviar WhatsApp</DrawerTitle>
+                {whatsappTramite && getWhatsappNumber(whatsappTramite) && (
+                  <a
+                    href={generateWhatsAppLink(getWhatsappNumber(whatsappTramite)!, "")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setWhatsappTramite(null)}
+                    className="inline-flex items-center justify-center w-8 h-8 bg-green-600 text-white rounded-full hover:bg-green-700"
+                    title="Abrir chat vacío"
+                    aria-label="Abrir WhatsApp sin mensaje"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+              {whatsappTramite && (
+                <DrawerDescription>
+                  Para: {whatsappTramite.partida?.nombres || whatsappTramite.user?.name || "Usuario"} - {getWhatsappNumber(whatsappTramite)}
+                </DrawerDescription>
+              )}
+            </DrawerHeader>
+
+            {whatsappTramite && plantillas.length > 0 ? (
+              <div className="px-4">
+                {editandoPlantillaId ? (
+                  <div className="mb-3">
+                    <label className="text-gray-500 text-sm block mb-1">Editar mensaje de la plantilla &quot;{plantillaSeleccionada?.nombre}&quot;</label>
+                    <p className="text-xs text-gray-400 mb-1">Variables: {"{nombre}"}, {"{apellido}"}, {"{nombreCompleto}"}, {"{dni}"}, {"{fechaNacimiento}"}, {"{ciudadNacimiento}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{fecha}"}</p>
+                    <textarea
+                      value={editMensaje}
+                      onChange={(e) => setEditMensaje(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm resize-y"
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={guardarPlantilla}
+                        disabled={savingPlantilla}
+                        className="min-h-[44px] px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {savingPlantilla ? "Guardando..." : "Guardar"}
+                      </button>
+                      <button
+                        onClick={cancelarEdicionPlantilla}
+                        disabled={savingPlantilla}
+                        className="min-h-[44px] px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <label className="text-gray-500 text-sm">Plantilla</label>
+                        <div className="flex items-center gap-1">
+                          <Link
+                            href="/admin/plantillas"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-blue-600 hover:text-blue-700 rounded-lg hover:bg-blue-50"
+                            title="Agregar plantilla"
+                            aria-label="Agregar plantilla"
+                          >
+                            <PlusCircle className="w-4 h-4" />
+                          </Link>
+                          {selectedTemplate !== "_blank" && (
+                            <button
+                              type="button"
+                              onClick={iniciarEdicionPlantilla}
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                              title="Editar plantilla"
+                              aria-label="Editar plantilla"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <select
+                        value={selectedTemplate}
+                        onChange={(e) => setSelectedTemplate(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
+                      >
+                        <option value="_blank">Sin mensaje (abrir chat vacío)</option>
+                        {plantillas.map((p) => (
+                          <option key={p.clave} value={p.clave}>{p.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {selectedTemplate !== "_blank" && (
+                      <div>
+                        <label className="text-gray-500 text-sm block mb-1">Vista previa</label>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700">
+                          {generarMensaje(selectedTemplate, whatsappTramite)}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="px-4">
+                <p className="text-sm text-gray-500">Cargando plantillas...</p>
+              </div>
+            )}
+
+            <DrawerFooter>
               {whatsappTramite && getWhatsappNumber(whatsappTramite) && (
                 <a
-                  href={generateWhatsAppLink(getWhatsappNumber(whatsappTramite)!, "")}
+                  href={generateWhatsAppLink(
+                    getWhatsappNumber(whatsappTramite)!,
+                    selectedTemplate === "_blank" ? "" : generarMensaje(selectedTemplate, whatsappTramite)
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setWhatsappTramite(null)}
-                  className="inline-flex items-center justify-center w-8 h-8 bg-green-600 text-white rounded-full hover:bg-green-700"
-                  title="Abrir chat vacío"
-                  aria-label="Abrir WhatsApp sin mensaje"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 active:bg-green-800"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-5 h-5" />
+                  {selectedTemplate === "_blank" ? "Abrir WhatsApp" : "Enviar por WhatsApp"}
                 </a>
               )}
-            </div>
-            {whatsappTramite && (
-              <DrawerDescription>
-                Para: {whatsappTramite.partida?.nombres || whatsappTramite.user?.name || "Usuario"} - {getWhatsappNumber(whatsappTramite)}
-              </DrawerDescription>
-            )}
-          </DrawerHeader>
-
-          {whatsappTramite && plantillas.length > 0 ? (
-            <div className="px-4">
-              {editandoPlantillaId ? (
-                <div className="mb-3">
-                  <label className="text-gray-500 text-sm block mb-1">Editar mensaje de la plantilla &quot;{plantillaSeleccionada?.nombre}&quot;</label>
-                  <p className="text-xs text-gray-400 mb-1">Variables: {"{nombre}"}, {"{apellido}"}, {"{nombreCompleto}"}, {"{dni}"}, {"{fechaNacimiento}"}, {"{ciudadNacimiento}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{fecha}"}</p>
-                  <textarea
-                    value={editMensaje}
-                    onChange={(e) => setEditMensaje(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm resize-y"
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={guardarPlantilla}
-                      disabled={savingPlantilla}
-                      className="min-h-[44px] px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
-                    >
-                      {savingPlantilla ? "Guardando..." : "Guardar"}
-                    </button>
-                    <button
-                      onClick={cancelarEdicionPlantilla}
-                      disabled={savingPlantilla}
-                      className="min-h-[44px] px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <label className="text-gray-500 text-sm">Plantilla</label>
-                      <div className="flex items-center gap-1">
-                        <Link
-                          href="/admin/plantillas"
-                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-blue-600 hover:text-blue-700 rounded-lg hover:bg-blue-50"
-                          title="Agregar plantilla"
-                          aria-label="Agregar plantilla"
-                        >
-                          <PlusCircle className="w-4 h-4" />
-                        </Link>
-                        {selectedTemplate !== "_blank" && (
-                          <button
-                            type="button"
-                            onClick={iniciarEdicionPlantilla}
-                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
-                            title="Editar plantilla"
-                            aria-label="Editar plantilla"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <select
-                      value={selectedTemplate}
-                      onChange={(e) => setSelectedTemplate(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
-                    >
-                      <option value="_blank">Sin mensaje (abrir chat vacío)</option>
-                      {plantillas.map((p) => (
-                        <option key={p.clave} value={p.clave}>{p.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedTemplate !== "_blank" && (
-                    <div>
-                      <label className="text-gray-500 text-sm block mb-1">Vista previa</label>
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700">
-                        {generarMensaje(selectedTemplate, whatsappTramite)}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="px-4">
-              <p className="text-sm text-gray-500">Cargando plantillas...</p>
-            </div>
-          )}
-
-          <DrawerFooter>
-            {whatsappTramite && getWhatsappNumber(whatsappTramite) && (
-              <a
-                href={generateWhatsAppLink(
-                  getWhatsappNumber(whatsappTramite)!,
-                  selectedTemplate === "_blank" ? "" : generarMensaje(selectedTemplate, whatsappTramite)
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
                 onClick={() => setWhatsappTramite(null)}
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 active:bg-green-800"
+                className="min-h-[44px] px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                <MessageCircle className="w-5 h-5" />
-                {selectedTemplate === "_blank" ? "Abrir WhatsApp" : "Enviar por WhatsApp"}
-              </a>
+                Cancelar
+              </button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={!!whatsappTramite} onOpenChange={(open) => { if (!open) { setWhatsappTramite(null); setEditandoPlantillaId(null); setWhatsappLinkPago(null) } }}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-2">
+                <DialogTitle>Enviar WhatsApp</DialogTitle>
+                {whatsappTramite && getWhatsappNumber(whatsappTramite) && (
+                  <a
+                    href={generateWhatsAppLink(getWhatsappNumber(whatsappTramite)!, "")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setWhatsappTramite(null)}
+                    className="inline-flex items-center justify-center w-8 h-8 bg-green-600 text-white rounded-full hover:bg-green-700"
+                    title="Abrir chat vacío"
+                    aria-label="Abrir WhatsApp sin mensaje"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+              {whatsappTramite && (
+                <DialogDescription>
+                  Para: {whatsappTramite.partida?.nombres || whatsappTramite.user?.name || "Usuario"} - {getWhatsappNumber(whatsappTramite)}
+                </DialogDescription>
+              )}
+            </DialogHeader>
+
+            {whatsappTramite && plantillas.length > 0 ? (
+              <div>
+                {editandoPlantillaId ? (
+                  <div className="mb-3">
+                    <label className="text-gray-500 text-sm block mb-1">Editar mensaje de la plantilla &quot;{plantillaSeleccionada?.nombre}&quot;</label>
+                    <p className="text-xs text-gray-400 mb-1">Variables: {"{nombre}"}, {"{apellido}"}, {"{nombreCompleto}"}, {"{dni}"}, {"{fechaNacimiento}"}, {"{ciudadNacimiento}"}, {"{tipo}"}, {"{monto}"}, {"{linkPago}"}, {"{fecha}"}</p>
+                    <textarea
+                      value={editMensaje}
+                      onChange={(e) => setEditMensaje(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm resize-y"
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={guardarPlantilla}
+                        disabled={savingPlantilla}
+                        className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {savingPlantilla ? "Guardando..." : "Guardar"}
+                      </button>
+                      <button
+                        onClick={cancelarEdicionPlantilla}
+                        disabled={savingPlantilla}
+                        className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <label className="text-gray-500 text-sm">Plantilla</label>
+                        <div className="flex items-center gap-1">
+                          <Link
+                            href="/admin/plantillas"
+                            className="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-700 rounded-lg hover:bg-blue-50"
+                            title="Agregar plantilla"
+                            aria-label="Agregar plantilla"
+                          >
+                            <PlusCircle className="w-4 h-4" />
+                          </Link>
+                          {selectedTemplate !== "_blank" && (
+                            <button
+                              type="button"
+                              onClick={iniciarEdicionPlantilla}
+                              className="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                              title="Editar plantilla"
+                              aria-label="Editar plantilla"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <select
+                        value={selectedTemplate}
+                        onChange={(e) => setSelectedTemplate(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm"
+                      >
+                        <option value="_blank">Sin mensaje (abrir chat vacío)</option>
+                        {plantillas.map((p) => (
+                          <option key={p.clave} value={p.clave}>{p.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {selectedTemplate !== "_blank" && (
+                      <div>
+                        <label className="text-gray-500 text-sm block mb-1">Vista previa</label>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 max-h-40 overflow-y-auto">
+                          {generarMensaje(selectedTemplate, whatsappTramite)}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Cargando plantillas...</p>
             )}
-            <button
-              onClick={() => setWhatsappTramite(null)}
-              className="min-h-[44px] px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <button
+                onClick={() => setWhatsappTramite(null)}
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+              >
+                Cancelar
+              </button>
+              {whatsappTramite && getWhatsappNumber(whatsappTramite) && (
+                <a
+                  href={generateWhatsAppLink(
+                    getWhatsappNumber(whatsappTramite)!,
+                    selectedTemplate === "_blank" ? "" : generarMensaje(selectedTemplate, whatsappTramite)
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setWhatsappTramite(null)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 order-1 sm:order-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  {selectedTemplate === "_blank" ? "Abrir WhatsApp" : "Enviar por WhatsApp"}
+                </a>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Datos del cliente: Dialog en desktop, Drawer en mobile */}
       {isMobile ? (
