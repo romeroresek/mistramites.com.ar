@@ -119,7 +119,6 @@ export default function AdminPage() {
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushLoading, setPushLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [actionMenuId, setActionMenuId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<"pendiente" | "en_proceso" | null>(null)
@@ -129,24 +128,23 @@ export default function AdminPage() {
   const [savingObs, setSavingObs] = useState(false)
   const pushNotifications = usePushNotifications()
 
-  const fetchTramites = async () => {
+  const fetchTramites = async (): Promise<Tramite[] | null> => {
     try {
-      const res = await fetch("/api/admin/tramites")
+      const res = await fetch("/api/admin/tramites", { cache: "no-store" })
       if (!res.ok) {
-        setTramites([])
-        return []
+        console.warn("No se pudo actualizar la lista de trámites:", res.status)
+        return null
       }
-      const data = await res.json()
+      const data: unknown = await res.json()
       if (Array.isArray(data)) {
-        setTramites(data)
-        return data
+        setTramites(data as Tramite[])
+        return data as Tramite[]
       }
-      setTramites([])
-      return []
+      console.warn("La API de trámites devolvió un formato inválido")
+      return null
     } catch (error) {
       console.error(error)
-      setTramites([])
-      return []
+      return null
     } finally {
       setLoading(false)
     }
@@ -539,7 +537,11 @@ export default function AdminPage() {
       return
     }
 
-    fetchTramites().then((data) => verifyPaymentsWithMp(data))
+    fetchTramites().then((data) => {
+      if (Array.isArray(data)) {
+        void verifyPaymentsWithMp(data)
+      }
+    })
     fetchPlantillas()
     fetchPushSettings()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch/verify solo al montar o cambiar sesión
