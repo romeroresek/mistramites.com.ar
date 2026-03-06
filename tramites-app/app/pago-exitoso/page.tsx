@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { PageNavbar } from "@/components/PageNavbar"
 import { Suspense } from "react"
-import { XCircle, AlertCircle, CheckCircle2 } from "lucide-react"
+import { XCircle, AlertCircle, CheckCircle2, MessageCircle } from "lucide-react"
 
 function PagoExitosoContent() {
   const { data: session, status } = useSession()
@@ -51,7 +51,7 @@ function PagoExitosoContent() {
               </div>
               <h1 className="text-xl font-semibold text-gray-900 mb-2">¡Trámite registrado!</h1>
               <p className="text-gray-600 mb-6">
-                Tu solicitud fue recibida correctamente. Te contactaremos por WhatsApp para informarte sobre el estado de tu trámite.
+                Tu solicitud y pago fue recibida correctamente y dependiendo del tipo de trámite tiene su demora. Te enviaremos un mensaje automático por WhatsApp cuando tu trámite este finalizado.
               </p>
             </>
           )}
@@ -62,38 +62,15 @@ function PagoExitosoContent() {
             </p>
           )}
 
-          {isLoggedIn ? (
-            <Link
-              href="/mis-tramites"
-              className="inline-block w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Ver mis trámites
-            </Link>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600 mb-4">
-                Creá una cuenta para seguir el estado de tu trámite online
-              </p>
-              <Link
-                href="/registro"
-                className="inline-block w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Crear cuenta
-              </Link>
-              <Link
-                href="/login"
-                className="inline-block w-full px-4 py-3 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-              >
-                Ya tengo cuenta
-              </Link>
-            </div>
-          )}
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm">
-              Volver al inicio
-            </Link>
-          </div>
+          <a
+            href="https://wa.me/543764889861"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-green-700 hover:text-green-800 hover:underline"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Por consultas comunicate con nosotros
+          </a>
         </div>
       </main>
 
