@@ -73,7 +73,7 @@ const normalizeEstado = (estado: string | null | undefined): string =>
   (estado ?? "").trim().toLowerCase().replace(/\s+/g, "_")
 
 const isPendienteParaProcesar = (tramite: Tramite): boolean =>
-  normalizeEstado(tramite.estado) === "pendiente" && (tramite.pago?.estado === "confirmado" || tramite.pago?.estado === "transferencia")
+  normalizeEstado(tramite.estado) === "pendiente" && tramite.pago?.estado === "confirmado"
 
 const isEnProceso = (tramite: Tramite): boolean => {
   const normalizedEstado = normalizeEstado(tramite.estado)
@@ -925,16 +925,13 @@ export default function AdminPage() {
                     onChange={(e) => updateTramiteStatus(tramite.id, "pagoEstado", e.target.value)}
                     className={`px-2 py-0.5 rounded text-xs border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 ${tramite.pago?.estado === "confirmado"
                       ? "bg-green-100 text-green-700 focus:ring-green-300"
-                      : tramite.pago?.estado === "transferencia"
-                        ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
-                        : tramite.pago?.estado === "devuelto"
-                          ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
-                          : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                      : tramite.pago?.estado === "devuelto"
+                        ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
+                        : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
                       }`}
                   >
                     <option value="pendiente">Pendiente</option>
                     <option value="confirmado">Pagado</option>
-                    <option value="transferencia">Transferencia</option>
                     <option value="devuelto">Devuelto</option>
                   </select>
                 </div>
@@ -1146,16 +1143,13 @@ export default function AdminPage() {
                         onChange={(e) => updateTramiteStatus(tramite.id, "pagoEstado", e.target.value)}
                         className={`px-2 py-0.5 rounded text-xs border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 ${tramite.pago?.estado === "confirmado"
                           ? "bg-green-100 text-green-700 focus:ring-green-300"
-                          : tramite.pago?.estado === "transferencia"
-                            ? "bg-blue-100 text-blue-700 focus:ring-blue-300"
-                            : tramite.pago?.estado === "devuelto"
-                              ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
-                              : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
+                          : tramite.pago?.estado === "devuelto"
+                            ? "bg-gray-100 text-gray-700 focus:ring-gray-300"
+                            : "bg-yellow-100 text-yellow-700 focus:ring-yellow-300"
                           }`}
                       >
                         <option value="pendiente">Pendiente</option>
                         <option value="confirmado">Pagado</option>
-                        <option value="transferencia">Transferencia</option>
                         <option value="devuelto">Devuelto</option>
                       </select>
                     </div>
