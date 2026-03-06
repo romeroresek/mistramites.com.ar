@@ -69,6 +69,8 @@ interface Tramite {
   }
 }
 
+const MP_VERIFY_BATCH_SIZE = 20
+
 const normalizeEstado = (estado: string | null | undefined): string =>
   (estado ?? "").trim().toLowerCase().replace(/\s+/g, "_")
 
@@ -164,9 +166,42 @@ export default function AdminPage() {
         t.pago.estado === "confirmado"
       )
     )
-    if (conPago.length === 0) return
+    const tramiteIds = conPago.map((tramite) => tramite.id)
+    if (tramiteIds.length === 0) return
 
     // Verificar pagos en paralelo (mucho más rápido)
+    let hasBatchUpdate = false
+
+    // Procesar en lotes evita golpear al servidor con una request pesada por tramite.
+    for (let i = 0; i < tramiteIds.length; i += MP_VERIFY_BATCH_SIZE) {
+      const batchIds = tramiteIds.slice(i, i + MP_VERIFY_BATCH_SIZE)
+
+      try {
+        const res = await fetch("/api/mercadopago/verify-batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tramiteIds: batchIds }),
+        })
+        if (!res.ok) continue
+
+        const data = await res.json() as { updated?: boolean }
+        if (data.updated) {
+          hasBatchUpdate = true
+        }
+      } catch {
+        // Ignorar fallos de un lote y seguir con el resto.
+      }
+    }
+
+    if (hasBatchUpdate) {
+      try {
+        await fetchTramites()
+      } catch {
+        // Ignorar error de fetch final
+      }
+    }
+    return
+
     const results = await Promise.allSettled(
       conPago.map(async (tramite) => {
         try {

@@ -34,24 +34,22 @@ function MisTramitesContent() {
   const verifiedRef = useRef(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const fetchTramites = useCallback(async (): Promise<Tramite[]> => {
+  const fetchTramites = useCallback(async (): Promise<Tramite[] | null> => {
     try {
-      const res = await fetch("/api/tramites")
-      const data = await res.json()
+      const res = await fetch("/api/tramites", { cache: "no-store" })
+      const data: unknown = await res.json()
       if (res.ok && Array.isArray(data)) {
         setTramites(data)
         return data
       }
-      if (data?.error) {
+      if (typeof data === "object" && data !== null && "error" in data && typeof data.error === "string") {
         toast.showError(data.error)
       }
-      setTramites([])
-      return []
+      return null
     } catch (error) {
       console.error(error)
       toast.showError("Error al cargar los trámites")
-      setTramites([])
-      return []
+      return null
     } finally {
       setLoading(false)
     }
@@ -127,7 +125,11 @@ function MisTramitesContent() {
             fetchTramites()
           })
       } else {
-        fetchTramites().then((data) => verifyPendingPayments(data))
+        fetchTramites().then((data) => {
+          if (Array.isArray(data)) {
+            void verifyPendingPayments(data)
+          }
+        })
       }
     }
   }, [status, router, searchParams, fetchTramites, verifyPendingPayments])

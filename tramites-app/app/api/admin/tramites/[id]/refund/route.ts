@@ -14,6 +14,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!session || !session.user?.email) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
+    if (session.user.role !== "admin") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+    }
 
     const { id: tramiteId } = await params
 

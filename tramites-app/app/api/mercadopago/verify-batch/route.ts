@@ -9,6 +9,9 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
 })
 
+const VERIFY_BATCH_MAX_IDS = 20
+const VERIFY_BATCH_PARALLELISM = 4
+
 interface MpPaymentData {
   id?: number
   status?: string
@@ -83,19 +86,39 @@ export async function POST(req: NextRequest) {
     }
 
     // Limitar a 20 trámites por request
-    const ids = tramiteIds.slice(0, 20)
+    const ids = Array.from(
+      new Set(
+        tramiteIds
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => id.trim())
+          .filter(Boolean)
+      )
+    ).slice(0, VERIFY_BATCH_MAX_IDS)
 
-    // Verificar todos en paralelo
-    const results = await Promise.all(
-      ids.map(async (tramiteId) => {
-        try {
-          // Primero buscar el paymentId guardado en la DB para usar lookup directo
-          const pago = await prisma.pago.findUnique({
-            where: { tramiteId },
-            select: { paymentId: true },
-          })
+    const [pagos, tramites] = await Promise.all([
+      prisma.pago.findMany({
+        where: { tramiteId: { in: ids } },
+        select: { tramiteId: true, paymentId: true, estado: true },
+      }),
+      prisma.tramite.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, monto: true, userId: true },
+      }),
+    ])
 
-          let paymentData: MpPaymentData | null = null
+    const pagosByTramite = new Map(pagos.map((pago) => [pago.tramiteId, pago]))
+    const tramitesById = new Map(tramites.map((tramite) => [tramite.id, tramite]))
+    const results: Array<{ tramiteId: string; updated: boolean; pagoEstado?: string }> = []
+
+    for (let i = 0; i < ids.length; i += VERIFY_BATCH_PARALLELISM) {
+      const chunk = ids.slice(i, i + VERIFY_BATCH_PARALLELISM)
+      const chunkResults = await Promise.all(
+        chunk.map(async (tramiteId) => {
+          try {
+            const pago = pagosByTramite.get(tramiteId)
+            const tramiteData = tramitesById.get(tramiteId)
+
+            let paymentData: MpPaymentData | null = null
 
           if (pago?.paymentId && /^\d+$/.test(pago.paymentId)) {
             // Lookup directo por paymentId (incluye refunds[], status_detail, transaction_amount_refunded)
@@ -161,13 +184,10 @@ export async function POST(req: NextRequest) {
           const paymentDate = paymentData.date_approved ? new Date(paymentData.date_approved) : null
 
           // Obtener estado anterior del pago para detectar cambios
-          const pagoAnterior = await prisma.pago.findUnique({
-            where: { tramiteId },
-            select: { estado: true },
-          })
+          const pagoAnteriorEstado = pago?.estado
 
           // Obtener monto del trámite para crear Pago si no existe
-          const tramite = await prisma.tramite.findUnique({
+          const tramite = tramiteData ?? await prisma.tramite.findUnique({
             where: { id: tramiteId },
             select: { monto: true, userId: true },
           })
@@ -201,7 +221,7 @@ export async function POST(req: NextRequest) {
           // El estado del trámite es 100% manual (lo maneja el admin)
 
           // Notificar admins si el pago cambió a "confirmado"
-          const pagoChanged = !pagoAnterior || pagoAnterior.estado !== pagoEstado
+          const pagoChanged = !pago || pagoAnteriorEstado !== pagoEstado
           if (pagoChanged && pagoEstado === "confirmado") {
             notifyAdminsNewPayment(tramiteId, payerName).catch((err) =>
               console.error("Error notifying admins of payment:", err)
@@ -212,8 +232,11 @@ export async function POST(req: NextRequest) {
         } catch {
           return { tramiteId, updated: false }
         }
-      })
-    )
+        })
+      )
+
+      results.push(...chunkResults)
+    }
 
     const anyUpdated = results.some((r) => r.updated)
     return NextResponse.json({ updated: anyUpdated, results })
