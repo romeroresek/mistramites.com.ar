@@ -49,7 +49,7 @@ function PagoExitosoContent() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-2">¡Trámite registrado!</h1>
+              <h1 className="text-xl font-semibold text-gray-900 mb-2">¡Tu Trámite está en proceso!</h1>
               <p className="text-gray-600 mb-6">
                 Tu solicitud y pago fue recibida correctamente y dependiendo del tipo de trámite tiene su demora. Te enviaremos un mensaje automático por WhatsApp cuando tu trámite este finalizado.
               </p>
