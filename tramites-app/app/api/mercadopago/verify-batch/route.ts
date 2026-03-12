@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago"
 import { prisma } from "@/lib/prisma"
 import { notifyAdminsNewPayment } from "@/lib/tramiteNotifications"
+import { hasPaymentStateChanged, type PaymentSyncFields } from "@/lib/paymentSync"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -23,6 +25,16 @@ interface MpPaymentData {
   transaction_amount?: number
   transaction_amount_refunded?: number
   refunds?: { id?: number; status?: string; amount?: number }[]
+}
+
+interface VerifiedPaymentPayload {
+  estado: string
+  paymentId: string | null
+  payerEmail: string | null
+  payerName: string | null
+  payerDni: string | null
+  paymentMethod: string | null
+  paymentDate: string | null
 }
 
 async function fetchPaymentById(paymentId: number): Promise<MpPaymentData | null> {
@@ -98,7 +110,16 @@ export async function POST(req: NextRequest) {
     const [pagos, tramites] = await Promise.all([
       prisma.pago.findMany({
         where: { tramiteId: { in: ids } },
-        select: { tramiteId: true, paymentId: true, estado: true },
+        select: {
+          tramiteId: true,
+          estado: true,
+          paymentId: true,
+          payerEmail: true,
+          payerName: true,
+          payerDni: true,
+          paymentMethod: true,
+          paymentDate: true,
+        },
       }),
       prisma.tramite.findMany({
         where: { id: { in: ids } },
@@ -108,7 +129,12 @@ export async function POST(req: NextRequest) {
 
     const pagosByTramite = new Map(pagos.map((pago) => [pago.tramiteId, pago]))
     const tramitesById = new Map(tramites.map((tramite) => [tramite.id, tramite]))
-    const results: Array<{ tramiteId: string; updated: boolean; pagoEstado?: string }> = []
+    const results: Array<{
+      tramiteId: string
+      updated: boolean
+      pagoEstado?: string
+      pago?: VerifiedPaymentPayload
+    }> = []
 
     for (let i = 0; i < ids.length; i += VERIFY_BATCH_PARALLELISM) {
       const chunk = ids.slice(i, i + VERIFY_BATCH_PARALLELISM)
@@ -183,8 +209,30 @@ export async function POST(req: NextRequest) {
           const paymentMethod = paymentData.payment_method_id || null
           const paymentDate = paymentData.date_approved ? new Date(paymentData.date_approved) : null
 
-          // Obtener estado anterior del pago para detectar cambios
-          const pagoAnteriorEstado = pago?.estado
+          const nextPayment: PaymentSyncFields = {
+            estado: pagoEstado,
+            paymentId: paymentData.id ? String(paymentData.id) : null,
+            payerEmail,
+            payerName,
+            payerDni,
+            paymentMethod,
+            paymentDate,
+          }
+
+          const pagoChanged = hasPaymentStateChanged(
+            pago
+              ? {
+                  estado: pago.estado,
+                  paymentId: pago.paymentId,
+                  payerEmail: pago.payerEmail,
+                  payerName: pago.payerName,
+                  payerDni: pago.payerDni,
+                  paymentMethod: pago.paymentMethod,
+                  paymentDate: pago.paymentDate,
+                }
+              : null,
+            nextPayment
+          )
 
           // Obtener monto del trámite para crear Pago si no existe
           const tramite = tramiteData ?? await prisma.tramite.findUnique({
@@ -192,43 +240,43 @@ export async function POST(req: NextRequest) {
             select: { monto: true, userId: true },
           })
 
-          // Actualizar SOLO el registro de pago (nunca tocar el estado del trámite)
-          await prisma.pago.upsert({
-            where: { tramiteId },
-            update: {
-              estado: pagoEstado,
-              paymentId: String(paymentData.id),
-              payerEmail,
-              payerName,
-              payerDni,
-              paymentMethod,
-              paymentDate,
-            },
-            create: {
-              tramiteId,
-              userId: tramite?.userId || null,
-              monto: tramite?.monto || 0,
-              estado: pagoEstado,
-              paymentId: String(paymentData.id),
-              payerEmail,
-              payerName,
-              payerDni,
-              paymentMethod,
-              paymentDate,
-            },
-          })
+          if (pagoChanged) {
+            await prisma.pago.upsert({
+              where: { tramiteId },
+              update: nextPayment,
+              create: {
+                tramiteId,
+                userId: tramite?.userId || null,
+                monto: tramite?.monto || 0,
+                ...nextPayment,
+              },
+            })
+          }
 
           // El estado del trámite es 100% manual (lo maneja el admin)
 
-          // Notificar admins si el pago cambió a "confirmado"
-          const pagoChanged = !pago || pagoAnteriorEstado !== pagoEstado
           if (pagoChanged && pagoEstado === "confirmado") {
             notifyAdminsNewPayment(tramiteId, payerName).catch((err) =>
               console.error("Error notifying admins of payment:", err)
             )
           }
 
-          return { tramiteId, updated: true, pagoEstado }
+          return {
+            tramiteId,
+            updated: pagoChanged,
+            pagoEstado,
+            pago: {
+              estado: nextPayment.estado,
+              paymentId: nextPayment.paymentId,
+              payerEmail: nextPayment.payerEmail,
+              payerName: nextPayment.payerName,
+              payerDni: nextPayment.payerDni,
+              paymentMethod: nextPayment.paymentMethod,
+              paymentDate: nextPayment.paymentDate instanceof Date
+                ? nextPayment.paymentDate.toISOString()
+                : nextPayment.paymentDate,
+            },
+          }
         } catch {
           return { tramiteId, updated: false }
         }
@@ -238,8 +286,23 @@ export async function POST(req: NextRequest) {
       results.push(...chunkResults)
     }
 
-    const anyUpdated = results.some((r) => r.updated)
-    return NextResponse.json({ updated: anyUpdated, results })
+    const changedCount = results.filter((result) => result.updated).length
+    const response = {
+      updated: changedCount > 0,
+      changedCount,
+      verifiedCount: results.length,
+      results,
+    }
+
+    logTrafficMetric({
+      route: "/api/mercadopago/verify-batch",
+      operation: "mercadopago_verify_batch",
+      payloadBytes: estimateJsonPayloadBytes(response),
+      rowCount: results.length,
+      changedCount,
+    })
+
+    return NextResponse.json(response)
   } catch (error: unknown) {
     console.error("Error verify-batch:", error)
     return NextResponse.json({ error: "Error al verificar pagos" }, { status: 500 })

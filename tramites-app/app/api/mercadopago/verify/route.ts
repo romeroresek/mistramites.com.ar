@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago"
 import { prisma } from "@/lib/prisma"
 import { notifyAdminsNewPayment } from "@/lib/tramiteNotifications"
+import { hasPaymentStateChanged, type PaymentSyncFields } from "@/lib/paymentSync"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 interface MpPaymentData {
   id?: number
@@ -16,6 +18,16 @@ interface MpPaymentData {
   transaction_amount?: number
   transaction_amount_refunded?: number
   refunds?: { id?: number; status?: string; amount?: number }[]
+}
+
+interface VerifiedPaymentPayload {
+  estado: string
+  paymentId: string | null
+  payerEmail: string | null
+  payerName: string | null
+  payerDni: string | null
+  paymentMethod: string | null
+  paymentDate: string | null
 }
 
 const client = new MercadoPagoConfig({
@@ -182,7 +194,15 @@ export async function POST(req: NextRequest) {
     // Obtener estado anterior del pago para detectar si realmente cambió algo
     const pagoAnterior = await prisma.pago.findUnique({
       where: { tramiteId: targetTramiteId },
-      select: { estado: true, paymentId: true },
+      select: {
+        estado: true,
+        paymentId: true,
+        payerEmail: true,
+        payerName: true,
+        payerDni: true,
+        paymentMethod: true,
+        paymentDate: true,
+      },
     })
 
     // Obtener monto del trámite para el caso de crear Pago si no existe
@@ -191,37 +211,46 @@ export async function POST(req: NextRequest) {
       select: { monto: true, userId: true },
     })
 
-    // Actualizar o crear SOLO el registro de pago (nunca tocar el estado del trámite)
-    await prisma.pago.upsert({
-      where: { tramiteId: targetTramiteId },
-      update: {
-        estado: pagoEstado,
-        paymentId: String(paymentData.id),
-        payerEmail,
-        payerName,
-        payerDni,
-        paymentMethod,
-        paymentDate,
-      },
-      create: {
-        tramiteId: targetTramiteId,
-        userId: tramite?.userId || null,
-        monto: tramite?.monto || 0,
-        estado: pagoEstado,
-        paymentId: String(paymentData.id),
-        payerEmail,
-        payerName,
-        payerDni,
-        paymentMethod,
-        paymentDate,
-      },
-    })
+    const nextPayment: PaymentSyncFields = {
+      estado: pagoEstado,
+      paymentId: paymentData.id ? String(paymentData.id) : null,
+      payerEmail,
+      payerName,
+      payerDni,
+      paymentMethod,
+      paymentDate,
+    }
+
+    const pagoChanged = hasPaymentStateChanged(
+      pagoAnterior
+        ? {
+            estado: pagoAnterior.estado,
+            paymentId: pagoAnterior.paymentId,
+            payerEmail: pagoAnterior.payerEmail,
+            payerName: pagoAnterior.payerName,
+            payerDni: pagoAnterior.payerDni,
+            paymentMethod: pagoAnterior.paymentMethod,
+            paymentDate: pagoAnterior.paymentDate,
+          }
+        : null,
+      nextPayment
+    )
+
+    if (pagoChanged) {
+      await prisma.pago.upsert({
+        where: { tramiteId: targetTramiteId },
+        update: nextPayment,
+        create: {
+          tramiteId: targetTramiteId,
+          userId: tramite?.userId || null,
+          monto: tramite?.monto || 0,
+          ...nextPayment,
+        },
+      })
+    }
 
     // El estado del trámite es 100% manual (lo maneja el admin)
     // No se modifica automáticamente por cambios en el pago
-
-    const pagoChanged = !pagoAnterior || pagoAnterior.estado !== pagoEstado ||
-      pagoAnterior.paymentId !== String(paymentData.id)
 
     // Notificar admins si el pago cambió a "confirmado" (nuevo pago confirmado)
     if (pagoChanged && pagoEstado === "confirmado") {
@@ -230,12 +259,42 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    const response: {
+      tramiteId: string
+      status: string | undefined
+      pagoEstado: string
+      paymentId: string | null
+      pago: VerifiedPaymentPayload
+      updated: boolean
+    } = {
+      tramiteId: targetTramiteId,
       status: paymentData.status,
       pagoEstado,
-      paymentId: paymentData.id ? String(paymentData.id) : null,
+      paymentId: nextPayment.paymentId,
+      pago: {
+        estado: nextPayment.estado,
+        paymentId: nextPayment.paymentId,
+        payerEmail: nextPayment.payerEmail,
+        payerName: nextPayment.payerName,
+        payerDni: nextPayment.payerDni,
+        paymentMethod: nextPayment.paymentMethod,
+        paymentDate: nextPayment.paymentDate instanceof Date
+          ? nextPayment.paymentDate.toISOString()
+          : nextPayment.paymentDate,
+      },
       updated: pagoChanged,
+    }
+
+    logTrafficMetric({
+      route: "/api/mercadopago/verify",
+      operation: "mercadopago_verify_single",
+      payloadBytes: estimateJsonPayloadBytes(response),
+      rowCount: 1,
+      changedCount: pagoChanged ? 1 : 0,
+      extra: { tramiteId: targetTramiteId },
     })
+
+    return NextResponse.json(response)
   } catch (error: unknown) {
     console.error("Error verificando pago:", error instanceof Error ? error.message : error)
     return NextResponse.json({ error: "Error al verificar pago" }, { status: 500 })

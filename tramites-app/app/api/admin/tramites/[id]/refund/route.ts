@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { MercadoPagoConfig, PaymentRefund } from "mercadopago"
 import { prisma } from "@/lib/prisma"
+import { adminTramiteDetailSelect } from "@/lib/tramiteSelects"
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -51,11 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const tramiteActualizado = await prisma.tramite.findUnique({
       where: { id: tramiteId },
-      include: {
-        user: { select: { name: true, email: true } },
-        pago: true,
-        partida: true,
-      },
+      select: adminTramiteDetailSelect,
     })
 
     return NextResponse.json({ ok: true, tramite: tramiteActualizado })

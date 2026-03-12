@@ -83,9 +83,19 @@ export default function TramiteDetalle() {
             body: JSON.stringify({ tramiteId: data.id }),
           })
             .then((res) => res.json())
-            .then((verifyData) => {
-              if (verifyData.pagoEstado === "confirmado") {
-                fetchTramite()
+            .then((verifyData: { updated?: boolean; pago?: { estado: string } }) => {
+              if (verifyData.updated && verifyData.pago) {
+                const nextPago = verifyData.pago
+                setTramite((current) =>
+                  current
+                    ? {
+                        ...current,
+                        pago: current.pago
+                          ? { ...current.pago, estado: nextPago.estado }
+                          : current.pago,
+                      }
+                    : current
+                )
               }
             })
             .catch((err) => console.error("Error verificando pago:", err))

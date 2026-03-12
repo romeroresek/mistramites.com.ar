@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 /**
  * GET: Obtiene el link de pago de MercadoPago para un trámite.
- * Consulta la API de MP para obtener el init_point actual (siempre válido).
+ * Usa el redirect determinístico por preference id para evitar roundtrips extra a MP.
  */
 export async function GET(
   _req: NextRequest,
@@ -21,6 +21,7 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { role: true },
     })
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
@@ -28,41 +29,20 @@ export async function GET(
 
     const tramite = await prisma.tramite.findUnique({
       where: { id: tramiteId },
-      include: { pago: true },
+      select: {
+        pago: {
+          select: {
+            mercadopagoId: true,
+          },
+        },
+      },
     })
 
     if (!tramite?.pago?.mercadopagoId) {
       return NextResponse.json({ error: "No hay preferencia de pago" }, { status: 404 })
     }
 
-    const prefId = tramite.pago.mercadopagoId
-    const res = await fetch(
-      `https://api.mercadopago.com/checkout/preferences/${prefId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
-        },
-      }
-    )
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      console.error("MercadoPago GET preference:", res.status, err)
-      return NextResponse.json(
-        { error: "No se pudo obtener el link de pago" },
-        { status: 502 }
-      )
-    }
-
-    const body = await res.json()
-    const initPoint = body.init_point || body.sandbox_init_point
-
-    if (!initPoint) {
-      return NextResponse.json(
-        { error: "MercadoPago no devolvió link de pago" },
-        { status: 502 }
-      )
-    }
+    const initPoint = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago.mercadopagoId}`
 
     return NextResponse.json({ initPoint })
   } catch (error) {

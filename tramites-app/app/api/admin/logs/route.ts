@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,6 +14,7 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { role: true },
     })
 
     if (!user || user.role !== "admin") {
@@ -21,8 +23,8 @@ export async function GET(req: NextRequest) {
 
     // Obtener parámetros de búsqueda
     const { searchParams } = new URL(req.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "50")
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10) || 50))
     const tipo = searchParams.get("tipo") || undefined
     const search = searchParams.get("search") || undefined
     const desde = searchParams.get("desde") || undefined
@@ -62,6 +64,17 @@ export async function GET(req: NextRequest) {
     const [logs, total] = await Promise.all([
       prisma.activityLog.findMany({
         where,
+        select: {
+          id: true,
+          tipo: true,
+          accion: true,
+          userEmail: true,
+          userName: true,
+          tramiteId: true,
+          ip: true,
+          metadata: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: "desc" },
         skip,
         take: limit,
@@ -76,16 +89,34 @@ export async function GET(req: NextRequest) {
       orderBy: { _count: { tipo: "desc" } },
     })
 
-    return NextResponse.json({
+    const response = {
       logs,
       pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.max(1, Math.ceil(total / limit)),
       },
       tipos: tipos.map((t) => ({ tipo: t.tipo, count: t._count.tipo })),
+    }
+
+    logTrafficMetric({
+      route: "/api/admin/logs",
+      operation: "admin_logs_list",
+      rowCount: logs.length,
+      payloadBytes: estimateJsonPayloadBytes(response),
+      extra: {
+        page,
+        limit,
+        tipo: tipo || null,
+        search: search || null,
+        desde: desde || null,
+        hasta: hasta || null,
+        total,
+      },
     })
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error("Error al obtener logs:", error)
     return NextResponse.json({ error: "Error al obtener logs" }, { status: 500 })

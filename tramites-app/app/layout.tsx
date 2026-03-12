@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import { Providers } from "./providers"
 import { LazyNotificationPrompt } from "@/components/LazyNotificationPrompt"
+import { WebVitals } from "./web-vitals"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tramitesmisiones.com.ar"
 
@@ -61,6 +62,7 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-50">
         <Providers>
+          <WebVitals />
           {children}
           <LazyNotificationPrompt />
         </Providers>

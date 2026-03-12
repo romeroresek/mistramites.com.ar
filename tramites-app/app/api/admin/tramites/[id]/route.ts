@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { notifyTramiteStatusChange } from "@/lib/tramiteNotifications"
 import { prisma } from "@/lib/prisma"
 import { logEstadoCambio, logActivity, ActivityType } from "@/lib/activityLog"
+import { adminTramiteDetailSelect } from "@/lib/tramiteSelects"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 // GET: obtener detalles de un trámite
 export async function GET(
@@ -20,6 +22,7 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true, role: true },
     })
 
     if (!user || user.role !== "admin") {
@@ -28,16 +31,20 @@ export async function GET(
 
     const tramite = await prisma.tramite.findUnique({
       where: { id },
-      include: {
-        user: true,
-        pago: true,
-        partida: true,
-      },
+      select: adminTramiteDetailSelect,
     })
 
     if (!tramite) {
       return NextResponse.json({ error: "Trámite no encontrado" }, { status: 404 })
     }
+
+    logTrafficMetric({
+      route: "/api/admin/tramites/[id]",
+      operation: "admin_tramite_detail",
+      rowCount: 1,
+      payloadBytes: estimateJsonPayloadBytes(tramite),
+      extra: { tramiteId: id },
+    })
 
     return NextResponse.json(tramite)
   } catch (error) {
@@ -61,6 +68,7 @@ export async function PUT(
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true, role: true, email: true, name: true },
     })
 
     if (!user || user.role !== "admin") {
@@ -131,11 +139,7 @@ export async function PUT(
 
       return tx.tramite.findUnique({
         where: { id },
-        include: {
-          user: true,
-          pago: true,
-          partida: true,
-        },
+        select: adminTramiteDetailSelect,
       })
     })
 
@@ -202,6 +206,7 @@ export async function DELETE(
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true, role: true, email: true, name: true },
     })
 
     if (!user || user.role !== "admin") {

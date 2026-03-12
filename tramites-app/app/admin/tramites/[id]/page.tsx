@@ -91,59 +91,25 @@ export default function AdminTramiteDetalle() {
   const [contactoForm, setContactoForm] = useState({ email: "", whatsapp: "" })
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [copiedLinkPago, setCopiedLinkPago] = useState(false)
-  const [linkPagoReal, setLinkPagoReal] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const tieneLinkPago =
     tramite?.pago?.estado === "pendiente" && !!tramite.pago?.mercadopagoId
 
-  // Obtener el link real desde la API de MercadoPago
-  useEffect(() => {
-    if (!tieneLinkPago || !params.id) return
-    let cancelled = false
-    fetch(`/api/admin/tramites/${params.id}/link-pago`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { initPoint?: string } | null) => {
-        if (!cancelled && data?.initPoint) setLinkPagoReal(data.initPoint)
-      })
-      .catch(() => { })
-    return () => { cancelled = true }
-  }, [tieneLinkPago, params.id])
-
-  const linkPagoMostrar = linkPagoReal || (tieneLinkPago && tramite?.pago?.mercadopagoId
+  const linkPagoMostrar = (tieneLinkPago && tramite?.pago?.mercadopagoId
     ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago.mercadopagoId}`
     : null)
 
   const copiarLinkPago = async () => {
-    if (!tieneLinkPago) return
-    const fallback = tramite?.pago?.mercadopagoId
-      ? `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${tramite.pago!.mercadopagoId}`
-      : ""
+    if (!linkPagoMostrar) return
     try {
-      if (linkPagoReal) {
-        await navigator.clipboard.writeText(linkPagoReal)
-      } else {
-        const res = await fetch(`/api/admin/tramites/${params.id}/link-pago`)
-        if (res.ok) {
-          const { initPoint } = await res.json()
-          if (initPoint) {
-            await navigator.clipboard.writeText(initPoint)
-            setLinkPagoReal(initPoint)
-          } else if (fallback) {
-            await navigator.clipboard.writeText(fallback)
-          }
-        } else if (fallback) {
-          await navigator.clipboard.writeText(fallback)
-        }
-      }
+      await navigator.clipboard.writeText(linkPagoMostrar)
       setCopiedLinkPago(true)
       setTimeout(() => setCopiedLinkPago(false), 2000)
     } catch {
-      if (fallback) {
-        await navigator.clipboard.writeText(fallback)
-        setCopiedLinkPago(true)
-        setTimeout(() => setCopiedLinkPago(false), 2000)
-      }
+      await navigator.clipboard.writeText(linkPagoMostrar)
+      setCopiedLinkPago(true)
+      setTimeout(() => setCopiedLinkPago(false), 2000)
     }
   }
 
@@ -179,8 +145,31 @@ export default function AdminTramiteDetalle() {
           }),
         })
           .then((res) => res.json())
-          .then((data) => {
-            if (data.updated) fetchTramite()
+          .then((data: {
+            updated?: boolean
+            pago?: {
+              estado: string
+              paymentId: string | null
+              payerEmail: string | null
+              payerName: string | null
+              payerDni: string | null
+              paymentMethod: string | null
+              paymentDate: string | null
+            }
+          }) => {
+            if (data.updated && data.pago) {
+              setTramite((current) =>
+                current && current.pago
+                  ? {
+                      ...current,
+                      pago: {
+                        ...current.pago,
+                        ...data.pago,
+                      },
+                    }
+                  : current
+              )
+            }
           })
           .catch(() => { })
       }

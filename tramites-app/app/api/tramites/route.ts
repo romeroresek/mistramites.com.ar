@@ -3,7 +3,9 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notifyAdminsNewTramite } from "@/lib/tramiteNotifications"
-import { logTramiteCreado, logPago } from "@/lib/activityLog"
+import { logTramiteCreado } from "@/lib/activityLog"
+import { userTramiteListSelect } from "@/lib/tramiteSelects"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 // GET: obtener todos los trámites del usuario
 export async function GET(_req: NextRequest) {
@@ -16,6 +18,7 @@ export async function GET(_req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true },
     })
 
     if (!user) {
@@ -29,11 +32,15 @@ export async function GET(_req: NextRequest) {
           { guestEmail: session.user.email },
         ],
       },
-      include: {
-        documentos: true,
-        pago: true,
-      },
+      select: userTramiteListSelect,
       orderBy: { createdAt: "desc" },
+    })
+
+    logTrafficMetric({
+      route: "/api/tramites",
+      operation: "user_tramites_list",
+      rowCount: tramites.length,
+      payloadBytes: estimateJsonPayloadBytes(tramites),
     })
 
     return NextResponse.json(tramites)
@@ -65,6 +72,7 @@ export async function POST(req: NextRequest) {
       // Usuario logueado
       const user = await prisma.user.findUnique({
         where: { email: session.user.email },
+        select: { id: true, email: true, name: true },
       })
       if (user) {
         userId = user.id

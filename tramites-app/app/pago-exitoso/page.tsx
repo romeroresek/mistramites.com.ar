@@ -1,19 +1,15 @@
 "use client"
 
-import { useSession } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { PageNavbar } from "@/components/PageNavbar"
 import { Suspense } from "react"
 import { XCircle, AlertCircle, CheckCircle2, MessageCircle } from "lucide-react"
 
 function PagoExitosoContent() {
-  const { data: session, status } = useSession()
   const searchParams = useSearchParams()
   const tramiteId = searchParams.get("tramiteId")
   const paymentStatus = searchParams.get("status")
 
-  const isLoggedIn = status === "authenticated" && session?.user?.email
   const isFailure = paymentStatus === "failure"
   const isPending = paymentStatus === "pending"
 

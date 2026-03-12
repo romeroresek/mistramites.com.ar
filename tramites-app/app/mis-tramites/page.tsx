@@ -3,11 +3,13 @@
 import { Suspense } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
+import { formatDateTimeAR } from "@/lib/utils"
 import { ArrowLeft, Menu, X, CreditCard, Download } from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 interface Tramite {
   id: string
@@ -23,37 +25,94 @@ interface Tramite {
   }
 }
 
+interface VerifyPagoResponse {
+  estado: string
+  paymentId: string | null
+}
+
+interface VerifySingleResponse {
+  tramiteId: string
+  updated?: boolean
+  pago?: VerifyPagoResponse
+}
+
+interface VerifyBatchResult {
+  tramiteId: string
+  updated: boolean
+  pago?: VerifyPagoResponse
+}
+
+interface VerifyBatchResponse {
+  updated: boolean
+  results?: VerifyBatchResult[]
+}
+
+const getEstadoLabel = (estado: string) => {
+  switch (estado) {
+    case "completado":
+    case "listo": return "Completado"
+    case "en_proceso": return "En proceso"
+    case "rechazado": return "Rechazado"
+    default: return "Pendiente"
+  }
+}
+
+async function fetchUserTramites(): Promise<Tramite[]> {
+  const res = await fetch("/api/tramites", { cache: "no-store" })
+  const data: unknown = await res.json()
+  if (res.ok && Array.isArray(data)) return data
+  if (typeof data === "object" && data !== null && "error" in data && typeof data.error === "string") {
+    throw new Error(data.error)
+  }
+  throw new Error("Error al cargar los trámites")
+}
+
 function MisTramitesContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const toast = useToast()
-  const [tramites, setTramites] = useState<Tramite[]>([])
-  const [loading, setLoading] = useState(true)
-  const [pagando, setPagando] = useState<string | null>(null)
+  const queryClient = useQueryClient()
   const verifiedRef = useRef(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [pagando, setPagando] = useState<string | null>(null)
 
-  const fetchTramites = useCallback(async (): Promise<Tramite[] | null> => {
-    try {
-      const res = await fetch("/api/tramites", { cache: "no-store" })
-      const data: unknown = await res.json()
-      if (res.ok && Array.isArray(data)) {
-        setTramites(data)
-        return data
-      }
-      if (typeof data === "object" && data !== null && "error" in data && typeof data.error === "string") {
-        toast.showError(data.error)
-      }
-      return null
-    } catch (error) {
-      console.error(error)
-      toast.showError("Error al cargar los trámites")
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
+  const {
+    data: tramites = [],
+    isLoading: loading,
+  } = useQuery({
+    queryKey: ["user", "tramites"],
+    queryFn: fetchUserTramites,
+    enabled: status === "authenticated",
+    staleTime: 60_000,
+  })
+
+  const mergePaymentResults = useCallback((results: VerifyBatchResult[]) => {
+    queryClient.setQueryData<Tramite[]>(["user", "tramites"], (current) => {
+      if (!current || results.length === 0) return current
+
+      const byTramiteId = new Map(
+        results
+          .filter((result): result is VerifyBatchResult & { pago: VerifyPagoResponse } => result.updated && !!result.pago)
+          .map((result) => [result.tramiteId, result.pago])
+      )
+
+      if (byTramiteId.size === 0) return current
+
+      return current.map((tramite) => {
+        const pago = byTramiteId.get(tramite.id)
+        if (!pago) return tramite
+
+        return {
+          ...tramite,
+          pago: {
+            estado: pago.estado,
+            mercadopagoId: tramite.pago?.mercadopagoId ?? null,
+          },
+        }
+      })
+    })
+  }, [queryClient])
 
   const verifyPendingPayments = useCallback(
     async (tramitesList: Tramite[]) => {
@@ -67,27 +126,23 @@ function MisTramitesContent() {
         const res = await fetch("/api/mercadopago/verify-batch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tramiteIds: pendientes.map((t) => t.id),
-          }),
+          body: JSON.stringify({ tramiteIds: pendientes.map((t) => t.id) }),
         })
-        const data = await res.json()
-        if (data.updated) {
-          await fetchTramites()
+        const data = await res.json() as VerifyBatchResponse
+        if (data.updated && Array.isArray(data.results)) {
+          mergePaymentResults(data.results)
         }
       } catch (err) {
         console.error("Error verificando pagos:", err)
       }
     },
-    [fetchTramites]
+    [mergePaymentResults]
   )
 
-  const handlePagar = async (tramiteId: string) => {
+  const handlePagar = useCallback(async (tramiteId: string) => {
     setPagando(tramiteId)
     try {
-      const res = await fetch(`/api/tramites/${tramiteId}/pagar`, {
-        method: "POST",
-      })
+      const res = await fetch(`/api/tramites/${tramiteId}/pagar`, { method: "POST" })
       const data = await res.json()
       if (data.initPoint) {
         window.location.href = data.initPoint
@@ -100,7 +155,7 @@ function MisTramitesContent() {
       toast.showError("Error al procesar el pago")
       setPagando(null)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -118,39 +173,53 @@ function MisTramitesContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ paymentId }),
         })
-          .then(() => fetchTramites())
+          .then((res) => res.json())
+          .then((data: VerifySingleResponse) => {
+            if (data.updated && data.pago) {
+              mergePaymentResults([
+                {
+                  tramiteId: data.tramiteId,
+                  updated: true,
+                  pago: data.pago,
+                },
+              ])
+            }
+          })
           .then(() => router.replace("/mis-tramites"))
           .catch((error) => {
             console.error("Error verificando pago:", error)
-            fetchTramites()
           })
-      } else {
-        fetchTramites().then((data) => {
-          if (Array.isArray(data)) {
-            void verifyPendingPayments(data)
-          }
-        })
       }
     }
-  }, [status, router, searchParams, fetchTramites, verifyPendingPayments])
+  }, [status, router, searchParams, mergePaymentResults])
 
-  // Polling automático: verificar pagos pendientes cada 5 minutos
+  // Verify payments when tramites load
+  const hasVerifiedPayments = useRef(false)
+  useEffect(() => {
+    if (tramites.length > 0 && !hasVerifiedPayments.current) {
+      hasVerifiedPayments.current = true
+      void verifyPendingPayments(tramites)
+    }
+  }, [tramites, verifyPendingPayments])
+
+  // Polling: verificar pagos pendientes cada 5 minutos
   useEffect(() => {
     if (status !== "authenticated") return
+    const pendientes = tramites.filter(
+      (tramite) => tramite.pago?.estado === "pendiente" && tramite.pago?.mercadopagoId
+    )
+    if (pendientes.length === 0) return
 
     const interval = setInterval(async () => {
       try {
-        const freshList = await fetchTramites()
-        if (Array.isArray(freshList)) {
-          await verifyPendingPayments(freshList)
-        }
+        await verifyPendingPayments(pendientes)
       } catch {
         // Silenciar errores de polling
       }
     }, 300000)
 
     return () => clearInterval(interval)
-  }, [status, fetchTramites, verifyPendingPayments])
+  }, [status, tramites, verifyPendingPayments])
 
   if (status === "loading" || loading) {
     return (
@@ -158,16 +227,6 @@ function MisTramitesContent() {
         <p className="text-sm text-gray-600">Cargando...</p>
       </div>
     )
-  }
-
-  const getEstadoLabel = (estado: string) => {
-    switch (estado) {
-      case "completado":
-      case "listo": return "Completado"
-      case "en_proceso": return "En proceso"
-      case "rechazado": return "Rechazado"
-      default: return "Pendiente"
-    }
   }
 
   return (
@@ -293,7 +352,7 @@ function MisTramitesContent() {
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-500">
-                        {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                        {formatDateTimeAR(tramite.createdAt)}
                       </span>
                       <span className="font-semibold text-gray-900">
                         ${tramite.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
@@ -357,7 +416,7 @@ function MisTramitesContent() {
                       <td className="px-4 py-3 text-sm text-gray-900">{tramite.tipoTramite}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{tramite.oficina}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {new Date(tramite.createdAt).toLocaleDateString("es-AR")} {new Date(tramite.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                        {formatDateTimeAR(tramite.createdAt)}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {getEstadoLabel(tramite.estado)}

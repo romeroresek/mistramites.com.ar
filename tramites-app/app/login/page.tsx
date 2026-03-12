@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn, getSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -18,15 +18,6 @@ function LoginContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState("")
 
-  const getRedirectUrl = async () => {
-    if (callbackUrl) return callbackUrl
-    const session = await getSession()
-    if (session?.user?.role === "admin") {
-      return "/admin"
-    }
-    return "/mis-tramites"
-  }
-
   const handleGoogleLogin = async () => {
     // Para Google, usar página intermedia que redirige según rol
     signIn("google", { callbackUrl: callbackUrl || "/auth/redirect" })
@@ -42,13 +33,13 @@ function LoginContent() {
         email,
         password,
         redirect: false,
+        callbackUrl: callbackUrl || "/auth/redirect",
       })
 
       if (result?.error) {
         setFormError("Email o contraseña incorrectos")
       } else {
-        const redirectUrl = await getRedirectUrl()
-        router.push(redirectUrl)
+        router.push(result?.url || callbackUrl || "/auth/redirect")
       }
     } catch {
       setFormError("Error al iniciar sesión")

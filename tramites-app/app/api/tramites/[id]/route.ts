@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { userTramiteDetailSelect } from "@/lib/tramiteSelects"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 export async function GET(
   req: NextRequest,
@@ -17,6 +19,7 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true },
     })
 
     if (!user) {
@@ -31,16 +34,20 @@ export async function GET(
           { guestEmail: session.user.email },
         ],
       },
-      include: {
-        pago: true,
-        documentos: true,
-        partida: true,
-      },
+      select: userTramiteDetailSelect,
     })
 
     if (!tramite) {
       return NextResponse.json({ error: "Trámite no encontrado" }, { status: 404 })
     }
+
+    logTrafficMetric({
+      route: "/api/tramites/[id]",
+      operation: "user_tramite_detail",
+      rowCount: 1,
+      payloadBytes: estimateJsonPayloadBytes(tramite),
+      extra: { tramiteId: id },
+    })
 
     return NextResponse.json(tramite)
   } catch (error) {

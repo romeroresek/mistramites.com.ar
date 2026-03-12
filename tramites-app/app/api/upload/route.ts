@@ -49,8 +49,9 @@ export async function POST(request: NextRequest) {
     const { error: uploadError } = await supabaseAdmin.storage
       .from("documentos")
       .upload(fileName, buffer, {
+        cacheControl: "31536000",
         contentType: file.type,
-        upsert: true,
+        upsert: false,
       })
 
     if (uploadError) {
