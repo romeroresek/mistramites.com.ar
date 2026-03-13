@@ -17,8 +17,14 @@ export async function notifyAdminsNewTramite(tramite: TramiteInfo): Promise<void
         role: "admin",
         pushNotificationsEnabled: true,
       },
-      include: {
-        pushSubscriptions: true,
+      select: {
+        pushSubscriptions: {
+          select: {
+            endpoint: true,
+            p256dh: true,
+            auth: true,
+          },
+        },
       },
     })
 
@@ -71,8 +77,14 @@ export async function notifyAdminsNewPayment(tramiteId: string, payerName?: stri
         role: "admin",
         pushNotificationsEnabled: true,
       },
-      include: {
-        pushSubscriptions: true,
+      select: {
+        pushSubscriptions: {
+          select: {
+            endpoint: true,
+            p256dh: true,
+            auth: true,
+          },
+        },
       },
     })
 
@@ -166,6 +178,11 @@ export async function notifyTramiteStatusChange(
   try {
     const subscriptions = await prisma.pushSubscription.findMany({
       where: { userId },
+      select: {
+        endpoint: true,
+        p256dh: true,
+        auth: true,
+      },
     })
 
     if (subscriptions.length === 0) return

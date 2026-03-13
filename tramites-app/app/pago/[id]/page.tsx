@@ -24,10 +24,8 @@ export default function PagoPage() {
     }
 
     if (status === "authenticated" && tramiteId) {
-      fetch("/api/mercadopago", {
+      fetch(`/api/tramites/${tramiteId}/pagar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tramiteId }),
       })
         .then((res) => res.json())
         .then((data) => {

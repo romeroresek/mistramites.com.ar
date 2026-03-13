@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { ensureMercadoPagoPreference } from "@/lib/mercadopagoPreferences"
+import {
+  getMercadoPagoWebhookUrl,
+  getPagoExitosoBackUrls,
+} from "@/lib/mercadopago"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -14,88 +20,72 @@ export async function POST(
     }
 
     const { id } = await params
+    const ownerFilters: Array<{ userId: string } | { guestEmail: string }> = [
+      { guestEmail: session.user.email },
+    ]
+    if (session.user.id) {
+      ownerFilters.unshift({ userId: session.user.id })
+    }
 
-    // Buscar el trámite con su pago
-    const tramite = await prisma.tramite.findUnique({
-      where: { id },
-      include: { pago: true, user: true },
+    const tramite = await prisma.tramite.findFirst({
+      where: {
+        id,
+        OR: ownerFilters,
+      },
+      select: {
+        id: true,
+        monto: true,
+        userId: true,
+        pago: {
+          select: {
+            estado: true,
+            mercadopagoId: true,
+          },
+        },
+      },
     })
 
     if (!tramite) {
-      return NextResponse.json({ error: "Trámite no encontrado" }, { status: 404 })
+      return NextResponse.json({ error: "Tramite no encontrado" }, { status: 404 })
     }
 
-    // Verificar que el trámite pertenece al usuario
-    if (tramite.userId !== session.user.id) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
-    }
-
-    // Verificar que el pago está pendiente
     if (tramite.pago?.estado === "confirmado") {
-      return NextResponse.json({ error: "Este trámite ya fue pagado" }, { status: 400 })
+      return NextResponse.json({ error: "Este tramite ya fue pagado" }, { status: 400 })
     }
 
-    // Crear nueva preferencia de Mercado Pago
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
-    const webhookUrl = process.env.WEBHOOK_URL
-
-    const preferenceBody: Record<string, unknown> = {
-      items: [
-        {
-          id: tramite.id,
-          title: "Tramite",
-          quantity: 1,
-          unit_price: tramite.monto,
-          currency_id: "ARS",
-        },
-      ],
-      payer: {
-        email: session.user.email,
-        name: session.user.name || undefined,
-      },
-      external_reference: tramite.id,
-      back_urls: {
-        success: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}`,
-        failure: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=failure`,
-        pending: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=pending`,
-      },
-    }
-
-    if (webhookUrl) {
-      preferenceBody.notification_url = `${webhookUrl}/api/mercadopago/webhook`
-    }
-
-    const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify(preferenceBody),
+    const result = await ensureMercadoPagoPreference({
+      tramiteId: tramite.id,
+      title: "Tramites Misiones",
+      amount: tramite.monto,
+      userId: tramite.userId,
+      payerEmail: session.user.email,
+      payerName: session.user.name || undefined,
+      backUrls: getPagoExitosoBackUrls(baseUrl, tramite.id),
+      notificationUrl: getMercadoPagoWebhookUrl(process.env.WEBHOOK_URL),
+      existingPreferenceId: tramite.pago?.mercadopagoId,
+      canReuseExistingPreference:
+        tramite.pago?.estado === "pendiente" && !!tramite.pago?.mercadopagoId,
     })
 
-    const result = await mpResponse.json()
-
-    if (!mpResponse.ok) {
-      console.error("Mercado Pago API Error:", JSON.stringify(result))
-      return NextResponse.json({ error: "Error al crear preferencia de pago" }, { status: 500 })
+    const response = {
+      initPoint: result.initPoint,
+      reusedExistingPreference: result.reusedExistingPreference,
+      preferenceId: result.preferenceId,
     }
 
-    // Actualizar o crear el registro de pago con mercadopagoId
-    await prisma.pago.upsert({
-      where: { tramiteId: tramite.id },
-      update: { mercadopagoId: result.id },
-      create: {
+    logTrafficMetric({
+      route: "/api/tramites/[id]/pagar",
+      operation: "user_payment_link",
+      payloadBytes: estimateJsonPayloadBytes(response),
+      rowCount: 1,
+      extra: {
         tramiteId: tramite.id,
-        userId: tramite.userId,
-        monto: tramite.monto,
-        mercadopagoId: result.id,
+        reusedExistingPreference: result.reusedExistingPreference,
       },
     })
 
-    return NextResponse.json({
-      initPoint: result.init_point,
-    })
+    return NextResponse.json(response)
   } catch (error) {
     console.error("Error al generar pago:", error)
     return NextResponse.json({ error: "Error interno" }, { status: 500 })

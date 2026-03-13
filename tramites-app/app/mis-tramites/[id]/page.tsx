@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
+import { getMercadoPagoPreferenceUrl } from "@/lib/mercadopago"
 import { Menu, X, FileText, Download } from "lucide-react"
 
 interface Tramite {
@@ -111,10 +112,13 @@ export default function TramiteDetalle() {
     setProcessingPayment(true)
 
     try {
-      const res = await fetch("/api/mercadopago", {
+      if (tramite.pago?.estado === "pendiente" && tramite.pago.mercadopagoId) {
+        window.location.href = getMercadoPagoPreferenceUrl(tramite.pago.mercadopagoId)
+        return
+      }
+
+      const res = await fetch(`/api/tramites/${tramite.id}/pagar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tramiteId: tramite.id }),
       })
 
       const data = await res.json()

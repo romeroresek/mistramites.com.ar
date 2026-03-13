@@ -3,6 +3,15 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notifyAdminsNewTramite } from "@/lib/tramiteNotifications"
+import {
+  getMercadoPagoWebhookUrl,
+  getPagoExitosoBackUrls,
+} from "@/lib/mercadopago"
+import {
+  ensureMercadoPagoPreference,
+  type MercadoPagoPreferenceResult,
+} from "@/lib/mercadopagoPreferences"
+import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
 
 const MONTO_PARTIDA = 20000
 
@@ -11,36 +20,44 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions)
 
     const body = await req.json()
-    const { tipoPartida, dni, sexo, nombres, apellido, fechaNacimiento, ciudadNacimiento,
-      fechaDefuncion, dni2, sexo2, nombres2, apellido2, fechaNacimiento2,
-      fechaMatrimonio, ciudadMatrimonio, divorciados, whatsapp, email } = body
-
-    const montoTotal = MONTO_PARTIDA
+    const {
+      tipoPartida,
+      dni,
+      sexo,
+      nombres,
+      apellido,
+      fechaNacimiento,
+      ciudadNacimiento,
+      fechaDefuncion,
+      dni2,
+      sexo2,
+      nombres2,
+      apellido2,
+      fechaNacimiento2,
+      fechaMatrimonio,
+      ciudadMatrimonio,
+      divorciados,
+      whatsapp,
+      email,
+    } = body
 
     if (!tipoPartida || !dni || !sexo || !nombres || !apellido || !fechaNacimiento) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
-    // Determinar userId y guestEmail
+    const montoTotal = MONTO_PARTIDA
     let userId: string | null = null
     let guestEmail: string | null = null
     let payerEmail: string | undefined
     let payerName: string | undefined
 
     if (session?.user?.email) {
-      // Usuario logueado
-      const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-      })
-      if (user) {
-        userId = user.id
-        payerEmail = user.email || undefined
-        payerName = user.name || undefined
-      }
+      userId = session.user.id || null
+      payerEmail = session.user.email
+      payerName = session.user.name || undefined
     }
 
     if (!userId) {
-      // Usuario no logueado - requiere email
       if (!email) {
         return NextResponse.json({ error: "Email requerido" }, { status: 400 })
       }
@@ -48,13 +65,15 @@ export async function POST(req: NextRequest) {
       payerEmail = email
     }
 
-    const tipoNombre = tipoPartida === "nacimiento" ? "Partida de Nacimiento"
-      : tipoPartida === "matrimonio" ? "Partida de Matrimonio"
-        : "Partida de Defunción"
+    const tipoNombre =
+      tipoPartida === "nacimiento"
+        ? "Partida de Nacimiento"
+        : tipoPartida === "matrimonio"
+          ? "Partida de Matrimonio"
+          : "Partida de Defuncion"
 
-    // Crear tramite + partida + pago en una transacción
     const tramite = await prisma.$transaction(async (tx) => {
-      const tramite = await tx.tramite.create({
+      const createdTramite = await tx.tramite.create({
         data: {
           userId,
           guestEmail,
@@ -68,7 +87,7 @@ export async function POST(req: NextRequest) {
 
       await tx.partida.create({
         data: {
-          tramiteId: tramite.id,
+          tramiteId: createdTramite.id,
           tipoPartida,
           whatsapp: whatsapp || null,
           dni,
@@ -92,87 +111,73 @@ export async function POST(req: NextRequest) {
 
       await tx.pago.create({
         data: {
-          tramiteId: tramite.id,
+          tramiteId: createdTramite.id,
           userId,
           monto: montoTotal,
           estado: "pendiente",
         },
       })
 
-      return tramite
+      return createdTramite
     })
 
-    // Crear preferencia de Mercado Pago
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
-    const webhookUrl = process.env.WEBHOOK_URL
+    let preferenceResult: MercadoPagoPreferenceResult
 
-    const preferenceBody: Record<string, unknown> = {
-      items: [
-        {
-          id: tramite.id,
-          title: "Trámites Misiones",
-          quantity: 1,
-          unit_price: montoTotal,
-          currency_id: "ARS",
-        },
-      ],
-      payer: {
-        email: payerEmail,
-        name: payerName,
-      },
-      external_reference: tramite.id,
-      back_urls: {
-        success: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}`,
-        failure: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=failure`,
-        pending: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=pending`,
-      },
-    }
-
-    if (webhookUrl) {
-      preferenceBody.notification_url = `${webhookUrl}/api/mercadopago/webhook`
-    }
-
-    const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify(preferenceBody),
-    })
-
-    const result = await mpResponse.json()
-
-    if (!mpResponse.ok) {
-      console.error("Mercado Pago API Error:", JSON.stringify(result))
+    try {
+      preferenceResult = await ensureMercadoPagoPreference({
+        tramiteId: tramite.id,
+        title: "Tramites Misiones",
+        amount: montoTotal,
+        userId,
+        payerEmail,
+        payerName,
+        backUrls: getPagoExitosoBackUrls(baseUrl, tramite.id),
+        notificationUrl: getMercadoPagoWebhookUrl(process.env.WEBHOOK_URL),
+      })
+    } catch (error) {
+      console.error("Mercado Pago API Error:", error)
       return NextResponse.json({ tramiteId: tramite.id, initPoint: null })
     }
 
-    // Guardar el mercadopagoId en el pago
-    await prisma.pago.update({
-      where: { tramiteId: tramite.id },
-      data: { mercadopagoId: result.id },
-    })
-
-    // Notificar a los admins del nuevo pedido
     notifyAdminsNewTramite({
       tipoTramite: tipoNombre,
       partida: { nombres, apellido },
     }).catch((err) => console.error("Error notifying admins:", err))
 
-    return NextResponse.json({
+    const response = {
       tramiteId: tramite.id,
-      initPoint: result.init_point,
+      initPoint: preferenceResult.initPoint,
+    }
+
+    logTrafficMetric({
+      route: "/api/partidas",
+      operation: "partida_create",
+      rowCount: 1,
+      payloadBytes: estimateJsonPayloadBytes(response),
+      extra: {
+        tramiteId: tramite.id,
+        tipoPartida,
+        hasPaymentLink: !!preferenceResult.initPoint,
+      },
     })
+
+    return NextResponse.json(response)
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorStack = error instanceof Error ? error.stack : undefined
     console.error("Error creando partida:", errorMessage)
     console.error("Stack trace:", errorStack)
-    console.error("Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error as object), 2))
-    return NextResponse.json({
-      error: "Error al crear la solicitud",
-      details: errorMessage
-    }, { status: 500 })
+    console.error(
+      "Full error:",
+      JSON.stringify(error, Object.getOwnPropertyNames(error as object), 2)
+    )
+    return NextResponse.json(
+      {
+        error: "Error al crear la solicitud",
+        details: errorMessage,
+      },
+      { status: 500 }
+    )
   }
 }

@@ -208,8 +208,18 @@ export async function POST(req: NextRequest) {
     // Obtener monto del trámite para el caso de crear Pago si no existe
     const tramite = await prisma.tramite.findUnique({
       where: { id: targetTramiteId },
-      select: { monto: true, userId: true },
+      select: { monto: true, userId: true, guestEmail: true },
     })
+
+    const canAccessTramite =
+      session.user.role === "admin" ||
+      (!!tramite &&
+        ((!!session.user.id && tramite.userId === session.user.id) ||
+          tramite.guestEmail === session.user.email))
+
+    if (!tramite || !canAccessTramite) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+    }
 
     const nextPayment: PaymentSyncFields = {
       estado: pagoEstado,
@@ -242,8 +252,8 @@ export async function POST(req: NextRequest) {
         update: nextPayment,
         create: {
           tramiteId: targetTramiteId,
-          userId: tramite?.userId || null,
-          monto: tramite?.monto || 0,
+          userId: tramite.userId || null,
+          monto: tramite.monto || 0,
           ...nextPayment,
         },
       })

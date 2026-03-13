@@ -107,6 +107,21 @@ export async function POST(req: NextRequest) {
       )
     ).slice(0, VERIFY_BATCH_MAX_IDS)
 
+    const ownerFilters: Array<{ userId: string } | { guestEmail: string }> = [
+      { guestEmail: session.user.email },
+    ]
+    if (session.user.id) {
+      ownerFilters.unshift({ userId: session.user.id })
+    }
+
+    const tramiteWhere =
+      session.user.role === "admin"
+        ? { id: { in: ids } }
+        : {
+            id: { in: ids },
+            OR: ownerFilters,
+          }
+
     const [pagos, tramites] = await Promise.all([
       prisma.pago.findMany({
         where: { tramiteId: { in: ids } },
@@ -122,13 +137,14 @@ export async function POST(req: NextRequest) {
         },
       }),
       prisma.tramite.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, monto: true, userId: true },
+        where: tramiteWhere,
+        select: { id: true, monto: true, userId: true, guestEmail: true },
       }),
     ])
 
     const pagosByTramite = new Map(pagos.map((pago) => [pago.tramiteId, pago]))
     const tramitesById = new Map(tramites.map((tramite) => [tramite.id, tramite]))
+    const accessibleIds = tramites.map((tramite) => tramite.id)
     const results: Array<{
       tramiteId: string
       updated: boolean
@@ -136,8 +152,8 @@ export async function POST(req: NextRequest) {
       pago?: VerifiedPaymentPayload
     }> = []
 
-    for (let i = 0; i < ids.length; i += VERIFY_BATCH_PARALLELISM) {
-      const chunk = ids.slice(i, i + VERIFY_BATCH_PARALLELISM)
+    for (let i = 0; i < accessibleIds.length; i += VERIFY_BATCH_PARALLELISM) {
+      const chunk = accessibleIds.slice(i, i + VERIFY_BATCH_PARALLELISM)
       const chunkResults = await Promise.all(
         chunk.map(async (tramiteId) => {
           try {
@@ -237,8 +253,12 @@ export async function POST(req: NextRequest) {
           // Obtener monto del trámite para crear Pago si no existe
           const tramite = tramiteData ?? await prisma.tramite.findUnique({
             where: { id: tramiteId },
-            select: { monto: true, userId: true },
+            select: { monto: true, userId: true, guestEmail: true },
           })
+
+          if (!tramite) {
+            return { tramiteId, updated: false }
+          }
 
           if (pagoChanged) {
             await prisma.pago.upsert({
@@ -246,8 +266,8 @@ export async function POST(req: NextRequest) {
               update: nextPayment,
               create: {
                 tramiteId,
-                userId: tramite?.userId || null,
-                monto: tramite?.monto || 0,
+                userId: tramite.userId || null,
+                monto: tramite.monto || 0,
                 ...nextPayment,
               },
             })

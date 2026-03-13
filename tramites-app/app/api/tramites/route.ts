@@ -6,31 +6,33 @@ import { notifyAdminsNewTramite } from "@/lib/tramiteNotifications"
 import { logTramiteCreado } from "@/lib/activityLog"
 import { userTramiteListSelect } from "@/lib/tramiteSelects"
 import { estimateJsonPayloadBytes, logTrafficMetric } from "@/lib/trafficMetrics"
+import {
+  getMercadoPagoWebhookUrl,
+  getPagoExitosoBackUrls,
+} from "@/lib/mercadopago"
+import {
+  ensureMercadoPagoPreference,
+  type MercadoPagoPreferenceResult,
+} from "@/lib/mercadopagoPreferences"
 
-// GET: obtener todos los trámites del usuario
 export async function GET(_req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user?.email) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
+    const ownerFilters: Array<{ userId: string } | { guestEmail: string }> = [
+      { guestEmail: session.user.email },
+    ]
+    if (session.user.id) {
+      ownerFilters.unshift({ userId: session.user.id })
     }
 
     const tramites = await prisma.tramite.findMany({
       where: {
-        OR: [
-          { userId: user.id },
-          { guestEmail: session.user.email },
-        ],
+        OR: ownerFilters,
       },
       select: userTramiteListSelect,
       orderBy: { createdAt: "desc" },
@@ -46,11 +48,10 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json(tramites)
   } catch (error) {
     console.error(error)
-    return NextResponse.json({ error: "Error al obtener trámites" }, { status: 500 })
+    return NextResponse.json({ error: "Error al obtener tramites" }, { status: 500 })
   }
 }
 
-// POST: crear nuevo trámite (permite usuarios logueados o invitados con email)
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -62,27 +63,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
-    // Determinar userId y guestEmail
     let userId: string | null = null
     let guestEmail: string | null = null
     let payerEmail: string | undefined
     let payerName: string | undefined
 
     if (session?.user?.email) {
-      // Usuario logueado
-      const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { id: true, email: true, name: true },
-      })
-      if (user) {
-        userId = user.id
-        payerEmail = user.email || undefined
-        payerName = user.name || undefined
-      }
+      userId = session.user.id || null
+      payerEmail = session.user.email
+      payerName = session.user.name || undefined
     }
 
     if (!userId) {
-      // Usuario no logueado - requiere email
       if (!email) {
         return NextResponse.json({ error: "Email requerido" }, { status: 400 })
       }
@@ -90,9 +82,8 @@ export async function POST(req: NextRequest) {
       payerEmail = email
     }
 
-    // Crear trámite y pago
     const tramite = await prisma.$transaction(async (tx) => {
-      const tramite = await tx.tramite.create({
+      const createdTramite = await tx.tramite.create({
         data: {
           userId,
           guestEmail,
@@ -107,69 +98,35 @@ export async function POST(req: NextRequest) {
 
       await tx.pago.create({
         data: {
-          tramiteId: tramite.id,
+          tramiteId: createdTramite.id,
           userId,
           monto,
           estado: "pendiente",
         },
       })
 
-      return tramite
+      return createdTramite
     })
 
-    // Crear preferencia de Mercado Pago
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
-    const webhookUrl = process.env.WEBHOOK_URL
+    let preferenceResult: MercadoPagoPreferenceResult
 
-    const preferenceBody: Record<string, unknown> = {
-      items: [
-        {
-          id: tramite.id,
-          title: "Trámites Misiones",
-          quantity: 1,
-          unit_price: monto,
-          currency_id: "ARS",
-        },
-      ],
-      payer: {
-        email: payerEmail,
-        name: payerName,
-      },
-      external_reference: tramite.id,
-      back_urls: {
-        success: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}`,
-        failure: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=failure`,
-        pending: `${baseUrl}/pago-exitoso?tramiteId=${tramite.id}&status=pending`,
-      },
-    }
-
-    if (webhookUrl) {
-      preferenceBody.notification_url = `${webhookUrl}/api/mercadopago/webhook`
-    }
-
-    const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify(preferenceBody),
-    })
-
-    const result = await mpResponse.json()
-
-    if (!mpResponse.ok) {
-      console.error("Mercado Pago API Error:", JSON.stringify(result))
+    try {
+      preferenceResult = await ensureMercadoPagoPreference({
+        tramiteId: tramite.id,
+        title: "Tramites Misiones",
+        amount: monto,
+        userId,
+        payerEmail,
+        payerName,
+        backUrls: getPagoExitosoBackUrls(baseUrl, tramite.id),
+        notificationUrl: getMercadoPagoWebhookUrl(process.env.WEBHOOK_URL),
+      })
+    } catch (error) {
+      console.error("Mercado Pago API Error:", error)
       return NextResponse.json({ tramiteId: tramite.id, initPoint: null })
     }
 
-    // Guardar el mercadopagoId en el pago
-    await prisma.pago.update({
-      where: { tramiteId: tramite.id },
-      data: { mercadopagoId: result.id },
-    })
-
-    // Registrar actividad
     await logTramiteCreado({
       tramiteId: tramite.id,
       tipoTramite,
@@ -179,18 +136,30 @@ export async function POST(req: NextRequest) {
       monto,
     })
 
-    // Notificar a los admins del nuevo pedido
     notifyAdminsNewTramite({
       tipoTramite,
       partida: null,
     }).catch((err) => console.error("Error notifying admins:", err))
 
-    return NextResponse.json({
+    const response = {
       tramiteId: tramite.id,
-      initPoint: result.init_point,
+      initPoint: preferenceResult.initPoint,
+    }
+
+    logTrafficMetric({
+      route: "/api/tramites",
+      operation: "user_tramite_create",
+      rowCount: 1,
+      payloadBytes: estimateJsonPayloadBytes(response),
+      extra: {
+        tramiteId: tramite.id,
+        hasPaymentLink: !!preferenceResult.initPoint,
+      },
     })
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error(error)
-    return NextResponse.json({ error: "Error al crear trámite" }, { status: 500 })
+    return NextResponse.json({ error: "Error al crear tramite" }, { status: 500 })
   }
 }

@@ -8,6 +8,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useToast } from "@/components/Toast"
 import { formatDateTimeAR } from "@/lib/utils"
+import { getMercadoPagoPreferenceUrl } from "@/lib/mercadopago"
 import { ArrowLeft, Menu, X, CreditCard, Download } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -139,10 +140,15 @@ function MisTramitesContent() {
     [mergePaymentResults]
   )
 
-  const handlePagar = useCallback(async (tramiteId: string) => {
-    setPagando(tramiteId)
+  const handlePagar = useCallback(async (tramite: Tramite) => {
+    setPagando(tramite.id)
     try {
-      const res = await fetch(`/api/tramites/${tramiteId}/pagar`, { method: "POST" })
+      if (tramite.pago?.estado === "pendiente" && tramite.pago.mercadopagoId) {
+        window.location.href = getMercadoPagoPreferenceUrl(tramite.pago.mercadopagoId)
+        return
+      }
+
+      const res = await fetch(`/api/tramites/${tramite.id}/pagar`, { method: "POST" })
       const data = await res.json()
       if (data.initPoint) {
         window.location.href = data.initPoint
@@ -362,7 +368,7 @@ function MisTramitesContent() {
                   {(tramite.pago?.estado === "pendiente" || !tramite.pago) && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
                       <button
-                        onClick={() => handlePagar(tramite.id)}
+                        onClick={() => handlePagar(tramite)}
                         disabled={pagando === tramite.id}
                         className="flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 disabled:opacity-70"
                       >
@@ -437,7 +443,7 @@ function MisTramitesContent() {
                           </Link>
                           {(tramite.pago?.estado === "pendiente" || !tramite.pago) && (
                             <button
-                              onClick={() => handlePagar(tramite.id)}
+                              onClick={() => handlePagar(tramite)}
                               disabled={pagando === tramite.id}
                               className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-70"
                             >
